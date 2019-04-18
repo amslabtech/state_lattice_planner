@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(state_lattice_planner)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -11,10 +11,13 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  trajectory_generation
 )
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
+find_package(Eigen3 REQUIRED)
+include_directories(${EIGEN_INCLUDE_DIRS})
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -49,8 +52,6 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 # add_message_files(
 #   FILES
-#   Message1.msg
-#   Message2.msg
 # )
 
 ## Generate services in the 'srv' folder
@@ -70,7 +71,6 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   std_msgs
 # )
 
 ################################################
@@ -105,7 +105,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES state_lattice_planner
-#  CATKIN_DEPENDS roscpp rospy std_msgs
+ CATKIN_DEPENDS roscpp rospy std_msgs trajectory_generation
 #  DEPENDS system_lib
 )
 
@@ -116,7 +116,6 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -133,7 +132,10 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/state_lattice_planner_node.cpp)
+add_executable(motion_planner src/motion_planner.cpp)
+add_executable(generate_server src/generate_server.cpp)
+add_executable(speed_control src/speed_control.cpp)
+add_executable(trajectory_manager src/trajectory_manager.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -146,9 +148,10 @@ include_directories(
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(${PROJECT_NAME}_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(motion_planner ${catkin_LIBRARIES})
+target_link_libraries(generate_server Visualize_lib trajectory_generation boundary_state LocalPlanning_lib ${catkin_LIBRARIES})
+target_link_libraries(speed_control ${catkin_LIBRARIES})
+target_link_libraries(trajectory_manager Visualize_lib ${catkin_LIBRARIES})
 
 #############
 ## Install ##

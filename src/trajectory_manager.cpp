@@ -21,21 +21,16 @@
 #define TRACE 1
 using namespace std;
 
-//const string header_frame("/map");
-//const string robot_frame("/matching_base_link");
 const string header_frame("/localmap");
 const string robot_frame("/velodyne_odom");
-//const string robot_frame("/velodyne");
 
 //callback mutex
 boost::mutex l_goal_mutex_;
-boost::mutex r_mutex_;
-boost::mutex speed_mutex_;
 
 //to use callback msg in main function
 geometry_msgs::PoseStamped g_l_goal; 
 nav_msgs::Odometry g_odo; 
-std_msgs::Float32 g_radius; 
+std_msgs::Float32 g_radius;
 std_msgs::Float32 g_speed; 
 
 boost::mutex res_mutex_;
@@ -43,9 +38,8 @@ trajectory_generation::TrajectoryGeneration::Response res_path;
 boost::mutex req_mutex_;
 trajectory_generation::TrajectoryGeneration::Request req_path;
 
-bool l_goal_flag = false, odometry_flag=false, r_flag=false, speed_flag=false;
+bool l_goal_flag = false, odometry_flag=false;
 
-int wp_mode=0;
 inline double calcDistance(double dx, double dy)
 {
 	return sqrt(dx*dx+dy*dy);
@@ -79,26 +73,17 @@ geometry_msgs::Pose2D nearest(	geometry_msgs::Pose2D A,
 
 bool checkSelectedPath(tf::StampedTransform& transform, trajectory_generation::TrajectoryGeneration& trj)
 {
-    //double robo_x=transform.getOrigin().x(), robo_y=transform.getOrigin().y();
-	//double yaw = tf::getYaw(transform.getRotation());
 	double n_dist=0;
-	//double dist=0, theta=0, phi=0;
 	geometry_msgs::Pose2D A, B, P;
 	A.x=trj.response.path.poses[0].pose.position.x;
 	A.y=trj.response.path.poses[0].pose.position.y;
 	B.x=trj.response.path.poses[trj.response.path.poses.size()-1].pose.position.x;
 	B.y=trj.response.path.poses[trj.response.path.poses.size()-1].pose.position.y;
 	for (size_t i=0; i<trj.response.path.poses.size(); ++i){
-		//phi=atan2(trj.response.path.poses[i].pose.position.y,
-		//			trj.response.path.poses[i].pose.position.x);
-		//theta=phi-yaw;
 		P.x=trj.response.path.poses[i].pose.position.x;
 		P.y=trj.response.path.poses[i].pose.position.y;
 		geometry_msgs::Pose2D H = nearest(A, B, P);
 		n_dist=calcDistance(H.x-P.x, H.y-P.y);
-		//dist=calcDistance(robo_x-trj.response.path.poses[i].pose.position.x, 
-	//					robo_y-trj.response.path.poses[i].pose.position.y);
-		//n_dist=dist*fabs(sin(theta));
 		if (n_dist>THRESH_N_DIST){
 			cout<<"n_dist:"<<n_dist<<endl;
 			return  true;
@@ -200,11 +185,6 @@ void showPath(nav_msgs::Path& path, ros::Publisher& pub)
 	delete marker_line;
 }
 
-void WpModeCallback(const std_msgs::Int32ConstPtr& msg)
-{
-	wp_mode=msg->data;
-}
-
 void LocalGoalCallback(const geometry_msgs::PoseStampedConstPtr& msg)
 {
 	boost::mutex::scoped_lock(l_goal_mutex_);
@@ -218,29 +198,12 @@ void tinyCallback(const nav_msgs::OdometryConstPtr& msg)
 	odometry_flag = true;
 }
 
-void RadiusCallback(const std_msgs::Float32ConstPtr& msg)
-{
-	boost::mutex::scoped_lock(r_mutex_);
-	g_radius=*msg;
-	r_flag = true;
-}
-
-void speedCallback(const std_msgs::Float32ConstPtr& msg)
-{
-	boost::mutex::scoped_lock(speed_mutex_);
-	g_speed=*msg;
-	speed_flag = true;
-}
-
 void trajectoryManage()
 {
 	ros::NodeHandle n;
 	ros::ServiceClient client = n.serviceClient<trajectory_generation::TrajectoryGeneration>("/plan/local_path");
 	ros::Subscriber tiny_sub = n.subscribe("/tinypower/odom", 1, tinyCallback);
 	ros::Subscriber l_goal_sub = n.subscribe("/local_goal", 1, LocalGoalCallback);
-	ros::Subscriber vel_sub = n.subscribe("/control/velo", 1, speedCallback);
-	ros::Subscriber r_sub = n.subscribe("/control/r", 1, RadiusCallback);
-	ros::Subscriber mode_sub = n.subscribe("/wp_mode", 1, WpModeCallback);
 	
 	ros::Publisher visu_path_pub = n.advertise<visualization_msgs::Marker>("plan/localpath_vis_shogo", 10);
 	ros::Publisher vel_arr_pub = n.advertise<trajectory_generation::VelocityArray>("plan/velocity_array", 10);
@@ -248,6 +211,9 @@ void trajectoryManage()
     tf::TransformListener listener;
     std_msgs::Bool back_flag;
     back_flag.data=false;
+
+	g_radius.data = 3.14;
+	g_speed.data = 0.7;
     
     bool tf_flag=false;
     
@@ -267,7 +233,7 @@ void trajectoryManage()
         }
             
         //Set Trajectory configuration//
-        if (l_goal_flag && odometry_flag && r_flag && speed_flag && tf_flag){
+        if (l_goal_flag && odometry_flag && tf_flag){
          	trajectory_generation::TrajectoryGeneration trj;
             trjSetMode(trj, transform);
             if(trj.request.params.vt > 0){
@@ -282,27 +248,15 @@ void trajectoryManage()
                 cout<<"An trajectory is not generated....."<<endl;
             }else{
                 cout<<"An trajectory is generated!!!"<<endl;
-				// robot must trace track line
-				//if (wp_mode==TRACE){
-				//	if (checkSelectedPath(transform, trj)){
-				//		trj.response.path.poses.clear();
-				//		trj.response.v_array.vel.resize(1);	
-				//		trj.response.v_array.vel[0].op_linear=0;
-				//		trj.response.v_array.vel[0].op_angular=0;
-				//		cout<<"selett path is not appropriate"<<endl;
-				//	}
-				//}
                 showPath(trj.response.path, visu_path_pub);
             }
             vel_arr_pub.publish(trj.response.v_array);
             
             //l_goal_flag = false;
             //odometry_flag = false;
-            //r_flag = false;
-            //speed_flag = false;
             tf_flag = false;
         }else{
-            cout<<"local_goal_flag:"<<l_goal_flag<<"\todometry_flag:"<<odometry_flag<<"\tr_flag"<<r_flag<<"\tspeed_flag"<<speed_flag<<endl;
+            cout<<"local_goal_flag:"<<l_goal_flag<<"\todometry_flag:"<<odometry_flag<<"\tr_flag"<< endl;
         }
         
         ros::spinOnce();

@@ -134,7 +134,6 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(motion_planner src/motion_planner.cpp)
 add_executable(generate_server src/generate_server.cpp)
-add_executable(speed_control src/speed_control.cpp)
 add_executable(trajectory_manager src/trajectory_manager.cpp)
 
 ## Rename C++ executable without prefix
@@ -150,7 +149,6 @@ add_executable(trajectory_manager src/trajectory_manager.cpp)
 ## Specify libraries to link a library or executable target against
 target_link_libraries(motion_planner ${catkin_LIBRARIES})
 target_link_libraries(generate_server Visualize_lib trajectory_generation boundary_state LocalPlanning_lib ${catkin_LIBRARIES})
-target_link_libraries(speed_control ${catkin_LIBRARIES})
 target_link_libraries(trajectory_manager Visualize_lib ${catkin_LIBRARIES})
 
 #############

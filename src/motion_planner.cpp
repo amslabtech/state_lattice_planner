@@ -5,31 +5,20 @@
 #include <tf/transform_listener.h>
 #include <knm_tiny_msgs/Velocity.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <sensor_msgs/Joy.h>
 #include <std_msgs/Float64.h>
 #include <std_msgs/Bool.h>
-#include <std_msgs/Int32.h>
 #include <std_msgs/Int16.h>
 #include <nav_msgs/Odometry.h>
-
-#include <knm_tiny_msgs/Velocity.h>
-
-#define HALF_PI M_PI*0.5
-#define STOP 0
-#define TURN 2
-#define STOP_TIME 2*10 //wait sec * loop rate
 
 using namespace std;
 
 const float Vmax=0.9;
 const float ANGULARmax=1.0; 
-const float ANGULARmin=0.1;
-const int MaxStop=40; //4[s]
 const float THRESH_ANG=0.17; //10[deg]
 
 ros::Publisher vel_pub;
 int time_count=0;
-bool v_a_flag=false, cheat_flag=false, joy_flag=false, target_flag=false,odom_flag=false;
+bool v_a_flag=false, cheat_flag=false, target_flag=false, odom_flag=false;
 bool intersection=false;
 knm_tiny_msgs::Velocity cheat_vel;
 boost::mutex v_array_mutex_;
@@ -100,10 +89,6 @@ void commandDecision(	trajectory_generation::VelocityArray& v_a,
 	//cout<<"lin1 = "<<cmd_vel.op_linear<<"\tang1 = "<<cmd_vel.op_angular<<endl;
 }
 
-void JoyCallback(const sensor_msgs::JoyConstPtr& msg){
-	joy_flag = true;
-}
-
 void CheatCallback(const knm_tiny_msgs::VelocityPtr& msg){
 	cheat_vel.op_linear = msg->op_linear;
 	cheat_vel.op_angular = msg->op_angular;
@@ -145,12 +130,11 @@ void IntersectionCallback(const std_msgs::BoolConstPtr& msg)
 void MotionPlanner()
 {
 	ros::NodeHandle n;
-	ros::Subscriber cntl_sub       = n.subscribe("/joy", 10, JoyCallback);
-	ros::Subscriber cheat_sub       = n.subscribe("/tinypower/cheat_velocity", 10, CheatCallback);
-	ros::Subscriber v_array_sub    = n.subscribe("/plan/velocity_array", 10, vArrayCallback);
-	ros::Subscriber target_sub        = n.subscribe("/target_yaw", 10, TargetCallback);
-	ros::Subscriber odom_sub        = n.subscribe("/lcl", 10, OdomCallback);
-	ros::Subscriber flag_sub = n.subscribe("/intersection_flag",1,IntersectionCallback);
+	ros::Subscriber cheat_sub   = n.subscribe("/tinypower/cheat_velocity", 10, CheatCallback);
+	ros::Subscriber v_array_sub = n.subscribe("/plan/velocity_array", 10, vArrayCallback);
+	ros::Subscriber target_sub  = n.subscribe("/target_yaw", 10, TargetCallback);
+	ros::Subscriber odom_sub    = n.subscribe("/lcl", 10, OdomCallback);
+	ros::Subscriber flag_sub    = n.subscribe("/intersection_flag",1,IntersectionCallback);
 	
 	ros::Subscriber mode_sub = n.subscribe("/mode",1,ModeCallback);
 
@@ -173,13 +157,7 @@ void MotionPlanner()
 					cout<<"run"<<endl;
 				}
 				else { // path is not generated
-					//if (stop_count>MaxStop){
-					//	turn_flag=true;
-					//	cout<<"stop_count_turn"<<endl;
-					//}
-					//else{
-						cout<<"no path stop"<<endl;
-					//}
+					cout<<"no path stop"<<endl;
 					stop_count++;
 					cout<< "stop_count" << stop_count <<endl;
 				}
@@ -230,7 +208,6 @@ void MotionPlanner()
 			cout<<"mode: "<<mode<<endl;
 			cout<<"lin = "<<cmd_vel.op_linear<<"\tang = "<<cmd_vel.op_angular<<endl<<endl;
 			
-			//v_a_flag=false;
 			turn_flag=false;
 		}
 		else if (cheat_flag){

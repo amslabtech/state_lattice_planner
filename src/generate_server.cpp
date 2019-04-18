@@ -15,21 +15,14 @@
 #include "trajectory_generation/boundary_state.h"
 #include "trajectory_generation/LocalPlanning_lib.h"
 
-#define TRACE 1
-
 const float Vmax = 0.8;	// infantの設定最高速度
 const float Vmax_ = 1.0/Vmax;	// infantの設定最高速度
 const float Lmin = 2.0;
-//const float Lmax = 6.0;
 const float Lmax = 5.0;
-// const float MaxAngle = 1.2;
 const float MaxAngle = 1.2;
 
-//const string header_frame("/map");
-//const string header_frame2("/matching_base_link");
 const string header_frame("/localmap");
 const string header_frame2("/velodyne_odom");
-//const string header_frame2("/velodyne");
 using namespace std;
 
 //-----------Pathの構造体-----------//
@@ -51,9 +44,6 @@ TrajectoryGeneration trajectory(16.0, -16.0,		//curvature
 								1.0);					//Safety factor
 
 
-//ShapeParameter p_ss = {1000, 31, 3, 7.0, -1.6, 1.6, -0.7, 0.7};
-//ShapeParameter p_ss = {1000, 9, 3, 7.0, -0.8, 0.8, -0.7, 0.7};	//20151101
-//ShapeParameter p_ss = {1000, 9, 5, 7.0, -1.2, 1.2, -0.9, 0.9};	//20151105
 ShapeParameter p_ss = {1000, 31, 5, 7.0, -1.6, 1.6, -0.9, 0.9};	//20181024
 //	{n_s:固定値，n_p:目的地数，n_h:目的地あたりの本数，d:pathの長さ，alpha_min:角度，alpha_max:角度，psi_min(max)目的地での角度の開き}
 
@@ -69,16 +59,10 @@ public:
 //////////////////////////////////////////////////
 //-------mutexロック スコープの範囲だけ有効-------//
 //////////////////////////////////////////////////
-ros::Publisher _path_pub;
-boost::mutex path_pub_mutex_;
 ros::Publisher _pose_pub;
 boost::mutex pose_pub_mutex_;
 ros::Publisher _array_pub;
 boost::mutex array_pub_mutex_;
-ros::Publisher _num_pub;
-boost::mutex num_pub_mutex_;
-ros::Publisher _target_pub;
-boost::mutex target_pub_mutex_;
 
 /////////////////////////////////////////////////////////
 //-------------------CallBack!!!!!---------------------//
@@ -89,7 +73,7 @@ boost::mutex map_mutex_;
 void mapCallback(const nav_msgs::OccupancyGridConstPtr& msg){
 	boost::mutex::scoped_lock(map_mutex_);	
 	grd_=*msg;
-	grd_.info.origin.position.z = 0;////////
+	grd_.info.origin.position.z = 0;
 	for(int i=0;i<grd_.info.width*grd_.info.height;i++){
 		if(grd_.data[i]>0) grd_.data[i] = 100;
 	}
@@ -102,13 +86,6 @@ void odomCallback(const nav_msgs::OdometryConstPtr& msg){
 	boost::mutex::scoped_lock(odom_mutex_);
 	vel_now = msg->twist.twist.linear.x;
 }
-
-int wp_mode=0;
-void WpModeCallback(const std_msgs::Int32ConstPtr& msg)
-{
-	wp_mode=msg->data;
-}
-
 
 void pathLocalGlobal(nav_msgs::Path& path, geometry_msgs::PoseStamped loc)
 {
@@ -125,27 +102,6 @@ void pathLocalGlobal(nav_msgs::Path& path, geometry_msgs::PoseStamped loc)
 	}
 }
 
-void showPath(nav_msgs::Path path)
-{
-	std_msgs::ColorRGBA rgba_in;
-	rgba_in.r = 1.0;
-	rgba_in.g = 0;
-	rgba_in.b = 0;
-	rgba_in.a = 0.8;
-	Visualization* marker_line = new Visualization(rgba_in, ADD,0.1, "OnlyPath",header_frame);
-	ros::Publisher pub;
-	{
-		boost::mutex::scoped_lock(path_pub_mutex_);	
-		pub = _path_pub;
-	}
-	
-	visualization_msgs::Marker line1;
-	marker_line->convertPath2MarkerLine(path, line1, 1);
-		
-	// pub.publish(line1);
-	delete marker_line;
-}
-
 string IntToString(int number)
 {
 	stringstream ss;
@@ -159,18 +115,13 @@ void showPathArray(list<PathState> path_array, int num)
 	rgba_in.r = 0.0;
 	rgba_in.g = 0.8;
 	rgba_in.b = 0.9;
-	//rgba_in.a = 0.8;
 	rgba_in.a = 1.0;
 	Visualization* marker_line = new Visualization(rgba_in, ADD,0.02, "PathSet",header_frame);
 	Visualization* marker_txt = new Visualization(rgba_in, ADD,0.02, "txtSet",header_frame);
-	ros::Publisher pub1,pub2;
+	ros::Publisher pub1;
 	{
 		boost::mutex::scoped_lock(array_pub_mutex_);	
 		pub1 = _array_pub;
-	}
-	{
-		boost::mutex::scoped_lock(num_pub_mutex_);	
-		pub2 = _num_pub;
 	}
 	int i = 0;
 	//------------------line array---------------------------//
@@ -179,7 +130,6 @@ void showPathArray(list<PathState> path_array, int num)
 	while( it != path_array.end() ){
 		visualization_msgs::Marker line1, txt1;
 		nav_msgs::Path path;
-		//if((*it).cost<100)	
 		path = (*it).path;
 		int id = (*it).id;
 		marker_line->convertPath2MarkerLine(path, line1, i);
@@ -188,20 +138,15 @@ void showPathArray(list<PathState> path_array, int num)
 		txts.markers.push_back(txt1);
 		i++;
 		++it;
-	}//un-show useless path
+	}
 	for(; i<num; i++){
 		visualization_msgs::Marker line2;
 		nav_msgs::Path path_zero;
 		marker_line->convertPath2MarkerLine(path_zero, line2, i);
 		lines.markers.push_back(line2);
 	}
-	
 	//------------------txt array---------------------------//
-	
-	
 	pub1.publish(lines);
-	
-	//pub2.publish(txts);
 	delete marker_line;
 }
 
@@ -218,20 +163,6 @@ void showPoses(geometry_msgs::PoseArray poses)
 	
 	pub.publish(poses);
 }
-void showPose(geometry_msgs::PoseStamped target)
-{
-	ros::Publisher pub;
-	{
-		boost::mutex::scoped_lock(target_pub_mutex_);
-		pub = _target_pub;
-	}
-	target.header.frame_id = header_frame;
-	target.header.stamp=ros::Time::now();
-	
-	//pub.publish(target);
-}
-
-
 
 float trajectoryLengthControl2(float theta)
 {
@@ -260,8 +191,6 @@ void targetMaker(trajectory_generation::TrajectoryGeneration::Request req,
 	x_f.pose.position.z = 0;
 	x_f.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(0,0,theta);
 
-	//p_ss.alph_min = theta - 0.35;	// 0.52 : 30[deg], 0.35 : 20[deg]
-	//p_ss.alph_max = theta + 0.35;	// 0.52 : 30[deg]
 	p_ss.alph_min = theta - 0.786;	// 0.52 : 30[deg], 0.35 : 20[deg]
 	p_ss.alph_max = theta + 0.786;	// 0.52 : 30[deg]
 	if(p_ss.alph_min < -MaxAngle){
@@ -277,8 +206,6 @@ void targetMaker(trajectory_generation::TrajectoryGeneration::Request req,
 void knmConvertor(trajectory_generation::TrajectoryGeneration::Request req,
 					geometry_msgs::PoseStamped& x_f)
 {
-	//p_ss.d = req.r;
-	//float theta = req.goal.pose.position.x;
 	float theta = tf::getYaw(req.goal.pose.orientation);
 	p_ss.d = trajectoryLengthControl2(theta);
 	x_f.pose.position.x = p_ss.d * cos(theta);
@@ -286,17 +213,13 @@ void knmConvertor(trajectory_generation::TrajectoryGeneration::Request req,
 	x_f.pose.position.z = 0;
 	x_f.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(0,0,theta);
 
-	// p_ss.alph_min = theta - 0.35;	// 0.52 : 30[deg], 0.35 : 20[deg]
-	// p_ss.alph_max = theta + 0.35;	// 0.52 : 30[deg]
 	p_ss.alph_min = theta - 0.69;	// 0.52 : 30[deg], 0.35 : 20[deg]
 	p_ss.alph_max = theta + 0.69;	// 0.52 : 30[deg]
 	if(p_ss.alph_min < -MaxAngle){
 		p_ss.alph_min = -MaxAngle;
-		// p_ss.alph_max = -MaxAngle+0.7;
 	}
 	if(p_ss.alph_max > MaxAngle){
 		p_ss.alph_max = MaxAngle;
-		// p_ss.alph_min = MaxAngle-0.7;
 	}
 }
 
@@ -313,41 +236,6 @@ float setBoundaryStates(trajectory_generation::TrajectoryGeneration::Request req
 	x_i.pose.position.z=0;
 	x_i.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(0,0,0.0);
 	return_n = (p_ss.n_p * p_ss.n_h);
-	//p_ss.d = req.r;
-	//cout<<"req.r:"<<req.r<<endl;
-	//p_ss.d = vel_now*5+2.0;
-	if (wp_mode==TRACE) p_ss.d=0.5;//trace modeとそろえること
-//--------Teledrive Mode !!
-	/*if(req.teledrive){
-		geometry_msgs::PoseStamped x_f;
-		targetMaker(req, x_f);
-		generateGloballyGuidedBoundaryStates(p_ss,x_i, x_f, boundary_state);
-//--------Autonomy Mode !!
-	}else{*/
-		if(!req.fin){
-			//Forward trajectory
-			if((req.params.vt+req.params.vf) > 0){
-				return_n = (p_ss.n_p * p_ss.n_h);
-				geometry_msgs::PoseStamped x_f;
-				knmConvertor(req, x_f);
-				cout<<"req.goal: "<<req.goal<<endl;
-				cout<<"x_f: "<<x_f<<endl;
-				generateGloballyGuidedBoundaryStates(p_ss,x_i, x_f, boundary_state);
-				//generateGloballyGuidedBoundaryStates(p_ss,x_i, req.goal, boundary_state);
-			//Back trajectory
-			}else{
-				p_ss.d = -1.2;
-				p_ss.psi_min=-0.2;
-				p_ss.psi_max=0.2;
-				p_ss.n_p = 13;
-				generateUniformBoundaryStates(p_ss,x_i,boundary_state);
-			}
-		/*}else{
-			//cout<<"---------------------goal!!--------------------"<<req.goal<<endl;
-			return_n = 10;
-			generateFinalBoundaryStates(p_ss, return_n, x_i, req.goal, boundary_state);
-		}*/
-	}
 	showPoses(boundary_state);
 	return return_n;
 }
@@ -370,7 +258,6 @@ int pickUpTrajectory(list<PathState> path_array,
 	}
 	
 	sort(path_array_tmp.begin(), path_array_tmp.end(), MY_LESS_DEFINITION());
-	showPose(goal);
 	float min_cost = INFINITY;
 	int iii=0;
 	std::cout<<"num candidate of path: "<< path_array_tmp.size()<< std::endl;
@@ -443,20 +330,15 @@ bool server(trajectory_generation::TrajectoryGeneration::Request  &req,
 	if(req.teledrive){
 		geometry_msgs::PoseStamped x_f;
 		targetMaker(req, x_f);
-		showPose(x_f);
 		req.goal = x_f;
 	}
-    // cout<<"bbb"<<endl;
 	geometry_msgs::PoseArray boundary_state;
 	float state_n = setBoundaryStates(req, boundary_state);
-    // cout<<"ccc"<<endl;
-    ///////////////cout<<state_n<<endl;
 	
 	list<PathState> path_array;
 	generatePathArray(req, boundary_state, path_array);
 	
 	PathState pick_up_path;
-	showPose(req.goal);
 	req.goal.header.frame_id = header_frame;
 	cout << "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" << req.goal << endl;
 	res.tolerance = pickUpTrajectory(path_array, pick_up_path, req.goal);
@@ -465,13 +347,10 @@ bool server(trajectory_generation::TrajectoryGeneration::Request  &req,
 	res.v_array.vel.clear();
 	res.path = pick_up_path.path;
 	res.v_array = pick_up_path.v_a;
-	// res.tolerance=tol;
 	res.path.header.frame_id=header_frame;
 	res.path.header.stamp=req.header.stamp;
 	
 	showPathArray(path_array, state_n);
-	
-    //showPath(res.path);
 	
 	end = clock();
 	ROS_INFO("Responce Time: %f", (double)(end-start)/CLOCKS_PER_SEC);
@@ -498,18 +377,16 @@ int main(int argc, char **argv)
 	ros::init(argc, argv, "generate_server");
 	ros::NodeHandle n;
 	
-	//ros::Publisher pub1 = n.advertise<visualization_msgs::Marker>("plan/localpath_vis", 100);
-	//ros::Publisher pub3 = n.advertise<visualization_msgs::MarkerArray>("plan/path_recomend", 100);
+	//publish
 	ros::Publisher pub3 = n.advertise<visualization_msgs::MarkerArray>("plan/path_recomend_shogo", 100);
 	ros::Publisher pub2 = n.advertise<geometry_msgs::PoseArray>("plan/poses", 100);
+
+	//service
 	ros::ServiceServer service = n.advertiseService("/plan/local_path", server);
+
+	//subscribe
 	ros::Subscriber sub1 = n.subscribe("/local_map", 5, mapCallback);
-	//ros::Subscriber sub1 = n.subscribe("/local_map/expand/gc", 5, mapCallback);
 	ros::Subscriber sub_odom = n.subscribe("/tinypower/odom", 5, odomCallback);
-	ros::Subscriber mode_sub = n.subscribe("/wp_mode", 1, WpModeCallback);
-	// ros::Subscriber sub1 = n.subscribe("/local_map/global_coord/expanded", 1, mapCallback);
-	// ros::Subscriber sub1 = n.subscribe("/local_map/global_coord", 1, mapCallback);
-	// ros::Subscriber sub1 = n.subscribe("/map/local_map_with_gc", 100, mapCallback);//20141013 written by masada
 	
 	{
 		boost::mutex::scoped_lock(pose_pub_mutex_);	

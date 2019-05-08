@@ -7,6 +7,11 @@ RUN apt-get install -y sudo \
                        lsb-release \
                        mesa-utils
 
+RUN apt-get update
+
+RUN apt-get install -y ros-kinetic-pcl* \
+						libpcl-dev
+
 WORKDIR /root
 
 # ROS setting

@@ -1,0 +1,7 @@
+Header header
+nav_msgs/Path path
+trajectory_generation/path_params params
+trajectory_generation/VelocityArray v_array
+float32 tolerance
+---
+bool flag

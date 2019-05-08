@@ -1,0 +1,5 @@
+geometry_msgs/PoseStamped goal
+---
+trajectory_generation/path_params params
+geometry_msgs/PoseStamped goal
+int8 flag

@@ -1,0 +1,10 @@
+Header header
+bool final
+geometry_msgs/PoseStamped start
+geometry_msgs/PoseStamped goal
+trajectory_generation/path_params params
+---
+nav_msgs/Path path
+trajectory_generation/path_params params
+trajectory_generation/VelocityArray v_array
+float32 tolerance

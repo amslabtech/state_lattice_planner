@@ -3,7 +3,7 @@
 #include <trajectory_generation/Velocity.h>
 #include <trajectory_generation/VelocityArray.h>
 #include <tf/transform_listener.h>
-#include <knm_tiny_msgs/Velocity.h>
+#include <geometry_msgs/Twist.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <std_msgs/Float64.h>
 #include <std_msgs/Bool.h>
@@ -20,7 +20,7 @@ ros::Publisher vel_pub;
 int time_count=0;
 bool v_a_flag=false, cheat_flag=false, target_flag=false, odom_flag=false;
 bool intersection=false;
-knm_tiny_msgs::Velocity cheat_vel;
+geometry_msgs::Twist cheat_vel;
 boost::mutex v_array_mutex_;
 trajectory_generation::VelocityArray g_v_array; 
 float target=0.0;
@@ -54,44 +54,44 @@ float angle_diff(float a, float b)
     return(d2);
 }
 
-void setStopCommand(knm_tiny_msgs::Velocity& cmd_vel)
+void setStopCommand(geometry_msgs::Twist& cmd_vel)
 {
-	cmd_vel.op_linear = 0;
-	cmd_vel.op_angular = 0;
+	cmd_vel.linear.x = 0;
+	cmd_vel.angular.z = 0;
 }
 
-void setTurnCommand(knm_tiny_msgs::Velocity& cmd_vel,
+void setTurnCommand(geometry_msgs::Twist& cmd_vel,
 					float& target,
 					float& robo)
 {
 	float turn_angular = 0.2;
 	float turn_dir = 1;
 	if(angle_diff(target, robo)>0) turn_dir=-1;
-	cmd_vel.op_linear = 0;
-	cmd_vel.op_angular = turn_dir * turn_angular;
+	cmd_vel.linear.x = 0;
+	cmd_vel.angular.z = turn_dir * turn_angular;
 	cout<<"now turn"<<endl;
 }
 
 void commandDecision(	trajectory_generation::VelocityArray& v_a,
-						knm_tiny_msgs::Velocity& cmd_vel)
+						geometry_msgs::Twist& cmd_vel)
 {
 	// float hoge = 0.6*10.0/0.4;
 	float hoge = 15;
 	int ind = hoge+time_count;
 	if((int)v_a.vel.size() > ind){
-		cmd_vel.header.stamp = ros::Time::now();
-		cmd_vel.op_linear = v_a.vel[ind].op_linear;
-		cmd_vel.op_angular = -v_a.vel[ind].op_angular;
+		// cmd_vel.header.stamp = ros::Time::now();
+		cmd_vel.linear.x = v_a.vel[ind].op_linear;
+		cmd_vel.angular.z = -v_a.vel[ind].op_angular;
 	}else{
-		cmd_vel.op_linear = 0;
-		cmd_vel.op_angular = 0;
+		cmd_vel.linear.x = 0;
+		cmd_vel.angular.z = 0;
 	}
-	//cout<<"lin1 = "<<cmd_vel.op_linear<<"\tang1 = "<<cmd_vel.op_angular<<endl;
+	//cout<<"lin1 = "<<cmd_vel.linear.x<<"\tang1 = "<<cmd_vel.angular.z<<endl;
 }
 
-void CheatCallback(const knm_tiny_msgs::VelocityPtr& msg){
-	cheat_vel.op_linear = msg->op_linear;
-	cheat_vel.op_angular = msg->op_angular;
+void CheatCallback(const geometry_msgs::TwistPtr& msg){
+	cheat_vel.linear.x = msg->linear.x;
+	cheat_vel.angular.z = msg->angular.z;
 	cheat_flag = true;
 }
 
@@ -138,11 +138,11 @@ void MotionPlanner()
 	
 	ros::Subscriber mode_sub = n.subscribe("/mode",1,ModeCallback);
 
-	vel_pub = n.advertise<knm_tiny_msgs::Velocity>("tinypower/command_velocity", 10);
+	vel_pub = n.advertise<geometry_msgs::Twist>("tinypower/command_velocity", 10);
 	
 	bool turn_flag = false;
 	int stop_count=0;
-	knm_tiny_msgs::Velocity cmd_vel;
+	geometry_msgs::Twist cmd_vel;
 
 	ros::Rate loop_rate(10);
 	while(ros::ok()){
@@ -198,15 +198,15 @@ void MotionPlanner()
 			}
 			
 			// safety //
-			if (cmd_vel.op_linear>Vmax) cmd_vel.op_linear=Vmax;
-			if (cmd_vel.op_angular>ANGULARmax) cmd_vel.op_angular=ANGULARmax;
-			else if (cmd_vel.op_angular<-ANGULARmax) cmd_vel.op_angular=-ANGULARmax;
+			if (cmd_vel.linear.x>Vmax) cmd_vel.linear.x=Vmax;
+			if (cmd_vel.angular.z>ANGULARmax) cmd_vel.angular.z=ANGULARmax;
+			else if (cmd_vel.angular.z<-ANGULARmax) cmd_vel.angular.z=-ANGULARmax;
 			
 			// publish //
 			vel_pub.publish(cmd_vel);
 			
 			cout<<"mode: "<<mode<<endl;
-			cout<<"lin = "<<cmd_vel.op_linear<<"\tang = "<<cmd_vel.op_angular<<endl<<endl;
+			cout<<"lin = "<<cmd_vel.linear.x<<"\tang = "<<cmd_vel.angular.z<<endl<<endl;
 			
 			turn_flag=false;
 		}
@@ -221,8 +221,8 @@ void MotionPlanner()
 			cout<<"odom_flag:"<<odom_flag<<endl;
 			cout<<"cheat_flag:"<<cheat_flag<<endl;
 			cout<<"-----------"<<endl;
-			cmd_vel.op_linear=0;
-			cmd_vel.op_angular=0;
+			cmd_vel.linear.x=0;
+			cmd_vel.angular.z=0;
 			vel_pub.publish(cmd_vel);
 		}
 		time_count++;

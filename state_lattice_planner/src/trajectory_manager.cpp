@@ -192,7 +192,7 @@ void LocalGoalCallback(const geometry_msgs::PoseStampedConstPtr& msg)
     l_goal_flag=true;
 }
 
-void tinyCallback(const nav_msgs::OdometryConstPtr& msg)
+void OdomCallback(const nav_msgs::OdometryConstPtr& msg)
 {
 	g_odo=*msg; 
 	odometry_flag = true;
@@ -201,12 +201,12 @@ void tinyCallback(const nav_msgs::OdometryConstPtr& msg)
 void trajectoryManage()
 {
 	ros::NodeHandle n;
-	ros::ServiceClient client = n.serviceClient<trajectory_generation::TrajectoryGeneration>("/plan/local_path");
-	ros::Subscriber tiny_sub = n.subscribe("/tinypower/odom", 1, tinyCallback);
+	ros::ServiceClient client = n.serviceClient<trajectory_generation::TrajectoryGeneration>("/local_path/local_path");
+	ros::Subscriber odom_sub = n.subscribe("/odom", 1, OdomCallback);
 	ros::Subscriber l_goal_sub = n.subscribe("/local_goal", 1, LocalGoalCallback);
 	
-	ros::Publisher visu_path_pub = n.advertise<visualization_msgs::Marker>("plan/localpath_vis_shogo", 10);
-	ros::Publisher vel_arr_pub = n.advertise<trajectory_generation::VelocityArray>("plan/velocity_array", 10);
+	ros::Publisher visu_path_pub = n.advertise<visualization_msgs::Marker>("/local_path/localpath_vis", 10);
+	ros::Publisher vel_arr_pub = n.advertise<trajectory_generation::VelocityArray>("/local_path/velocity_array", 10);
 	
     tf::TransformListener listener;
     std_msgs::Bool back_flag;

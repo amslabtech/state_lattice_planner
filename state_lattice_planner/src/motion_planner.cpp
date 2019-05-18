@@ -59,7 +59,7 @@ void MotionPlanner()
 {
 	ros::NodeHandle n;
 	ros::Subscriber joy_sub   = n.subscribe("/joy/vel", 10, JoyCallback);
-	ros::Subscriber v_array_sub = n.subscribe("/plan/velocity_array", 10, vArrayCallback);
+	ros::Subscriber v_array_sub = n.subscribe("/local_path/velocity_array", 10, vArrayCallback);
 	ros::Subscriber stop_sub = n.subscribe("/stop",1,StopCallback);
 
 	vel_pub = n.advertise<geometry_msgs::Twist>("/cmd_vel", 10);

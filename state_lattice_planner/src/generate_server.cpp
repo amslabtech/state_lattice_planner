@@ -360,7 +360,7 @@ bool server(trajectory_generation::TrajectoryGeneration::Request  &req,
 
 int main(int argc, char **argv)
 {
-	const string package_path_str("/home/amsl/ros_catkin_ws/src/state_lattice_planner/");
+	const string package_path_str("/home/amsl/ros_catkin_ws/src/rwrc19/state_lattice_planner/state_lattice_planner/");
 	trajectory.fileInput(package_path_str+"/look_up_table/infant/v-03.bin",-0.3);
 	trajectory.fileInput(package_path_str+"/look_up_table/infant/v-02.bin",-0.2);
 	trajectory.fileInput(package_path_str+"/look_up_table/infant/v-01.bin",-0.1);
@@ -378,15 +378,15 @@ int main(int argc, char **argv)
 	ros::NodeHandle n;
 	
 	//publish
-	ros::Publisher pub3 = n.advertise<visualization_msgs::MarkerArray>("plan/path_recomend_shogo", 100);
-	ros::Publisher pub2 = n.advertise<geometry_msgs::PoseArray>("plan/poses", 100);
+	ros::Publisher pub3 = n.advertise<visualization_msgs::MarkerArray>("/local_path/path_recomend", 100);
+	ros::Publisher pub2 = n.advertise<geometry_msgs::PoseArray>("/local_path/poses", 100);
 
 	//service
-	ros::ServiceServer service = n.advertiseService("/plan/local_path", server);
+	ros::ServiceServer service = n.advertiseService("/local_path/local_path", server);
 
 	//subscribe
 	ros::Subscriber sub1 = n.subscribe("/local_map", 5, mapCallback);
-	ros::Subscriber sub_odom = n.subscribe("/tinypower/odom", 5, odomCallback);
+	ros::Subscriber sub_odom = n.subscribe("/odom", 5, odomCallback);
 	
 	{
 		boost::mutex::scoped_lock(pose_pub_mutex_);	

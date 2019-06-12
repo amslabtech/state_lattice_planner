@@ -21,8 +21,8 @@
 #define TRACE 1
 using namespace std;
 
-const string header_frame("/localmap");
-const string robot_frame("/velodyne_odom");
+const string header_frame("/base_link");
+const string robot_frame("/velodyne");
 
 //callback mutex
 boost::mutex l_goal_mutex_;

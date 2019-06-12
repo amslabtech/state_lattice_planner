@@ -21,8 +21,8 @@ const float Lmin = 2.0;
 const float Lmax = 5.0;
 const float MaxAngle = 1.2;
 
-const string header_frame("/localmap");
-const string header_frame2("/velodyne_odom");
+const string header_frame("/base_link");
+const string header_frame2("/velodyne");
 using namespace std;
 
 //-----------Pathの構造体-----------//
@@ -91,7 +91,7 @@ void pathLocalGlobal(nav_msgs::Path& path, geometry_msgs::PoseStamped loc)
 {
 	int length=path.poses.size();
 	nav_msgs::Odometry zero;
-	float angle = tf::getYaw(loc.pose.orientation) - 0;
+	float angle = tf::getYaw(loc.pose.orientation);
 	for(int i=0;i<length;i++){
 		float tmp_x = path.poses[i].pose.position.x - zero.pose.pose.position.x;
 		float tmp_y = path.poses[i].pose.position.y - zero.pose.pose.position.y;
@@ -100,13 +100,6 @@ void pathLocalGlobal(nav_msgs::Path& path, geometry_msgs::PoseStamped loc)
 		path.poses[i].pose.position.x = conv_x + loc.pose.position.x;
 		path.poses[i].pose.position.y = conv_y + loc.pose.position.y;
 	}
-}
-
-string IntToString(int number)
-{
-	stringstream ss;
-	ss << number;
-	return ss.str();
 }
 
 void showPathArray(list<PathState> path_array, int num)
@@ -128,14 +121,12 @@ void showPathArray(list<PathState> path_array, int num)
 	visualization_msgs::MarkerArray lines, txts;
 	list<PathState>::iterator it = path_array.begin();
 	while( it != path_array.end() ){
-		visualization_msgs::Marker line1, txt1;
+		visualization_msgs::Marker line1;
 		nav_msgs::Path path;
 		path = (*it).path;
 		int id = (*it).id;
 		marker_line->convertPath2MarkerLine(path, line1, i);
-		marker_txt->txtMarker(IntToString(id), (*it).goal, txt1, i);
 		lines.markers.push_back(line1);
-		txts.markers.push_back(txt1);
 		i++;
 		++it;
 	}
@@ -236,6 +227,25 @@ float setBoundaryStates(trajectory_generation::TrajectoryGeneration::Request req
 	x_i.pose.position.z=0;
 	x_i.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(0,0,0.0);
 	return_n = (p_ss.n_p * p_ss.n_h);
+	p_ss.d=0.5;
+    if(!req.fin){
+	    //Forward trajectory
+        if((req.params.vt+req.params.vf) > 0){
+    		return_n = (p_ss.n_p * p_ss.n_h);
+        	geometry_msgs::PoseStamped x_f;
+            knmConvertor(req, x_f);
+            cout<<"req.goal: "<<req.goal<<endl;
+            cout<<"x_f: "<<x_f<<endl;
+            generateGloballyGuidedBoundaryStates(p_ss,x_i, x_f, boundary_state);
+    	//Back trajectory
+		}else{
+            p_ss.d = -1.2;
+            p_ss.psi_min=-0.2;
+            p_ss.psi_max=0.2;
+            p_ss.n_p = 13;
+            generateUniformBoundaryStates(p_ss,x_i,boundary_state);
+        }
+     }
 	showPoses(boundary_state);
 	return return_n;
 }

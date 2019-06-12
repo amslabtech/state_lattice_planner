@@ -1,3 +1,6 @@
+//
+//
+//
 #include "trajectory_generation/trajectory_generation.h"
 
 #include <trajectory_generation/TrajectoryGeneration.h>
@@ -20,6 +23,8 @@ void TrajectoryGeneration::fileInput(const string str, const float id)
 	ifstream ifs(file_name, ios::binary);
 	ROS_INFO("Look Up Table setting....id:%f",id);
 	if( !ifs ){
+		//cout << "Error:Non file!!!!!---------Is this file's name correct?"<<endl;
+		//cout << str <<endl;
 		ROS_FATAL( "Error:Non file!!!!!---------Is this file's name correct?\n------->%s\n",str.c_str());
 		exit(0);
 	}else{
@@ -199,6 +204,53 @@ TrajectoryGeneration::planning(trajectory_generation::TrajectoryGeneration::Resp
 	return c.norm();
 }
 
+
+geometry_msgs::PoseStamped
+TrajectoryGeneration::saitekikaSinai(CntlParam& cntl_out, float dt)
+{
+	geometry_msgs::PoseStamped traj;
+	cntl_out.velocity.tf=estimateTime(cntl_out.velocity, cntl_out.curv);
+	cntl_out.curv.makeSpline();
+	makeVProfile(dt, cntl_out.velocity);
+	
+	Eigen::VectorXf x(5), x0(5), xf(5);
+	x<<0,0,0,cntl_out.velocity.v0,cntl_out.curv.k0;
+	
+	for(float time=-t_delay; time<cntl_out.velocity.tf+dt; time+=dt){
+//		cout<<"time = "<<time<<endl;
+		motionModel(xf, x, cntl_out, dt, time);
+		x=xf;
+		traj.pose.position.x=x(0);
+		traj.pose.position.y=x(1);		
+		traj.pose.orientation.w=x(2);
+	}
+	return traj;
+}
+
+nav_msgs::Path
+TrajectoryGeneration::saitekikaSinaiPath(CntlParam& cntl_out, float dt)
+{
+	nav_msgs::Path path;
+	geometry_msgs::PoseStamped traj;
+	cntl_out.velocity.tf=estimateTime(cntl_out.velocity, cntl_out.curv);
+	cntl_out.curv.makeSpline();
+	makeVProfile(dt, cntl_out.velocity);
+	
+	Eigen::VectorXf x(5), x0(5), xf(5);
+	x<<0,0,0,cntl_out.velocity.v0,cntl_out.curv.k0;
+	
+	for(float time=-t_delay; time<cntl_out.velocity.tf+dt; time+=dt){
+//		cout<<"time = "<<time<<endl;
+		motionModel(xf, x, cntl_out, dt, time);
+		x=xf;
+		traj.pose.position.x=x(0);
+		traj.pose.position.y=x(1);		
+//		traj.pose.orientation.w=x(2);
+		path.poses.push_back(traj);
+	}
+	return path;
+}
+
 float
 TrajectoryGeneration::estimateTime(const VelParam & upv, const CurvParam& upk){
 
@@ -235,6 +287,36 @@ TrajectoryGeneration::motionModel(Eigen::VectorXf& x_next, const Eigen::VectorXf
 	
 	x_next=out;
 }
+
+/*
+float
+TrajectoryGeneration::vProfile(float time, const VelParam& upv)
+{
+	if(time<0){
+		return upv.v0;
+	}
+	float ta=fabs( (upv.vt-upv.v0)/upv.a0);
+	float td=upv.tf - fabs( (upv.vf-upv.vt)/upv.af);
+	
+	float v=0;
+	
+	if(time<ta){
+		v=upv.v0+time*upv.a0;
+	}else if(ta <= time && time <= td){
+		v=upv.vt;
+	}else{
+		v=upv.vt+(time-td)*upv.af;
+		//cout<<"Time!!!"<<time<<"\tupv.tf"<<v<<endl;
+	}
+	
+	if(time>upv.tf){
+		v=upv.vf;
+		
+	}
+	
+	return v;
+}*/
+
 
 float
 TrajectoryGeneration::curvProfile(float time, const CurvParam & upk, const VelParam& upv, float dt)
@@ -292,6 +374,15 @@ void
 TrajectoryGeneration::speedControlLogic(Eigen::VectorXf& out)
 {
 	//This is used in Urbanchallenge "Boss"
+	/*
+	float v_cmd_abs = fabs(out[3]);
+	float v_cmd_max = max(v_scl,(out[4]-a_scl)/b_scl);
+	float k_max_scl = min(k_max,(a_scl+b_scl*v_cmd_abs));
+	if( fabs(out(4)) >= k_max_scl){
+		v_cmd_abs = fabs( safety*v_cmd_max );
+	}
+	out[3] = v_cmd_abs * (out[3]/fabs(out[3]));
+	*/
 	float k_cmd_abs = fabs(out[4]);
 	float yawrate = fabs(out[3] * out[4]);
 	if(yawrate > yawrate_max){
@@ -309,7 +400,10 @@ TrajectoryGeneration::makeJacob(Eigen::Matrix3f& J, float dt, const CntlParam& c
 	terminalState(x1, cntl.curv.k1-dk1, cntl.curv.kf, cntl.curv.sf, cntl, dt);
 	terminalState(x2, cntl.curv.k1+dk1, cntl.curv.kf, cntl.curv.sf, cntl, dt);
 	Eigen::Vector3f dc_dk1;
+	//cout<<"x1:"<<x1.transpose()<<endl;
+	//cout<<"x2:"<<x2.transpose()<<endl;
 	dc_dk1<< (x2(0)-x1(0))/2.0/dk1, (x2(1)-x1(1))/2.0/dk1, (x2(2)-x1(2))/2.0/dk1;
+	//cout<<"dc_dk1:"<<dc_dk1.transpose()<<endl;
 		
 	terminalState(x1, cntl.curv.k1, cntl.curv.kf-dkf, cntl.curv.sf, cntl, dt);
 	terminalState(x2, cntl.curv.k1, cntl.curv.kf+dkf, cntl.curv.sf, cntl, dt);
@@ -432,3 +526,4 @@ CurvParam::makeSpline()
 	p1[0]=ans(0);	p1[1]=ans(1);	p1[2]=y[0];
 	p2[0]=p1[0];	p2[1]=ans(2);	p2[2]=y[1];	
 }
+

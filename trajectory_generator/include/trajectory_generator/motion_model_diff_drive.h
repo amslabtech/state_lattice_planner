@@ -23,10 +23,32 @@ public:
     private:
     };
 
+    class VelocityParams
+    {
+    public:
+        VelocityParams(double, double);
+
+        double v0;
+        double time;
+    private:
+    };
+
+    class CurvatureParams
+    {
+    public:
+        CurvatureParams(double, double, double, double);
+
+        double k0;
+        double km;
+        double kf;
+        double sf;
+    private:
+    };
+
     void set_param(const double, const double, const double, const double, const double);
     void update(const State&, const double, const double, const double, State&);
-    void calculate_spline(const Eigen::Vector3d, const double, Eigen::VectorXd&, Eigen::VectorXd&);
-    void generate_trajectory(const double, const double, const double, const double, const double, const double, std::vector<double>&, std::vector<double>&, std::vector<double>&);
+    void calculate_spline(const CurvatureParams&, Eigen::VectorXd&, Eigen::VectorXd&);
+    void generate_trajectory(const double, const double, const CurvatureParams&, std::vector<double>&, std::vector<double>&, std::vector<double>&);
     void generate_last_state(const double, const double, const double, const double, const double, const double, Eigen::Vector3d&);
     double calculate_cubic_function(const double, const Eigen::VectorXd&);
 

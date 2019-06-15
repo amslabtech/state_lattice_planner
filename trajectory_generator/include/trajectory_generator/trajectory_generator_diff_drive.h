@@ -12,6 +12,7 @@ class TrajectoryGeneratorDiffDrive
 public:
     TrajectoryGeneratorDiffDrive(void);
 
+    void generate_trajectory(const Eigen::Vector3d&, const double);
     void get_jacobian(const Eigen::Vector3d&, const double, const double, const double, const double, const double, const double, const Eigen::Vector3d&, Eigen::Matrix3d&);
 
 private:

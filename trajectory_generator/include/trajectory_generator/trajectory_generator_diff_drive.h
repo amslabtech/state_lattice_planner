@@ -13,7 +13,7 @@ public:
     TrajectoryGeneratorDiffDrive(void);
 
     void set_param(const double, const double, const double);
-    double generate_optimized_trajectory(const Eigen::Vector3d&, const MotionModelDiffDrive::VelocityParams&, const double, const double, const int, MotionModelDiffDrive::VelocityParams&, MotionModelDiffDrive::CurvatureParams&, std::vector<Eigen::Vector3d>&);
+    double generate_optimized_trajectory(const Eigen::Vector3d&, const MotionModelDiffDrive::VelocityParams&, const MotionModelDiffDrive::CurvatureParams&, const double, const double, const int, MotionModelDiffDrive::VelocityParams&, MotionModelDiffDrive::CurvatureParams&, std::vector<Eigen::Vector3d>&);
     void get_jacobian(const double, const double, const MotionModelDiffDrive::CurvatureParams&, const Eigen::Vector3d&, Eigen::Matrix3d&);
 
 private:

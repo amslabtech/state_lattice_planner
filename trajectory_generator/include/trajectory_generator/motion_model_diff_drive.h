@@ -26,6 +26,7 @@ public:
     class VelocityParams
     {
     public:
+        VelocityParams(void);
         VelocityParams(double, double);
 
         double v0;
@@ -36,6 +37,7 @@ public:
     class CurvatureParams
     {
     public:
+        CurvatureParams(void);
         CurvatureParams(double, double, double, double);
 
         void calculate_spline(void);

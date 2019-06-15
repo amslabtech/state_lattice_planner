@@ -19,10 +19,20 @@ MotionModelDiffDrive::State::State(double _x, double _y, double _yaw, double _v,
     curvature = _curvature;
 }
 
+MotionModelDiffDrive::VelocityParams::VelocityParams(void)
+{
+
+}
 MotionModelDiffDrive::VelocityParams::VelocityParams(double _v0, double _time)
 {
     v0 = _v0;
     time = _time;
+}
+
+MotionModelDiffDrive::CurvatureParams::CurvatureParams(void)
+{
+    coeff_0_m = Eigen::VectorXd::Zero(4);
+    coeff_m_f = Eigen::VectorXd::Zero(4);
 }
 
 MotionModelDiffDrive::CurvatureParams::CurvatureParams(double _k0, double _km, double _kf, double _sf)

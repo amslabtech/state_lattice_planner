@@ -11,11 +11,12 @@ void TrajectoryGeneratorDiffDrive::set_param(const double dkm, const double dkf,
     h << dkm, dkf, dsf;
 }
 
-double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::Vector3d& goal, const MotionModelDiffDrive::VelocityParams& velocity, const double dt, const double tolerance, const int max_iteration, MotionModelDiffDrive::VelocityParams& output_v, MotionModelDiffDrive::CurvatureParams& output_c, std::vector<Eigen::Vector3d>& trajectory)
+double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::Vector3d& goal, const MotionModelDiffDrive::VelocityParams& init_v, const MotionModelDiffDrive::CurvatureParams& init_c, const double dt, const double tolerance, const int max_iteration, MotionModelDiffDrive::VelocityParams& output_v, MotionModelDiffDrive::CurvatureParams& output_c, std::vector<Eigen::Vector3d>& trajectory)
 {
     Eigen::Vector3d cost(1, 1, 1);
 
-    output_v = velocity;
+    output_v = init_v;
+    output_c = init_c;
 
     int count = 0;
 
@@ -28,7 +29,6 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
         }
         trajectory.clear();
         double time = goal.norm() / output_v.v0;
-        output_c.calculate_spline();
         model.generate_trajectory(dt, output_v.v0, output_c, trajectory);
 
         Eigen::Matrix3d jacobian;

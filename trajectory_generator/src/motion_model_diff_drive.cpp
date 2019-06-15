@@ -50,7 +50,7 @@ void MotionModelDiffDrive::update(const State& s, const double v, const double c
     output_s.x += v * cos(s.yaw) * dt; 
     output_s.y += v * sin(s.yaw) * dt; 
     output_s.yaw += curv * v * dt;
-    output_s.yaw = atan2(sin(s.yaw), cos(s.yaw));
+    output_s.yaw = atan2(sin(output_s.yaw), cos(output_s.yaw));
     output_s.v = v;
     output_s.curvature = curv;
 }
@@ -81,10 +81,10 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const double v0,
     State state_(0, 0, 0, v0, _curv.k0);
     trajectory[0] << state.x, state.y, state.yaw;
 
-    for(int i=0;i<N-1;i++){
-        update(state, s_profile[i], curv_profile[i], dt, state_);
+    for(int i=1;i<N;i++){
+        update(state, (s_profile[i]-s_profile[i-1])/dt, curv_profile[i], dt, state_);
         state = state_;
-        trajectory[i + 1] << state.x, state.y, state.yaw;
+        trajectory[i] << state.x, state.y, state.yaw;
     }
 }
 

@@ -38,6 +38,19 @@ TEST(TestSuite, test1)
 	EXPECT_NEAR(-1.0, cf, 0.01);
 }
 
+TEST(TestSuite, test2)
+{
+	ros::NodeHandle nh;
+    MotionModelDiffDrive mm;
+    MotionModelDiffDrive::CurvatureParams curv(0.0, 0.0, 0.0, 5);
+    std::vector<Eigen::Vector3d> trajectory;
+    mm.generate_trajectory(0.01, 0.5, curv, trajectory);
+
+    EXPECT_NEAR(5, trajectory.back()(0), 0.05);
+    EXPECT_NEAR(0, trajectory.back()(1), 0.05);
+    EXPECT_NEAR(0, trajectory.back()(2), 0.01);
+}
+
 int main(int argc, char** argv)
 {
 	testing::InitGoogleTest(&argc, argv);

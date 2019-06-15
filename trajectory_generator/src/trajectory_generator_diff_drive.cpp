@@ -2,41 +2,75 @@
 
 TrajectoryGeneratorDiffDrive::TrajectoryGeneratorDiffDrive(void)
 {
-
+    // default
+    h << 0.005, 0.005, 0.1;
 }
 
-void TrajectoryGeneratorDiffDrive::get_jacobian(const Eigen::Vector3d& target, const double dt, const double v0, const double sf, const double k0, const double km, const double kf, const Eigen::Vector3d& h, Eigen::Matrix3d& j)
+void TrajectoryGeneratorDiffDrive::set_param(const double dkm, const double dkf, const double dsf)
+{
+    h << dkm, dkf, dsf;
+}
+
+double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::Vector3d& goal, const MotionModelDiffDrive::VelocityParams& velocity, const double dt, const double tolerance, const int max_iteration, MotionModelDiffDrive::VelocityParams& output_v, MotionModelDiffDrive::CurvatureParams& output_c, std::vector<Eigen::Vector3d>& trajectory)
+{
+    Eigen::Vector3d cost(1, 1, 1);
+
+    output_v = velocity;
+
+    int count = 0;
+
+    while(cost.norm() > tolerance && count < max_iteration){
+        trajectory.clear();
+        double time = goal.norm() / output_v.v0;
+        output_c.calculate_spline();
+        model.generate_trajectory(dt, output_v.v0, output_c, trajectory);
+
+        Eigen::Matrix3d jacobian;
+        get_jacobian(dt, output_v.v0, output_c, h, jacobian);
+        cost = goal - trajectory.back();
+        Eigen::Vector3d dp = jacobian.lu().solve(cost);
+
+        output_c.km += dp(0);
+        output_c.kf += dp(1);
+        output_c.sf += dp(2);
+
+        count++;
+    }
+    return cost.norm();
+}
+
+void TrajectoryGeneratorDiffDrive::get_jacobian(const double dt, const double v0, const MotionModelDiffDrive::CurvatureParams& curv, const Eigen::Vector3d& h, Eigen::Matrix3d& j)
 {
     /*
      * h: (dkm, dkf, dsf)
      */
     Eigen::Vector3d x0;
-    model.generate_last_state(dt, sf, v0, k0, km - h(0), kf, x0);
+    model.generate_last_state(dt, curv.sf, v0, curv.k0, curv.km - h(0), curv.kf, x0);
     Eigen::Vector3d x1;
-    model.generate_last_state(dt, sf, v0, k0, km + h(0), kf, x1);
+    model.generate_last_state(dt, curv.sf, v0, curv.k0, curv.km + h(0), curv.kf, x1);
 
-    Eigen::Vector3d dp_dkm;
-    dp_dkm << (x1(0) - x0(0)) / (2.0 * h(0)),
+    Eigen::Vector3d dx_dkm;
+    dx_dkm << (x1(0) - x0(0)) / (2.0 * h(0)),
               (x1(1) - x0(1)) / (2.0 * h(0)),
               (x1(2) - x0(2)) / (2.0 * h(0));
 
-    model.generate_last_state(dt, sf, v0, k0, km, kf - h(1), x0);
-    model.generate_last_state(dt, sf, v0, k0, km, kf + h(1), x1);
+    model.generate_last_state(dt, curv.sf, v0, curv.k0, curv.km, curv.kf - h(1), x0);
+    model.generate_last_state(dt, curv.sf, v0, curv.k0, curv.km, curv.kf + h(1), x1);
 
-    Eigen::Vector3d dp_dkf;
-    dp_dkf << (x1(0) - x0(0)) / (2.0 * h(1)),
+    Eigen::Vector3d dx_dkf;
+    dx_dkf << (x1(0) - x0(0)) / (2.0 * h(1)),
               (x1(1) - x0(1)) / (2.0 * h(1)),
               (x1(2) - x0(2)) / (2.0 * h(1));
 
-    model.generate_last_state(dt, sf - h(2), v0, k0, km, kf, x0);
-    model.generate_last_state(dt, sf + h(2), v0, k0, km, kf, x1);
+    model.generate_last_state(dt, curv.sf - h(2), v0, curv.k0, curv.km, curv.kf, x0);
+    model.generate_last_state(dt, curv.sf + h(2), v0, curv.k0, curv.km, curv.kf, x1);
 
-    Eigen::Vector3d dp_dsf;
-    dp_dsf << (x1(0) - x0(0)) / (2.0 * h(2)),
+    Eigen::Vector3d dx_dsf;
+    dx_dsf << (x1(0) - x0(0)) / (2.0 * h(2)),
               (x1(1) - x0(1)) / (2.0 * h(2)),
               (x1(2) - x0(2)) / (2.0 * h(2));
 
-    j << dp_dkm(0), dp_dkf(0), dp_dsf(0),
-         dp_dkm(1), dp_dkf(1), dp_dsf(1),
-         dp_dkm(2), dp_dkf(2), dp_dsf(2);
+    j << dx_dkm(0), dx_dkf(0), dx_dsf(0),
+         dx_dkm(1), dx_dkf(1), dx_dsf(1),
+         dx_dkm(2), dx_dkf(2), dx_dsf(2);
 }

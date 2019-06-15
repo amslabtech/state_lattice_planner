@@ -12,11 +12,14 @@ class TrajectoryGeneratorDiffDrive
 public:
     TrajectoryGeneratorDiffDrive(void);
 
-    void generate_trajectory(const Eigen::Vector3d&, const double);
-    void get_jacobian(const Eigen::Vector3d&, const double, const double, const double, const double, const double, const double, const Eigen::Vector3d&, Eigen::Matrix3d&);
+    void set_param(const double, const double, const double);
+    double generate_optimized_trajectory(const Eigen::Vector3d&, const MotionModelDiffDrive::VelocityParams&, const double, const double, const int, MotionModelDiffDrive::VelocityParams&, MotionModelDiffDrive::CurvatureParams&, std::vector<Eigen::Vector3d>&);
+    void get_jacobian(const double, const double, const MotionModelDiffDrive::CurvatureParams&, const Eigen::Vector3d&, Eigen::Matrix3d&);
 
 private:
     MotionModelDiffDrive model;
+
+    Eigen::Vector3d h;
 };
 
 #endif //__TRAJECTORY_GENERATOR_DIFF_DRIVE_H

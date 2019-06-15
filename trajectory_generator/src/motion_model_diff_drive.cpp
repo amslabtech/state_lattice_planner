@@ -53,13 +53,12 @@ void MotionModelDiffDrive::update(const State& s, const double v, const double c
     output_s.curvature = curv;
 }
 
-void MotionModelDiffDrive::generate_trajectory(const double dt, const double v0, const CurvatureParams& curv, std::vector<double>& x_list, std::vector<double>& y_list, std::vector<double>& yaw_list)
+void MotionModelDiffDrive::generate_trajectory(const double dt, const double v0, const CurvatureParams& curv, std::vector<Eigen::Vector3d>& trajectory)
 {
     const int N = curv.sf / trajectory_resolution;
 
-    Eigen::VectorXd coeff0(4);
-    Eigen::VectorXd coeff1(4);
-    calculate_spline(curv, coeff0, coeff1); 
+    CurvatureParams _curv = curv;
+    _curv.calculate_spline(); 
     std::vector<double> s_profile;
     for(int i=0;i<N;i++){
         s_profile.push_back(i * trajectory_resolution);
@@ -67,47 +66,42 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const double v0,
     std::vector<double> curv_profile;
     for(auto s : s_profile){
         double c = 0;
-        if(s < curv.sf / 2.0){
-            c = calculate_cubic_function(s, coeff0);
+        if(s < _curv.sf / 2.0){
+            c = calculate_cubic_function(s, _curv.coeff_0_m);
         }else{
-            c = calculate_cubic_function(s, coeff1);
+            c = calculate_cubic_function(s, _curv.coeff_m_f);
         }
         curv_profile.push_back(c);
     }
 
-    State state(0, 0, 0, v0, curv.k0);
-    State state_(0, 0, 0, v0, curv.k0);
-    x_list.push_back(state.x);
-    y_list.push_back(state.y);
-    yaw_list.push_back(state.yaw);
+    trajectory.resize(N);
+    State state(0, 0, 0, v0, _curv.k0);
+    State state_(0, 0, 0, v0, _curv.k0);
+    trajectory[0] << state.x, state.y, state.yaw;
 
     for(int i=0;i<N-1;i++){
         update(state, s_profile[i], curv_profile[i], dt, state_);
-        x_list.push_back(state.x);
-        y_list.push_back(state.y);
-        yaw_list.push_back(state.yaw);
         state = state_;
+        trajectory[i + 1] << state.x, state.y, state.yaw;
     }
 }
 
 void MotionModelDiffDrive::generate_last_state(const double dt, const double trajectory_length, const double v0, const double k0, const double km, const double kf, Eigen::Vector3d& output)
 {
-    std::vector<double> x_list;
-    std::vector<double> y_list;
-    std::vector<double> yaw_list;
+    std::vector<Eigen::Vector3d> trajectory;
     CurvatureParams curv(k0, km, kf, trajectory_length);
-    generate_trajectory(dt, v0, curv, x_list, y_list, yaw_list);
-    output << x_list.back(), y_list.back(), yaw_list.back();
+    generate_trajectory(dt, v0, curv, trajectory);
+    output << trajectory.back();
 }
 
-void MotionModelDiffDrive::calculate_spline(const CurvatureParams& curv, Eigen::VectorXd& coeff0, Eigen::VectorXd& coeff1)
+void MotionModelDiffDrive::CurvatureParams::calculate_spline(void)
 {
     Eigen::Vector3d x;
     x(0) = 0;
-    x(1) = curv.sf / 2.0;
-    x(2) = curv.sf;
+    x(1) = sf / 2.0;
+    x(2) = sf;
     Eigen::Vector3d y;
-    y << curv.k0, curv.km, curv.kf; 
+    y << k0, km, kf; 
 
     // cubic spline interpolation
     Eigen::MatrixXd s(8, 8);
@@ -127,8 +121,8 @@ void MotionModelDiffDrive::calculate_spline(const CurvatureParams& curv, Eigen::
     a = s.lu().solve(c);
     // ax^3 + bx^2 + cx + d = y
     // coeff: (a, b, c, d)
-    coeff0 = a.segment(0, 4);
-    coeff1 = a.segment(4, 4);
+    coeff_0_m = a.segment(0, 4);
+    coeff_m_f = a.segment(4, 4);
 }
 
 double MotionModelDiffDrive::calculate_cubic_function(const double x, const Eigen::VectorXd& coeff)

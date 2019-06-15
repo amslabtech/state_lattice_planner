@@ -31,6 +31,8 @@ MotionModelDiffDrive::CurvatureParams::CurvatureParams(double _k0, double _km, d
     km = _km;
     kf = _kf;
     sf = _sf;
+    coeff_0_m = Eigen::VectorXd::Zero(4);
+    coeff_m_f = Eigen::VectorXd::Zero(4);
 }
 
 void MotionModelDiffDrive::set_param(const double trajectory_resolution_, const double target_velocity_, const double max_curvature_, const double max_acceleration_, const double max_d_curvature_)
@@ -118,7 +120,7 @@ void MotionModelDiffDrive::CurvatureParams::calculate_spline(void)
     c << y(0), y(1), y(1), y(2), 0, 0, 0, 0;
 
     Eigen::VectorXd a(8);
-    a = s.lu().solve(c);
+    a = s.inverse() * c;
     // ax^3 + bx^2 + cx + d = y
     // coeff: (a, b, c, d)
     coeff_0_m = a.segment(0, 4);
@@ -127,5 +129,5 @@ void MotionModelDiffDrive::CurvatureParams::calculate_spline(void)
 
 double MotionModelDiffDrive::calculate_cubic_function(const double x, const Eigen::VectorXd& coeff)
 {
-    return coeff(0) * x * x * x + coeff(1) * x * x + coeff(2) + x + coeff(3);
+    return coeff(0) * x * x * x + coeff(1) * x * x + coeff(2) * x + coeff(3);
 }

@@ -19,7 +19,13 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
 
     int count = 0;
 
-    while(cost.norm() > tolerance && count < max_iteration){
+    while(1){
+        if(cost.norm() < tolerance){
+            break;
+        }else if(count >= max_iteration){
+            std::cout << "cannot optimize trajectory" << std::endl;
+            return -1;
+        }
         trajectory.clear();
         double time = goal.norm() / output_v.v0;
         output_c.calculate_spline();

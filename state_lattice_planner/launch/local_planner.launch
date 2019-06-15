@@ -1,6 +1,0 @@
-<?xml version="1.0"?>
-<launch>
-	<node name="trajectory_manager" pkg="state_lattice_planner" type="trajectory_manager"/>
-	<node name="generate_server" pkg="state_lattice_planner" type="generate_server"/>
-	<node name="motion_planner" pkg="state_lattice_planner" type="motion_planner"/>
-</launch>

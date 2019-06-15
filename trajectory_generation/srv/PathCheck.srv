@@ -1,7 +1,0 @@
-nav_msgs/Path path
-nav_msgs/OccupancyGrid map
----
-int32 cost
-nav_msgs/GridCells out_cells
-
-

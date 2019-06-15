@@ -31,6 +31,3 @@ RUN ln -sf /usr/include/eigen3/Eigen /usr/include/Eigen
 
 # clone repository
 WORKDIR /root
-
-RUN cd catkin_ws/src && git clone https://github.com/amslabtech/state_lattice_planner --depth=1
-

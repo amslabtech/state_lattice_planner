@@ -210,3 +210,16 @@ add_dependencies(trajectory_generator_diff_drive ${${PROJECT_NAME}_EXPORTED_TARG
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+if(CATKIN_ENABLE_TESTING)
+	find_package(rostest REQUIRED)
+    add_rostest_gtest(trajectory_generator_test 
+		test/trajectory_generator.test
+		test/trajectory_generator_test.cpp
+	)
+	target_link_libraries(trajectory_generator_test 
+        ${catkin_LIBRARIES}
+        motion_model_diff_drive
+        trajectory_generator_diff_drive
+    ) 
+endif()

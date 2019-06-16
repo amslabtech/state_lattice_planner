@@ -1,0 +1,5 @@
+<launch>
+
+	<test pkg="state_lattice_planner" type="state_lattice_planner_test" test-name="state_lattice_planner_test"/> 
+
+</launch>

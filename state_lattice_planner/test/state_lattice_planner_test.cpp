@@ -2,9 +2,12 @@
 
 #include <ros/ros.h>
 
+#include "state_lattice_planner/lookup_table_generator.h"
+
 TEST(TestSuite, test0)
 {
-	ros::NodeHandle nh;
+    LookupTableGenerator ltg;
+    ltg.process();
 	EXPECT_NEAR(1.0, 1.0, 0.01);
 }
 

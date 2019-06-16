@@ -33,13 +33,22 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
 
         Eigen::Matrix3d jacobian;
         get_jacobian(dt, output_v.v0, output_c, h, jacobian);
+        //std::cout << "j: \n" << jacobian << std::endl;
+        //std::cout << "j^-1: \n" << jacobian.inverse() << std::endl;
         cost = goal - trajectory.back();
         Eigen::Vector3d dp = jacobian.inverse() * cost;
+        //std::cout << "cost: \n" << cost << std::endl;
+        //std::cout << "dp: \n" << dp << std::endl;
+        if(dp.norm() > 1e2){
+            std::cout << "diverge to infinity!!!" << std::endl;
+            return -1;
+        }
 
         output_c.km += dp(0);
         output_c.kf += dp(1);
         output_c.sf += dp(2);
 
+        //std::cout << "count: " << count << std::endl;
         count++;
     }
     return cost.norm();

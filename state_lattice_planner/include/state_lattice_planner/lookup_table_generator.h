@@ -26,6 +26,7 @@ private:
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;
+
 };
 
 #endif// __LOOKUP_TABLE_GENERATOR_H

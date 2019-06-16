@@ -141,7 +141,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/state_lattice_planner_node.cpp)
 add_executable(state_lattice_planner src/state_lattice_planner.cpp)
-add_executable(lookup_table_generator src/lookup_table_generator.cpp)
+add_executable(lookup_table_generator src/lookup_table_generator_node.cpp src/lookup_table_generator.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -223,8 +223,11 @@ if(CATKIN_ENABLE_TESTING)
     add_rostest_gtest(state_lattice_planner_test 
 		test/state_lattice_planner.test
 		test/state_lattice_planner_test.cpp
+        src/lookup_table_generator.cpp
 	)
 	target_link_libraries(state_lattice_planner_test 
         ${catkin_LIBRARIES}
+        motion_model_diff_drive
+        trajectory_generator_diff_drive
     ) 
 endif()

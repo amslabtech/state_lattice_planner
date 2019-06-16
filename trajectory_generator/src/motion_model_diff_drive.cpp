@@ -85,7 +85,7 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const double v0,
         }
         curv_profile.push_back(c);
     }
-
+    //std::cout << "N: " << N << std::endl;
     trajectory.resize(N);
     State state(0, 0, 0, v0, _curv.k0);
     State state_(0, 0, 0, v0, _curv.k0);

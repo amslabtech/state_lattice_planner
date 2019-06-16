@@ -5,9 +5,25 @@ StateLatticePlanner::StateLatticePlanner(void)
 
 }
 
+void StateLatticePlanner::process(void)
+{
+    ros::NodeHandle nh;
+    ros::NodeHandle local_nh;
+
+    local_nh.param("HZ", HZ, {20});
+
+    ros::Rate loop_rate(HZ);
+
+    while(ros::ok()){
+
+        loop_rate.sleep();
+    }
+}
+
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "state_lattice_planner");
-    ros::NodeHandle nh;
+    StateLatticePlanner planner;
+    planner.process();
     return 0;
 }

@@ -13,7 +13,10 @@ class StateLatticePlanner
 public:
     StateLatticePlanner(void);
 
+    void process(void);
+
 private:
+    double HZ;
 };
 
 #endif //__STATE_LATTICE_PLANNER_H

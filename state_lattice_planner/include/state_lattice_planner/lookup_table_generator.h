@@ -1,6 +1,9 @@
 #ifndef __LOOKUP_TABLE_GENERATOR_H
 #define __LOOKUP_TABLE_GENERATOR_H
 
+#include <iostream>
+#include <fstream>
+
 #include <ros/ros.h>
 
 #include <Eigen/Dense>
@@ -23,6 +26,7 @@ private:
     double DELTA_Y;
     double MAX_YAW;
     double DELTA_YAW;
+    std::string LOOKUP_TABLE_FILE_NAME;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;

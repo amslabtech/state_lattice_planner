@@ -10,6 +10,7 @@ LookupTableGenerator::LookupTableGenerator(void)
     local_nh.param("DELTA_Y", DELTA_Y, {1.0});
     local_nh.param("MAX_YAW", MAX_YAW, {M_PI / 3.0});
     local_nh.param("DELTA_YAW", DELTA_YAW, {M_PI / 3.0});
+    local_nh.param("LOOKUP_TABLE_FILE_NAME", LOOKUP_TABLE_FILE_NAME, {std::string(std::getenv("HOME")) + "/lookup_table.csv"});
 
 }
 
@@ -55,6 +56,7 @@ void LookupTableGenerator::process(void)
         lookup_table_data.resize(6);
     }
 
+    std::string output_data;
     for(auto state : states){
         std::cout << "state:" << std::endl;
         std::cout << state << std::endl;
@@ -67,11 +69,23 @@ void LookupTableGenerator::process(void)
         std::vector<Eigen::Vector3d> trajectory;
         TrajectoryGeneratorDiffDrive tg;
         tg.set_param(0.005, 0.005, 0.5);
+
         double cost = tg.generate_optimized_trajectory(state, init_v, init_c, 0.05, 0.1, 100, output_v, output_c, trajectory);
         if(cost > 0){
             std::cout << "successfully optimized" << std::endl;
+            std::stringstream data;
+            data << trajectory.back()(0) << "," << trajectory.back()(1) << "," << trajectory.back()(2) << "," << output_c.km << "," << output_c.kf << "," << output_c.sf << "\n";
+            output_data += data.str();
         }else{
             std::cout << "failed to optimize trajectory" << std::endl;
         }
+    }
+    std::ofstream ofs(LOOKUP_TABLE_FILE_NAME);
+    if(ofs){
+        ofs << output_data;
+        ofs.close();
+    }else{
+        std::cout << "cannot open file" << std::endl;
+        exit(-1);
     }
 }

@@ -61,7 +61,8 @@ TEST(TestSuite, test3)
     MotionModelDiffDrive::VelocityParams vel(0.5, 0.0);
     Eigen::Vector3d goal(5, 1, 1);
     std::vector<Eigen::Vector3d> trajectory;
-    double cost = tg.generate_optimized_trajectory(goal, vel, curv, 0.01, 1e-3, 1000, output_v, output_c, trajectory);
+    double cost = tg.generate_optimized_trajectory(goal, vel, curv, 1e-1, 1e-1, 1000, output_v, output_c, trajectory);
+    tg.set_param(1e-4, 1e-4, 1e-4);
     std::cout << "trajecotry.back():" << std::endl;
     std::cout << trajectory.back() << std::endl;
     std::cout << "cost: " << cost << std::endl;
@@ -69,6 +70,7 @@ TEST(TestSuite, test3)
     EXPECT_NEAR(5, trajectory.back()(0), 0.01);
     EXPECT_NEAR(1, trajectory.back()(1), 0.01);
     EXPECT_NEAR(1, trajectory.back()(2), 0.01);
+    EXPECT_GT(cost, 0);// cost > 0
 }
 
 int main(int argc, char** argv)

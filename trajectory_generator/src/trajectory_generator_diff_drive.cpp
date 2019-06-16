@@ -34,7 +34,7 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
         Eigen::Matrix3d jacobian;
         get_jacobian(dt, output_v.v0, output_c, h, jacobian);
         cost = goal - trajectory.back();
-        Eigen::Vector3d dp = jacobian.lu().solve(cost);
+        Eigen::Vector3d dp = jacobian.inverse() * cost;
 
         output_c.km += dp(0);
         output_c.kf += dp(1);
@@ -56,25 +56,19 @@ void TrajectoryGeneratorDiffDrive::get_jacobian(const double dt, const double v0
     model.generate_last_state(dt, curv.sf, v0, curv.k0, curv.km + h(0), curv.kf, x1);
 
     Eigen::Vector3d dx_dkm;
-    dx_dkm << (x1(0) - x0(0)) / (2.0 * h(0)),
-              (x1(1) - x0(1)) / (2.0 * h(0)),
-              (x1(2) - x0(2)) / (2.0 * h(0));
+    dx_dkm << (x1 - x0) / (2.0 * h(0));
 
     model.generate_last_state(dt, curv.sf, v0, curv.k0, curv.km, curv.kf - h(1), x0);
     model.generate_last_state(dt, curv.sf, v0, curv.k0, curv.km, curv.kf + h(1), x1);
 
     Eigen::Vector3d dx_dkf;
-    dx_dkf << (x1(0) - x0(0)) / (2.0 * h(1)),
-              (x1(1) - x0(1)) / (2.0 * h(1)),
-              (x1(2) - x0(2)) / (2.0 * h(1));
+    dx_dkf << (x1 - x0) / (2.0 * h(1));
 
     model.generate_last_state(dt, curv.sf - h(2), v0, curv.k0, curv.km, curv.kf, x0);
     model.generate_last_state(dt, curv.sf + h(2), v0, curv.k0, curv.km, curv.kf, x1);
 
     Eigen::Vector3d dx_dsf;
-    dx_dsf << (x1(0) - x0(0)) / (2.0 * h(2)),
-              (x1(1) - x0(1)) / (2.0 * h(2)),
-              (x1(2) - x0(2)) / (2.0 * h(2));
+    dx_dsf << (x1 - x0) / (2.0 * h(2));
 
     j << dx_dkm(0), dx_dkf(0), dx_dsf(0),
          dx_dkm(1), dx_dkf(1), dx_dsf(1),

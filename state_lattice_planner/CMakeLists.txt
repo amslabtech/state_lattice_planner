@@ -141,6 +141,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/state_lattice_planner_node.cpp)
 add_executable(state_lattice_planner src/state_lattice_planner.cpp)
+add_executable(lookup_table_generator src/lookup_table_generator.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -152,12 +153,18 @@ add_executable(state_lattice_planner src/state_lattice_planner.cpp)
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(state_lattice_planner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(lookup_table_generator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
 target_link_libraries(state_lattice_planner
+  ${catkin_LIBRARIES}
+  trajectory_generator_diff_drive
+  motion_model_diff_drive
+)
+target_link_libraries(lookup_table_generator
   ${catkin_LIBRARIES}
   trajectory_generator_diff_drive
   motion_model_diff_drive

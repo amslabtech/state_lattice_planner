@@ -17,6 +17,9 @@ public:
 
 private:
     double HZ;
+
+    ros::NodeHandle nh;
+    ros::NodeHandle local_nh;
 };
 
 #endif //__STATE_LATTICE_PLANNER_H

@@ -1,17 +1,13 @@
 #include "state_lattice_planner/state_lattice_planner.h"
 
 StateLatticePlanner::StateLatticePlanner(void)
+:local_nh("~")
 {
-
+    local_nh.param("HZ", HZ, {20});
 }
 
 void StateLatticePlanner::process(void)
 {
-    ros::NodeHandle nh;
-    ros::NodeHandle local_nh;
-
-    local_nh.param("HZ", HZ, {20});
-
     ros::Rate loop_rate(HZ);
 
     while(ros::ok()){

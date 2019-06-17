@@ -256,7 +256,7 @@ void trajectoryManage()
             //odometry_flag = false;
             tf_flag = false;
         }else{
-            cout<<"local_goal_flag:"<<l_goal_flag<<"\todometry_flag:"<<odometry_flag<<"\tr_flag"<< endl;
+            cout<<"local_goal_flag:"<<l_goal_flag<<"\todometry_flag:"<<odometry_flag<< endl;
         }
         
         ros::spinOnce();

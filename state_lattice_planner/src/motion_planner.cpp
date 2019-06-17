@@ -32,7 +32,7 @@ void commandDecision(trajectory_generation::VelocityArray& v_a,
 	int ind = hoge+time_count;
 	if((int)v_a.vel.size() > ind){
 		cmd_vel.linear.x = v_a.vel[ind].op_linear;
-		cmd_vel.angular.z = -v_a.vel[ind].op_angular;
+		cmd_vel.angular.z = v_a.vel[ind].op_angular;
 	}else{
 		cmd_vel.linear.x = 0;
 		cmd_vel.angular.z = 0;

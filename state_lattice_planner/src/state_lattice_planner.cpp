@@ -21,7 +21,7 @@ StateLatticePlanner::SamplingParams::SamplingParams(const int _n_p, const int _n
     max_alpha = _max_alpha;
     min_alpha = -_max_alpha;
     max_psi = _max_psi;
-    max_psi = -_max_psi;
+    min_psi = -_max_psi;
 }
 
 void StateLatticePlanner::local_goal_callback(const geometry_msgs::PoseStampedConstPtr& msg)
@@ -43,7 +43,7 @@ void StateLatticePlanner::sample_states(const std::vector<double>& sample_angles
      */
     std::vector<Eigen::Vector3d> _states;
     for(auto angle_ratio : sample_angles){
-        double angle = params.min_alpha * (params.max_alpha - params.min_alpha) * angle_ratio;
+        double angle = params.min_alpha + (params.max_alpha - params.min_alpha) * angle_ratio;
         for(int i=0;i<params.n_h;i++){
             double x = params.length * cos(angle);
             double y = params.length * sin(angle);

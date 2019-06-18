@@ -15,7 +15,17 @@ TEST(TestSuite, test0)
 TEST(TestSuite, test1)
 {
     StateLatticePlanner slp;
-    EXPECT_NEAR(1.0, 1.0, 0.01);
+    StateLatticePlanner::SamplingParams params(6, 3, 5, M_PI / 4.0, M_PI / 6.0);
+    std::vector<double> angles = {0, 0.5, 1.0};
+    std::vector<Eigen::Vector3d> states;
+    slp.sample_states(angles, params, states);
+    int n = 0;
+    for(auto state : states){
+        std::cout << "state " << n << std::endl;
+        std::cout << state << std::endl;
+        n++;
+    }
+    EXPECT_GT(n, 0);
 }
 
 int main(int argc, char** argv)

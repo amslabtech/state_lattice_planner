@@ -34,10 +34,10 @@ TEST(TestSuite, test2)
     int np = 5;
     int nh = 2;
     int ns = 20;
-    double goal_direction = 0.5;
+    Eigen::Vector3d goal(5, 0, 0);
     StateLatticePlanner::SamplingParams params(np, nh, 5.0, M_PI / 4.0, M_PI / 6.0);
     std::vector<Eigen::Vector3d> states;
-    slp.generate_biased_polar_states(ns, goal_direction, params, states);
+    slp.generate_biased_polar_states(ns, goal, params, states);
     int n = 0;
     for(auto state : states){
         std::cout << "state " << n << std::endl;

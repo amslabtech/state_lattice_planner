@@ -68,7 +68,7 @@ void StateLatticePlanner::sample_states(const std::vector<double>& sample_angles
     states = _states;
 }
 
-void StateLatticePlanner::generate_biased_polar_states(const int n_s, const double goal_direction, const SamplingParams& params, std::vector<Eigen::Vector3d>& states)
+void StateLatticePlanner::generate_biased_polar_states(const int n_s, const Eigen::Vector3d& goal, const SamplingParams& params, std::vector<Eigen::Vector3d>& states)
 {
     /*
      * n_s: param for biased polar sampling
@@ -77,14 +77,15 @@ void StateLatticePlanner::generate_biased_polar_states(const int n_s, const doub
     std::cout << "biased polar sampling" << std::endl;
     double alpha_coeff = params.span_alpha / double(n_s - 1);
     std::vector<double> cnav;
+    double goal_direction = atan2(goal(1), goal(0));
     for(int i=0;i<n_s;i++){
         double angle = params.min_alpha + double(i) * alpha_coeff;
+        angle = fabs(angle - goal_direction);
         cnav.push_back(angle);
     }
     double cnav_sum = 0;
     double cnav_max = 0;
     for(auto& alpha_s : cnav){
-        alpha_s = fabs(alpha_s - goal_direction);
         cnav_sum += alpha_s;
         if(cnav_max < alpha_s){
             cnav_max = alpha_s;

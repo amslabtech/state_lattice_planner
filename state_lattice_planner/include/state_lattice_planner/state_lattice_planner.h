@@ -24,8 +24,10 @@ public:
         double length;// sample trajectory length
         double max_alpha;// max trajectories angle
         double min_alpha;// min trajectories angle
+        double span_alpha;// max - min alpha
         double max_psi;// max heading angle
         double min_psi;// min trajectories angle
+        double span_psi;// max - min psi
     private:
     };
 
@@ -34,7 +36,7 @@ public:
     void process(void);
     void local_goal_callback(const geometry_msgs::PoseStampedConstPtr&);
     void local_map_callback(const nav_msgs::OccupancyGridConstPtr&);
-    void generate_biased_polar_state();
+    void generate_biased_polar_states(const int, const double, const SamplingParams&, std::vector<Eigen::Vector3d>&);
     void sample_states(const std::vector<double>&, const SamplingParams&, std::vector<Eigen::Vector3d>&);
 
 

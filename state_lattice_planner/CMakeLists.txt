@@ -133,17 +133,21 @@ include_directories(
 add_library(lookup_table_generator_lib
   src/lookup_table_generator.cpp
 )
+add_library(state_lattice_planner_lib
+  src/state_lattice_planner.cpp
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
 add_dependencies(lookup_table_generator_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(state_lattice_planner_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/state_lattice_planner_node.cpp)
-add_executable(state_lattice_planner src/state_lattice_planner.cpp)
+add_executable(state_lattice_planner src/state_lattice_planner_node.cpp)
 add_executable(lookup_table_generator src/lookup_table_generator_node.cpp)
 
 ## Rename C++ executable without prefix
@@ -167,10 +171,16 @@ target_link_libraries(lookup_table_generator_lib
   trajectory_generator_diff_drive
   motion_model_diff_drive
 )
+target_link_libraries(state_lattice_planner_lib
+  ${catkin_LIBRARIES}
+  trajectory_generator_diff_drive
+  motion_model_diff_drive
+)
 target_link_libraries(state_lattice_planner
   ${catkin_LIBRARIES}
   trajectory_generator_diff_drive
   motion_model_diff_drive
+  state_lattice_planner_lib
 )
 target_link_libraries(lookup_table_generator
   ${catkin_LIBRARIES}
@@ -238,5 +248,6 @@ if(CATKIN_ENABLE_TESTING)
         motion_model_diff_drive
         trajectory_generator_diff_drive
         lookup_table_generator_lib
+        state_lattice_planner_lib
     )
 endif()

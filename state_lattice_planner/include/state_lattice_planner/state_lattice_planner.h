@@ -14,11 +14,27 @@
 class StateLatticePlanner
 {
 public:
+    class SamplingParams
+    {
+    public:
+        SamplingParams(const int, const int, const double, const double, const double);
+
+        int n_p;// num of sampling positions
+        int n_h;// num of sampling angle by position
+        double length;// sample trajectory length
+        double alpha;// max angle of trajectories
+        double psi;// max angle of yaw
+    private:
+    };
+
     StateLatticePlanner(void);
 
     void process(void);
     void local_goal_callback(const geometry_msgs::PoseStampedConstPtr&);
     void local_map_callback(const nav_msgs::OccupancyGridConstPtr&);
+    void generate_biased_polar_state();
+    void sample_states(const SamplingParams&, std::vector<Eigen::Vector3d>&);
+
 
 private:
     double HZ;

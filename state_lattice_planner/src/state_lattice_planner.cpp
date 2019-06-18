@@ -25,6 +25,11 @@ void StateLatticePlanner::local_map_callback(const nav_msgs::OccupancyGridConstP
     local_map_updated = true;
 }
 
+void StateLatticePlanner::sample_states(const SamplingParams& params, std::vector<Eigen::Vector3d>& states)
+{
+
+}
+
 void StateLatticePlanner::process(void)
 {
     ros::Rate loop_rate(HZ);

@@ -48,6 +48,34 @@ TEST(TestSuite, test2)
     //EXPECT_NEAR(states[0](2) - goal_direction, -states[n-1](2) - goal_direction, 1e-1);
 }
 
+TEST(TestSuite, test3)
+{
+    StateLatticePlanner slp;
+    int np = 5;
+    int nh = 2;
+    int ns = 20;
+    Eigen::Vector3d goal(2, 2, 1);
+    StateLatticePlanner::SamplingParams params(np, nh, 5.0, M_PI / 4.0, M_PI / 6.0);
+    std::vector<Eigen::Vector3d> states;
+    slp.generate_biased_polar_states(ns, goal, params, states);
+    int n = 0;
+    for(auto state : states){
+        std::cout << "state " << n << std::endl;
+        std::cout << state << std::endl;
+        n++;
+    }
+    std::vector<std::vector<Eigen::Vector3d> > trajectories;
+    slp.generate_trajectories(states, trajectories);
+    int count = 0;
+    for(auto trajectory : trajectories){
+        std::cout << "trajectory " << count << std::endl;
+        std::cout << trajectory.back() << std::endl;
+        count++;
+    }
+    Eigen::Vector3d center_state = trajectories[(np*nh)/2].back();
+    EXPECT_NEAR(center_state.segment(0, 2).norm(), 5.0, 0.1);
+}
+
 int main(int argc, char** argv)
 {
     testing::InitGoogleTest(&argc, argv);

@@ -133,6 +133,23 @@ void StateLatticePlanner::generate_biased_polar_states(const int n_s, const Eige
     sample_states(biased_angles, params, states);
 }
 
+void StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3d>& boundary_states, std::vector<std::vector<Eigen::Vector3d> >& trajectories)
+{
+    for(auto boundary_state : boundary_states){
+        TrajectoryGeneratorDiffDrive tg;
+        MotionModelDiffDrive::CurvatureParams output_c;
+        MotionModelDiffDrive::VelocityParams output_v;
+        MotionModelDiffDrive::CurvatureParams curv(0.0, 0.0, 0.0, boundary_state.segment(0, 2).norm());
+        MotionModelDiffDrive::VelocityParams vel(0.5, 0.0);
+        std::vector<Eigen::Vector3d> trajectory;
+        double cost = tg.generate_optimized_trajectory(boundary_state, vel, curv, 1e-1, 1e-1, 1000, output_v, output_c, trajectory);
+        tg.set_param(1e-4, 1e-4, 1e-4);
+        if(cost > 0){
+            trajectories.push_back(trajectory);
+        }
+    }
+}
+
 void StateLatticePlanner::process(void)
 {
     ros::Rate loop_rate(HZ);

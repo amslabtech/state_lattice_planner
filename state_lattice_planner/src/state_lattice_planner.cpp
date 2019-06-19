@@ -80,8 +80,11 @@ void StateLatticePlanner::generate_biased_polar_states(const int n_s, const Eige
     double goal_direction = atan2(goal(1), goal(0));
     for(int i=0;i<n_s;i++){
         double angle = params.min_alpha + double(i) * alpha_coeff;
-        angle = fabs(angle - goal_direction);
-        cnav.push_back(angle);
+        Eigen::Vector2d terminal;
+        terminal <<  params.length * cos(angle),
+                     params.length * sin(angle);
+        double diff = (goal.segment(0, 2) - terminal).norm();
+        cnav.push_back(diff);
     }
     double cnav_sum = 0;
     double cnav_max = 0;

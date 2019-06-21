@@ -23,6 +23,7 @@ MotionModelDiffDrive::VelocityParams::VelocityParams(void)
 {
 
 }
+
 MotionModelDiffDrive::VelocityParams::VelocityParams(double _v0, double _time)
 {
     v0 = _v0;
@@ -45,6 +46,17 @@ MotionModelDiffDrive::CurvatureParams::CurvatureParams(double _k0, double _km, d
     coeff_m_f = Eigen::VectorXd::Zero(4);
 }
 
+MotionModelDiffDrive::ControlParams::ControlParams(void)
+{
+
+}
+
+MotionModelDiffDrive::ControlParams::ControlParams(const VelocityParams& _vel, const CurvatureParams& _curv)
+{
+    vel = _vel;
+    curv = _curv;
+}
+
 void MotionModelDiffDrive::set_param(const double trajectory_resolution_, const double target_velocity_, const double max_curvature_, const double max_acceleration_, const double max_d_curvature_)
 {
     trajectory_resolution = trajectory_resolution_;
@@ -57,8 +69,8 @@ void MotionModelDiffDrive::set_param(const double trajectory_resolution_, const 
 void MotionModelDiffDrive::update(const State& s, const double v, const double curv, const double dt, State& output_s)
 {
     output_s = s;
-    output_s.x += v * cos(s.yaw) * dt; 
-    output_s.y += v * sin(s.yaw) * dt; 
+    output_s.x += v * cos(s.yaw) * dt;
+    output_s.y += v * sin(s.yaw) * dt;
     output_s.yaw += curv * v * dt;
     output_s.yaw = atan2(sin(output_s.yaw), cos(output_s.yaw));
     output_s.v = v;
@@ -70,7 +82,7 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const double v0,
     const int N = curv.sf / trajectory_resolution;
 
     CurvatureParams _curv = curv;
-    _curv.calculate_spline(); 
+    _curv.calculate_spline();
     std::vector<double> s_profile;
     for(int i=0;i<N;i++){
         s_profile.push_back(i * trajectory_resolution);
@@ -113,7 +125,7 @@ void MotionModelDiffDrive::CurvatureParams::calculate_spline(void)
     x(1) = sf / 2.0;
     x(2) = sf;
     Eigen::Vector3d y;
-    y << k0, km, kf; 
+    y << k0, km, kf;
 
     // cubic spline interpolation
     Eigen::MatrixXd s(8, 8);
@@ -121,7 +133,7 @@ void MotionModelDiffDrive::CurvatureParams::calculate_spline(void)
          x(1) * x(1) * x(1), x(1) * x(1), x(1), 1, 0, 0, 0, 0,
          0, 0, 0, 0, x(1) * x(1) * x(1), x(1) * x(1), x(1), 1,
          0, 0, 0, 0, x(2) * x(2) * x(2), x(2) * x(2), x(2), 1,
-         3 * x(1) * x(1), 2 * x(1), 1, 0, -3 * x(1) * x(1), -2 * x(1), -1, 0, 
+         3 * x(1) * x(1), 2 * x(1), 1, 0, -3 * x(1) * x(1), -2 * x(1), -1, 0,
          6 * x(1), 2, 0, 0, -6 * x(1), -2, 0, 0,
          6 * x(0), 2, 0, 0, 0, 0, 0, 0,
          0, 0, 0, 0, 6 * x(2), 2, 0, 0;

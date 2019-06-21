@@ -11,12 +11,11 @@ void TrajectoryGeneratorDiffDrive::set_param(const double dkm, const double dkf,
     h << dkm, dkf, dsf;
 }
 
-double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::Vector3d& goal, const MotionModelDiffDrive::VelocityParams& init_v, const MotionModelDiffDrive::CurvatureParams& init_c, const double dt, const double tolerance, const int max_iteration, MotionModelDiffDrive::VelocityParams& output_v, MotionModelDiffDrive::CurvatureParams& output_c, std::vector<Eigen::Vector3d>& trajectory)
+double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::Vector3d& goal, const MotionModelDiffDrive::ControlParams& init_control_param, const double dt, const double tolerance, const int max_iteration, MotionModelDiffDrive::ControlParams& output, std::vector<Eigen::Vector3d>& trajectory)
 {
     Eigen::Vector3d cost(1, 1, 1);
 
-    output_v = init_v;
-    output_c = init_c;
+    output = init_control_param;
 
     int count = 0;
 
@@ -28,11 +27,11 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
             return -1;
         }
         trajectory.clear();
-        double time = goal.norm() / output_v.v0;
-        model.generate_trajectory(dt, output_v.v0, output_c, trajectory);
+        double time = goal.norm() / output.vel.v0;
+        model.generate_trajectory(dt, output.vel.v0, output.curv, trajectory);
 
         Eigen::Matrix3d jacobian;
-        get_jacobian(dt, output_v.v0, output_c, h, jacobian);
+        get_jacobian(dt, output.vel.v0, output.curv, h, jacobian);
         //std::cout << "j: \n" << jacobian << std::endl;
         //std::cout << "j^-1: \n" << jacobian.inverse() << std::endl;
         cost = goal - trajectory.back();
@@ -44,9 +43,9 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
             return -1;
         }
 
-        output_c.km += dp(0);
-        output_c.kf += dp(1);
-        output_c.sf += dp(2);
+        output.curv.km += dp(0);
+        output.curv.kf += dp(1);
+        output.curv.sf += dp(2);
 
         //std::cout << "count: " << count << std::endl;
         count++;

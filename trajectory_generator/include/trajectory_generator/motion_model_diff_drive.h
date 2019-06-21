@@ -51,6 +51,17 @@ public:
     private:
     };
 
+    class ControlParams
+    {
+    public:
+        ControlParams(void);
+        ControlParams(const VelocityParams&, const CurvatureParams&);
+
+        VelocityParams vel;
+        CurvatureParams curv;
+    private:
+    };
+
     void set_param(const double, const double, const double, const double, const double);
     void update(const State&, const double, const double, const double, State&);
     void calculate_spline(const CurvatureParams&, Eigen::VectorXd&, Eigen::VectorXd&);

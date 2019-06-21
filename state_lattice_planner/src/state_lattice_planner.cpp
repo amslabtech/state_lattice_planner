@@ -26,6 +26,19 @@ StateLatticePlanner::SamplingParams::SamplingParams(const int _n_p, const int _n
     span_psi = max_psi - min_psi;
 }
 
+StateLatticePlanner::SamplingParams::SamplingParams(const int _n_p, const int _n_h, const double _max_alpha, const double _max_psi)
+{
+    n_p = _n_p;
+    n_h = _n_h;
+    length = 0.0;
+    max_alpha = _max_alpha;
+    min_alpha = -_max_alpha;
+    span_alpha = max_alpha - min_alpha;
+    max_psi = _max_psi;
+    min_psi = -_max_psi;
+    span_psi = max_psi - min_psi;
+}
+
 void StateLatticePlanner::local_goal_callback(const geometry_msgs::PoseStampedConstPtr& msg)
 {
     local_goal = *msg;

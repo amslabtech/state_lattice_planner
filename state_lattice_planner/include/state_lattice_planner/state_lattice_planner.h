@@ -17,6 +17,7 @@ public:
     class SamplingParams
     {
     public:
+        SamplingParams(const int, const int, const double, const double);
         SamplingParams(const int, const int, const double, const double, const double);
 
         int n_p;// num of sampling positions

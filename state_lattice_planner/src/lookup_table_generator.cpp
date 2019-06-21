@@ -49,7 +49,7 @@ void LookupTableGenerator::process(void)
     }
     std::cout << "states num: " << states.size() << std::endl;
 
-    std::vector<std::vector<double> > lookup_table_data_list; 
+    std::vector<std::vector<double> > lookup_table_data_list;
     lookup_table_data_list.resize(N);
     for(auto& lookup_table_data : lookup_table_data_list){
         // x, y, yaw, km, kf, sf
@@ -60,21 +60,19 @@ void LookupTableGenerator::process(void)
     for(auto state : states){
         std::cout << "state:" << std::endl;
         std::cout << state << std::endl;
-        MotionModelDiffDrive::VelocityParams init_v(0.5, 0);
-        double distance = sqrt(state(0)*state(0)+state(1)*state(1));
+        double distance = state.segment(0, 2).norm();
         std::cout << "distance: " << distance << std::endl;
-        MotionModelDiffDrive::CurvatureParams init_c(0, 0, 0, distance);
-        MotionModelDiffDrive::VelocityParams output_v;
-        MotionModelDiffDrive::CurvatureParams output_c;
+        MotionModelDiffDrive::ControlParams init(MotionModelDiffDrive::VelocityParams(0.5, 0), MotionModelDiffDrive::CurvatureParams(0, 0, 0, distance));
+        MotionModelDiffDrive::ControlParams output;
         std::vector<Eigen::Vector3d> trajectory;
         TrajectoryGeneratorDiffDrive tg;
         tg.set_param(0.005, 0.005, 0.5);
 
-        double cost = tg.generate_optimized_trajectory(state, init_v, init_c, 0.05, 0.1, 100, output_v, output_c, trajectory);
+        double cost = tg.generate_optimized_trajectory(state, init, 0.05, 0.1, 100, output, trajectory);
         if(cost > 0){
             std::cout << "successfully optimized" << std::endl;
             std::stringstream data;
-            data << trajectory.back()(0) << "," << trajectory.back()(1) << "," << trajectory.back()(2) << "," << output_c.km << "," << output_c.kf << "," << output_c.sf << "\n";
+            data << trajectory.back()(0) << "," << trajectory.back()(1) << "," << trajectory.back()(2) << "," << output.curv.km << "," << output.curv.kf << "," << output.curv.sf << "\n";
             output_data += data.str();
         }else{
             std::cout << "failed to optimize trajectory" << std::endl;

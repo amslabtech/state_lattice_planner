@@ -176,12 +176,10 @@ void StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
 {
     for(auto boundary_state : boundary_states){
         TrajectoryGeneratorDiffDrive tg;
-        MotionModelDiffDrive::CurvatureParams output_c;
-        MotionModelDiffDrive::VelocityParams output_v;
-        MotionModelDiffDrive::CurvatureParams curv(0.0, 0.0, 0.0, boundary_state.segment(0, 2).norm());
-        MotionModelDiffDrive::VelocityParams vel(0.5, 0.0);
+        MotionModelDiffDrive::ControlParams output;
+        MotionModelDiffDrive::ControlParams init(MotionModelDiffDrive::VelocityParams(0.5, 0), MotionModelDiffDrive::CurvatureParams(0, 0, 0, boundary_state.segment(0, 2).norm()));
         std::vector<Eigen::Vector3d> trajectory;
-        double cost = tg.generate_optimized_trajectory(boundary_state, vel, curv, 1e-1, 1e-1, N_S, output_v, output_c, trajectory);
+        double cost = tg.generate_optimized_trajectory(boundary_state, init, 1e-1, 1e-1, N_S, output, trajectory);
         tg.set_param(1e-4, 1e-4, 1e-4);
         if(cost > 0){
             trajectories.push_back(trajectory);

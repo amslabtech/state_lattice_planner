@@ -5,6 +5,14 @@ StateLatticePlanner::StateLatticePlanner(void)
 {
     local_nh.param("HZ", HZ, {20});
     local_nh.param("ROBOT_FRAME", ROBOT_FRAME, {"base_link"});
+    local_nh.param("N_P", N_P, {10});
+    local_nh.param("N_H", N_H, {3});
+    local_nh.param("MAX_ALPHA", MAX_ALPHA, {M_PI / 3.0});
+    local_nh.param("MAX_PSI", MAX_PSI, {M_PI / 6.0});
+    local_nh.param("N_S", N_S, {1000});
+
+    SamplingParams sp(N_P, N_H, MAX_ALPHA, MAX_PSI);
+    sampling_params = sp;
 
     velocity_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
     local_goal_sub = nh.subscribe("/local_goal", 1, &StateLatticePlanner::local_goal_callback, this);
@@ -12,6 +20,19 @@ StateLatticePlanner::StateLatticePlanner(void)
 
     local_goal_subscribed = false;
     local_map_updated = false;
+}
+
+StateLatticePlanner::SamplingParams::SamplingParams(void)
+{
+    n_p = 0.0;
+    n_h = 0.0;
+    length = 0.0;
+    max_alpha = 0.0;
+    min_alpha = 0.0;
+    span_alpha = max_alpha - min_alpha;
+    max_psi = 0.0;
+    min_psi = 0.0;
+    span_psi = 0.0;
 }
 
 StateLatticePlanner::SamplingParams::SamplingParams(const int _n_p, const int _n_h, const double _length, const double _max_alpha, const double _max_psi)
@@ -111,27 +132,27 @@ void StateLatticePlanner::generate_biased_polar_states(const int n_s, const Eige
         }
     }
     // normalize
-    std::cout << "normalize" << std::endl;
+    //std::cout << "normalize" << std::endl;
     for(auto& alpha_s : cnav){
         alpha_s = (cnav_max - alpha_s) / (cnav_max * n_s - cnav_sum);
-        std::cout << alpha_s << std::endl;
+        //std::cout << alpha_s << std::endl;
     }
     // cumsum
-    std::cout << "cumsum" << std::endl;
+    //std::cout << "cumsum" << std::endl;
     std::vector<double> cnav2;
     double cumsum = 0;
     std::vector<double> cumsum_list;
     for(auto cnav_it=cnav.begin();cnav_it!=cnav.end()-1;++cnav_it){
         cumsum += *cnav_it;
         cnav2.push_back(cumsum);
-        std::cout << cumsum << std::endl;
+        //std::cout << cumsum << std::endl;
     }
 
     // sampling
     std::vector<double> biased_angles;
     for(int i=0;i<_params.n_p;i++){
         double sample_angle = double(i) / (_params.n_p - 1);
-        std::cout << "sample angle: " << sample_angle << std::endl;
+        //std::cout << "sample angle: " << sample_angle << std::endl;
         int count = 0;
         for(;count<n_s-1;count++){
             // if this loop finish without break, count is n_s - 1
@@ -139,13 +160,15 @@ void StateLatticePlanner::generate_biased_polar_states(const int n_s, const Eige
                 break;
             }
         }
-        std::cout << "count: " << count << std::endl;
+        //std::cout << "count: " << count << std::endl;
         biased_angles.push_back(count / double(n_s - 1));
     }
-    std::cout << "biased angles" << std::endl;
+    //std::cout << "biased angles" << std::endl;
+    /*
     for(auto angle : biased_angles){
         std::cout << angle << std::endl;
     }
+    */
     sample_states(biased_angles, _params, states);
 }
 
@@ -158,7 +181,7 @@ void StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
         MotionModelDiffDrive::CurvatureParams curv(0.0, 0.0, 0.0, boundary_state.segment(0, 2).norm());
         MotionModelDiffDrive::VelocityParams vel(0.5, 0.0);
         std::vector<Eigen::Vector3d> trajectory;
-        double cost = tg.generate_optimized_trajectory(boundary_state, vel, curv, 1e-1, 1e-1, 1000, output_v, output_c, trajectory);
+        double cost = tg.generate_optimized_trajectory(boundary_state, vel, curv, 1e-1, 1e-1, N_S, output_v, output_c, trajectory);
         tg.set_param(1e-4, 1e-4, 1e-4);
         if(cost > 0){
             trajectories.push_back(trajectory);
@@ -188,6 +211,22 @@ void StateLatticePlanner::process(void)
 
     while(ros::ok()){
         if(local_goal_subscribed && local_map_updated){
+            Eigen::Vector3d goal(local_goal.pose.position.x, local_goal.pose.position.y, 0);
+            std::vector<Eigen::Vector3d> states;
+            generate_biased_polar_states(N_S, goal, sampling_params, states);
+            std::vector<std::vector<Eigen::Vector3d> > trajectories;
+            generate_trajectories(states, trajectories);
+            for(auto trajectory : trajectories){
+                check_collision(local_map, trajectory);
+            }
+
+            /*
+             * pickup trajectory
+             */
+
+            /*
+             * velocity decision
+             */
 
         }else{
             if(!local_goal_subscribed){
@@ -197,6 +236,7 @@ void StateLatticePlanner::process(void)
                 std::cout << "waiting for local map" << std::endl;
             }
         }
+        ros::spinOnce();
         loop_rate.sleep();
     }
 }

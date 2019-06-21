@@ -17,6 +17,7 @@ public:
     class SamplingParams
     {
     public:
+        SamplingParams(void);
         SamplingParams(const int, const int, const double, const double);
         SamplingParams(const int, const int, const double, const double, const double);
 
@@ -49,6 +50,11 @@ private:
 
     double HZ;
     std::string ROBOT_FRAME;
+    int N_P;
+    int N_H;
+    int N_S;
+    double MAX_ALPHA;
+    double MAX_PSI;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;
@@ -60,6 +66,7 @@ private:
     nav_msgs::OccupancyGrid local_map;
     bool local_goal_subscribed;
     bool local_map_updated;
+    SamplingParams sampling_params;
 };
 
 #endif //__STATE_LATTICE_PLANNER_H

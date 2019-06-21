@@ -72,17 +72,19 @@ void StateLatticePlanner::generate_biased_polar_states(const int n_s, const Eige
 {
     /*
      * n_s: param for biased polar sampling
-     * goal_direction: goal direction from robot [rad]
      */
+    // params.length is ignored in this function (distance for goal is used)
+    SamplingParams _params = params;
     std::cout << "biased polar sampling" << std::endl;
-    double alpha_coeff = params.span_alpha / double(n_s - 1);
+    double alpha_coeff = _params.span_alpha / double(n_s - 1);
     std::vector<double> cnav;
-    double goal_direction = atan2(goal(1), goal(0));
+    double goal_distance = goal.segment(0, 2).norm();
     for(int i=0;i<n_s;i++){
-        double angle = params.min_alpha + double(i) * alpha_coeff;
+        double angle = _params.min_alpha + double(i) * alpha_coeff;
+        _params.length = goal_distance;
         Eigen::Vector2d terminal;
-        terminal <<  params.length * cos(angle),
-                     params.length * sin(angle);
+        terminal <<  _params.length * cos(angle),
+                     _params.length * sin(angle);
         double diff = (goal.segment(0, 2) - terminal).norm();
         cnav.push_back(diff);
     }
@@ -113,8 +115,8 @@ void StateLatticePlanner::generate_biased_polar_states(const int n_s, const Eige
 
     // sampling
     std::vector<double> biased_angles;
-    for(int i=0;i<params.n_p;i++){
-        double sample_angle = double(i) / (params.n_p - 1);
+    for(int i=0;i<_params.n_p;i++){
+        double sample_angle = double(i) / (_params.n_p - 1);
         std::cout << "sample angle: " << sample_angle << std::endl;
         int count = 0;
         for(;count<n_s-1;count++){
@@ -130,7 +132,7 @@ void StateLatticePlanner::generate_biased_polar_states(const int n_s, const Eige
     for(auto angle : biased_angles){
         std::cout << angle << std::endl;
     }
-    sample_states(biased_angles, params, states);
+    sample_states(biased_angles, _params, states);
 }
 
 void StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3d>& boundary_states, std::vector<std::vector<Eigen::Vector3d> >& trajectories)

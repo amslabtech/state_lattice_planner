@@ -54,7 +54,7 @@ TEST(TestSuite, test3)
     int np = 5;
     int nh = 2;
     int ns = 20;
-    Eigen::Vector3d goal(2, 2, 1);
+    Eigen::Vector3d goal(2, 1, 1);
     StateLatticePlanner::SamplingParams params(np, nh, 5.0, M_PI / 4.0, M_PI / 6.0);
     std::vector<Eigen::Vector3d> states;
     slp.generate_biased_polar_states(ns, goal, params, states);
@@ -73,7 +73,7 @@ TEST(TestSuite, test3)
         count++;
     }
     Eigen::Vector3d center_state = trajectories[(np*nh)/2].back();
-    EXPECT_NEAR(center_state.segment(0, 2).norm(), 5.0, 0.1);
+    EXPECT_NEAR(center_state.segment(0, 2).norm(), goal.segment(0, 2).norm(), 0.1);
 }
 
 int main(int argc, char** argv)

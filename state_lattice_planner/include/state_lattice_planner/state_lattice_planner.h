@@ -40,10 +40,15 @@ public:
     void generate_biased_polar_states(const int, const Eigen::Vector3d&, const SamplingParams&, std::vector<Eigen::Vector3d>&);
     void sample_states(const std::vector<double>&, const SamplingParams&, std::vector<Eigen::Vector3d>&);
     void generate_trajectories(const std::vector<Eigen::Vector3d>&, std::vector<std::vector<Eigen::Vector3d> >&);
+    bool check_collision(const nav_msgs::OccupancyGrid&, const std::vector<Eigen::Vector3d>&);
 
 
 private:
+    void swap(double&, double&);
+    void generate_bresemhams_line(const std::vector<Eigen::Vector3d>&, const double&, std::vector<Eigen::Vector3d>&);
+
     double HZ;
+    std::string ROBOT_FRAME;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;

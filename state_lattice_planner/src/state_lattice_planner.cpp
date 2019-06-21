@@ -4,6 +4,7 @@ StateLatticePlanner::StateLatticePlanner(void)
 :local_nh("~")
 {
     local_nh.param("HZ", HZ, {20});
+    local_nh.param("ROBOT_FRAME", ROBOT_FRAME, {"base_link"});
 
     velocity_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
     local_goal_sub = nh.subscribe("/local_goal", 1, &StateLatticePlanner::local_goal_callback, this);
@@ -165,6 +166,22 @@ void StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
     }
 }
 
+bool StateLatticePlanner::check_collision(const nav_msgs::OccupancyGrid& local_costmap, const std::vector<Eigen::Vector3d>& trajectory)
+{
+    double resolution = local_costmap.info.resolution;
+    std::vector<Eigen::Vector3d> bresenhams_line;
+    generate_bresemhams_line(trajectory, resolution, bresenhams_line);
+    int size = bresenhams_line.size();
+    for(int i=0;i<size;i++){
+        int xi = round((bresenhams_line[i](0) + local_costmap.info.origin.position.x) / resolution);
+        int yi = round((bresenhams_line[i](1) + local_costmap.info.origin.position.y) / resolution);
+        if(local_costmap.data[xi + local_costmap.info.width * yi] != 0){
+            return false;
+        }
+    }
+    return true;
+}
+
 void StateLatticePlanner::process(void)
 {
     ros::Rate loop_rate(HZ);
@@ -181,5 +198,61 @@ void StateLatticePlanner::process(void)
             }
         }
         loop_rate.sleep();
+    }
+}
+
+void StateLatticePlanner::swap(double& a, double& b)
+{
+    double temp = a;
+    a = b;
+    b = temp;
+}
+
+void StateLatticePlanner::generate_bresemhams_line(const std::vector<Eigen::Vector3d>& trajectory, const double& resolution, std::vector<Eigen::Vector3d>& output)
+{
+    int size = trajectory.size();
+    output.resize(size);
+    std::vector<Eigen::Vector3d> bresenhams_line;
+    for(int i=0;i<size-2;i++){
+        double x0 = trajectory[i](0);
+        double y0 = trajectory[i](1);
+        double x1 = trajectory[i+1](0);
+        double y1 = trajectory[i+1](1);
+
+        bool steep = fabs(y1 - y0) > fabs(x1 - x0);
+
+        if(steep){
+            swap(x0, y0);
+            swap(x1, y1);
+        }
+        if(x0 > x1){
+            swap(x0, x1);
+            swap(y0, y1);
+        }
+
+        double delta_x = x1 - x0;
+        double delta_y = fabs(y1 - y0);
+        double error = 0;
+        double delta_error = delta_y / delta_x;
+        double y_step;
+        double yt = y0;
+
+        y_step = (y0 < y1) ? resolution : -resolution;
+
+        for(double xt=x0;xt<x1;xt+=resolution){
+            if(steep){
+                output[i](0) = yt;
+                output[i](1) = xt;
+            }else{
+                output[i](0) = xt;
+                output[i](1) = yt;
+            }
+            error += delta_error;
+            if(error >= 0.5){
+                yt += y_step;
+                error -= 1;
+            }
+        }
+
     }
 }

@@ -15,8 +15,7 @@ const float ANGULARmax=1.0;
 
 ros::Publisher vel_pub;
 int time_count=0;
-bool v_a_flag=false, joy_flag=false;
-geometry_msgs::Twist joy_vel;
+bool v_a_flag=false;
 boost::mutex v_array_mutex_;
 trajectory_generation::VelocityArray g_v_array; 
 
@@ -33,12 +32,6 @@ void commandDecision(trajectory_generation::VelocityArray& v_a,
 	}
 }
 
-void JoyCallback(const geometry_msgs::TwistPtr& msg){
-	joy_vel.linear.x = msg->linear.x;
-	joy_vel.angular.z = msg->angular.z;
-	joy_flag = true;
-}
-
 void vArrayCallback(const trajectory_generation::VelocityArrayConstPtr& msg){
 	boost::mutex::scoped_lock(v_array_mutex_);
 	g_v_array=*msg;
@@ -48,17 +41,16 @@ void vArrayCallback(const trajectory_generation::VelocityArrayConstPtr& msg){
 void LocalPlanner()
 {
 	ros::NodeHandle n;
-	ros::Subscriber joy_sub   = n.subscribe("/joy/vel", 10, JoyCallback);
 	ros::Subscriber v_array_sub = n.subscribe("/local_path/velocity_array", 10, vArrayCallback);
 
-	vel_pub = n.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
+	vel_pub = n.advertise<geometry_msgs::Twist>("/local_path/cmd_vel", 10);
 	
 	bool turn_flag = false;
 	geometry_msgs::Twist cmd_vel;
 
 	ros::Rate loop_rate(10);
 	while(ros::ok()){
-		if (!joy_flag && v_a_flag){ //normal state
+		if (v_a_flag){ //normal state
 			trajectory_generation::VelocityArray v_array; 
 			boost::mutex::scoped_lock(v_array_mutex_);
 			v_array = g_v_array;
@@ -75,14 +67,9 @@ void LocalPlanner()
 			
 			cout<<"lin = "<<cmd_vel.linear.x<<"\tang = "<<cmd_vel.angular.z<<endl<<endl;
 		}
-		else if (joy_flag){
-			vel_pub.publish(joy_vel);
-			joy_flag=false;
-		}
 		else { //waiting for callback
 			cout<<"-----------"<<endl;
 			cout<<"v_arr:"<<v_a_flag<<endl;
-			cout<<"joy_flag:"<<joy_flag<<endl;
 			cout<<"-----------"<<endl;
 			cmd_vel.linear.x=0;
 			cmd_vel.angular.z=0;

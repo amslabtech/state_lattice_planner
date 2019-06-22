@@ -19,12 +19,6 @@ bool v_a_flag=false, joy_flag=false;
 geometry_msgs::Twist joy_vel;
 boost::mutex v_array_mutex_;
 trajectory_generation::VelocityArray g_v_array; 
-bool stop_flag=false;
-
-void setStopCommand(geometry_msgs::Twist& cmd_vel){
-	cmd_vel.linear.x = 0;
-	cmd_vel.angular.z = 0;
-}
 
 void commandDecision(trajectory_generation::VelocityArray& v_a,
 						geometry_msgs::Twist& cmd_vel){
@@ -51,16 +45,11 @@ void vArrayCallback(const trajectory_generation::VelocityArrayConstPtr& msg){
 	v_a_flag=true;
 }
 
-void StopCallback(const std_msgs::BoolConstPtr& msg){
-	stop_flag = msg->data;
-}
-
-void MotionPlanner()
+void LocalPlanner()
 {
 	ros::NodeHandle n;
 	ros::Subscriber joy_sub   = n.subscribe("/joy/vel", 10, JoyCallback);
 	ros::Subscriber v_array_sub = n.subscribe("/local_path/velocity_array", 10, vArrayCallback);
-	ros::Subscriber stop_sub = n.subscribe("/stop",1,StopCallback);
 
 	vel_pub = n.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
 	
@@ -74,20 +63,8 @@ void MotionPlanner()
 			boost::mutex::scoped_lock(v_array_mutex_);
 			v_array = g_v_array;
 			// set velocity and angular //
-			if(stop_flag == true){
-				cout<<"stop"<<endl;
-				setStopCommand(cmd_vel);
-			}
-			else if(stop_flag == false){ 
-				cout<<"normal"<<endl;
-				commandDecision(v_array, cmd_vel);
-				time_count=0;
-			}
-			else{
-				cout<<"unknown"<<endl;
-				setStopCommand(cmd_vel);
-				time_count=0;
-			}
+			commandDecision(v_array, cmd_vel);
+			time_count=0;
 			// safety //
 			if (cmd_vel.linear.x>Vmax) cmd_vel.linear.x=Vmax;
 			if (cmd_vel.angular.z>ANGULARmax) cmd_vel.angular.z=ANGULARmax;
@@ -96,7 +73,6 @@ void MotionPlanner()
 			// publish //
 			vel_pub.publish(cmd_vel);
 			
-			cout<<"stop flag: "<<stop_flag<<endl;
 			cout<<"lin = "<<cmd_vel.linear.x<<"\tang = "<<cmd_vel.angular.z<<endl<<endl;
 		}
 		else if (joy_flag){
@@ -121,8 +97,8 @@ void MotionPlanner()
 
 int main(int argc, char **argv)
 {
-	ros::init(argc, argv, "motion_decision");
-	MotionPlanner();
+	ros::init(argc, argv, "local_planner");
+	LocalPlanner();
 	
 	ROS_INFO("Killing now!!!!!");
 	return 0;

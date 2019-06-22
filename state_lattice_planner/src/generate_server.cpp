@@ -370,7 +370,7 @@ bool server(trajectory_generation::TrajectoryGeneration::Request  &req,
 
 int main(int argc, char **argv)
 {
-	const string package_path_str("/home/amsl/ros_catkin_ws/src/rwrc19/state_lattice_planner/state_lattice_planner/");
+	const string package_path_str("/home/amsl/ros_catkin_ws/src/state_lattice_planner/state_lattice_planner");
 	trajectory.fileInput(package_path_str+"/look_up_table/infant/v-03.bin",-0.3);
 	trajectory.fileInput(package_path_str+"/look_up_table/infant/v-02.bin",-0.2);
 	trajectory.fileInput(package_path_str+"/look_up_table/infant/v-01.bin",-0.1);

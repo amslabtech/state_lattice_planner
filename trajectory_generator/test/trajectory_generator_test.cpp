@@ -8,39 +8,39 @@
 
 TEST(TestSuite, test0)
 {
-	ros::NodeHandle nh;
+    ros::NodeHandle nh;
     MotionModelDiffDrive::CurvatureParams curv(0, 0.5, 1.0, 5);
     curv.calculate_spline();
     MotionModelDiffDrive mm;
     double cf = mm.calculate_cubic_function(0, curv.coeff_0_m);
-	EXPECT_NEAR(0, cf, 0.01);
+    EXPECT_NEAR(0, cf, 0.01);
     cf = mm.calculate_cubic_function(2.5, curv.coeff_0_m);
-	EXPECT_NEAR(0.5, cf, 0.01);
+    EXPECT_NEAR(0.5, cf, 0.01);
     cf = mm.calculate_cubic_function(2.5, curv.coeff_m_f);
-	EXPECT_NEAR(0.5, cf, 0.01);
+    EXPECT_NEAR(0.5, cf, 0.01);
     cf = mm.calculate_cubic_function(5, curv.coeff_m_f);
-	EXPECT_NEAR(1.0, cf, 0.01);
+    EXPECT_NEAR(1.0, cf, 0.01);
 }
 
 TEST(TestSuite, test1)
 {
-	ros::NodeHandle nh;
+    ros::NodeHandle nh;
     MotionModelDiffDrive::CurvatureParams curv(0, -0.5, -1.0, 10);
     curv.calculate_spline();
     MotionModelDiffDrive mm;
     double cf = mm.calculate_cubic_function(0, curv.coeff_0_m);
-	EXPECT_NEAR(0, cf, 0.01);
+    EXPECT_NEAR(0, cf, 0.01);
     cf = mm.calculate_cubic_function(5, curv.coeff_0_m);
-	EXPECT_NEAR(-0.5, cf, 0.01);
+    EXPECT_NEAR(-0.5, cf, 0.01);
     cf = mm.calculate_cubic_function(5, curv.coeff_m_f);
-	EXPECT_NEAR(-0.5, cf, 0.01);
+    EXPECT_NEAR(-0.5, cf, 0.01);
     cf = mm.calculate_cubic_function(10, curv.coeff_m_f);
-	EXPECT_NEAR(-1.0, cf, 0.01);
+    EXPECT_NEAR(-1.0, cf, 0.01);
 }
 
 TEST(TestSuite, test2)
 {
-	ros::NodeHandle nh;
+    ros::NodeHandle nh;
     MotionModelDiffDrive mm;
     MotionModelDiffDrive::CurvatureParams curv(0.0, 0.0, 0.0, 5);
     std::vector<Eigen::Vector3d> trajectory;
@@ -53,15 +53,13 @@ TEST(TestSuite, test2)
 
 TEST(TestSuite, test3)
 {
-	ros::NodeHandle nh;
+    ros::NodeHandle nh;
     TrajectoryGeneratorDiffDrive tg;
-    MotionModelDiffDrive::CurvatureParams output_c;
-    MotionModelDiffDrive::VelocityParams output_v;
-    MotionModelDiffDrive::CurvatureParams curv(0.0, 0.0, 0.5, 5);
-    MotionModelDiffDrive::VelocityParams vel(0.5, 0.0);
+    MotionModelDiffDrive::ControlParams output;
+    MotionModelDiffDrive::ControlParams init_params(MotionModelDiffDrive::VelocityParams(0.5, 0), MotionModelDiffDrive::CurvatureParams(0, 0, 0.5, 5));
     Eigen::Vector3d goal(5, 1, 1);
     std::vector<Eigen::Vector3d> trajectory;
-    double cost = tg.generate_optimized_trajectory(goal, vel, curv, 1e-1, 1e-1, 1000, output_v, output_c, trajectory);
+    double cost = tg.generate_optimized_trajectory(goal, init_params, 1e-1, 1e-1, 1000, output, trajectory);
     tg.set_param(1e-4, 1e-4, 1e-4);
     std::cout << "trajecotry.back():" << std::endl;
     std::cout << trajectory.back() << std::endl;
@@ -75,20 +73,20 @@ TEST(TestSuite, test3)
 
 int main(int argc, char** argv)
 {
-	testing::InitGoogleTest(&argc, argv);
+    testing::InitGoogleTest(&argc, argv);
 
-	ros::init(argc, argv, "trajectory_generator_test");
+    ros::init(argc, argv, "trajectory_generator_test");
 
-	ros::AsyncSpinner spinner(1);
-	spinner.start();
+    ros::AsyncSpinner spinner(1);
+    spinner.start();
 
-	ros::Duration(3.0).sleep();
+    ros::Duration(3.0).sleep();
 
-	int r_e_t = RUN_ALL_TESTS();
+    int r_e_t = RUN_ALL_TESTS();
 
-	spinner.stop();
+    spinner.stop();
 
-	ros::shutdown();
+    ros::shutdown();
 
-	return r_e_t;
+    return r_e_t;
 }

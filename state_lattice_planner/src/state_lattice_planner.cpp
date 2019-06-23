@@ -186,7 +186,9 @@ void StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
         TrajectoryGeneratorDiffDrive tg;
         MotionModelDiffDrive::ControlParams output;
         double k0 = angular_velocity / velocity;
-        MotionModelDiffDrive::ControlParams init(MotionModelDiffDrive::VelocityParams(velocity, 0), MotionModelDiffDrive::CurvatureParams(k0, 0, 0, boundary_state.segment(0, 2).norm()));
+        MotionModelDiffDrive::VelocityParams init_v;
+        init_v.v0 = velocity;
+        MotionModelDiffDrive::ControlParams init(init_v, MotionModelDiffDrive::CurvatureParams(k0, 0, 0, boundary_state.segment(0, 2).norm()));
         MotionModelDiffDrive::Trajectory trajectory;
         double cost = tg.generate_optimized_trajectory(boundary_state, init, 1e-1, 1e-1, N_S, output, trajectory);
         if(cost > 0){

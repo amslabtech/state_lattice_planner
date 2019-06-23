@@ -14,7 +14,7 @@ public:
 
     void set_param(const double, const double, const double);
     double generate_optimized_trajectory(const Eigen::Vector3d&, const MotionModelDiffDrive::ControlParams&, const double, const double, const int, MotionModelDiffDrive::ControlParams&, MotionModelDiffDrive::Trajectory&);
-    void get_jacobian(const double, const double, const MotionModelDiffDrive::CurvatureParams&, const Eigen::Vector3d&, Eigen::Matrix3d&);
+    void get_jacobian(const double, const MotionModelDiffDrive::ControlParams&, const Eigen::Vector3d&, Eigen::Matrix3d&);
 
 private:
     MotionModelDiffDrive model;

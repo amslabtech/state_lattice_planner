@@ -27,9 +27,13 @@ public:
     {
     public:
         VelocityParams(void);
-        VelocityParams(double, double);
+        VelocityParams(double, double, double, double, double, double);
 
         double v0;
+        double a0;
+        double vt;
+        double vf;
+        double af;
         double time;
     private:
     };
@@ -80,8 +84,8 @@ public:
     void set_param(const double, const double, const double, const double, const double);
     void update(const State&, const double, const double, const double, State&);
     void calculate_spline(const CurvatureParams&, Eigen::VectorXd&, Eigen::VectorXd&);
-    void generate_trajectory(const double, const double, const CurvatureParams&, Trajectory&);
-    void generate_last_state(const double, const double, const double, const double, const double, const double, Eigen::Vector3d&);
+    void generate_trajectory(const double, const ControlParams&, Trajectory&);
+    void generate_last_state(const double, const double, const VelocityParams&, const double, const double, const double, Eigen::Vector3d&);
     double calculate_cubic_function(const double, const Eigen::VectorXd&);
 
 private:

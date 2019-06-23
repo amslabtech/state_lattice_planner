@@ -24,9 +24,13 @@ MotionModelDiffDrive::VelocityParams::VelocityParams(void)
 
 }
 
-MotionModelDiffDrive::VelocityParams::VelocityParams(double _v0, double _time)
+MotionModelDiffDrive::VelocityParams::VelocityParams(double _v0, double _a0, double _vt, double _vf, double _af, double _time)
 {
     v0 = _v0;
+    a0 = _a0;
+    vt = _vt;
+    vf = _vf;
+    af = _af;
     time = _time;
 }
 
@@ -87,16 +91,17 @@ void MotionModelDiffDrive::update(const State& s, const double v, const double c
     output_s.curvature = curv;
 }
 
-void MotionModelDiffDrive::generate_trajectory(const double dt, const double v0, const CurvatureParams& curv, Trajectory& trajectory)
+void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlParams& control_param, Trajectory& trajectory)
 {
+    CurvatureParams curv = control_param.curv;
     const int N = curv.sf / trajectory_resolution;
 
-    CurvatureParams _curv = curv;
-    _curv.calculate_spline();
     std::vector<double> s_profile;
     for(int i=0;i<N;i++){
         s_profile.push_back(i * trajectory_resolution);
     }
+    CurvatureParams _curv = curv;
+    _curv.calculate_spline();
     std::vector<double> curv_profile;
     for(auto s : s_profile){
         double c = 0;
@@ -108,8 +113,8 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const double v0,
         curv_profile.push_back(c);
     }
     //std::cout << "N: " << N << std::endl;
-    State state(0, 0, 0, v0, _curv.k0);
-    State state_(0, 0, 0, v0, _curv.k0);
+    State state(0, 0, 0, control_param.vel.v0, _curv.k0);
+    State state_(0, 0, 0, control_param.vel.v0, _curv.k0);
     Eigen::Vector3d pose;
     pose << state.x, state.y, state.yaw;
     trajectory.trajectory.push_back(pose);
@@ -126,11 +131,11 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const double v0,
     }
 }
 
-void MotionModelDiffDrive::generate_last_state(const double dt, const double trajectory_length, const double v0, const double k0, const double km, const double kf, Eigen::Vector3d& output)
+void MotionModelDiffDrive::generate_last_state(const double dt, const double trajectory_length, const VelocityParams& vel, const double k0, const double km, const double kf, Eigen::Vector3d& output)
 {
     Trajectory trajectory;
     CurvatureParams curv(k0, km, kf, trajectory_length);
-    generate_trajectory(dt, v0, curv, trajectory);
+    generate_trajectory(dt, ControlParams(vel, curv), trajectory);
     output << trajectory.trajectory.back();
 }
 

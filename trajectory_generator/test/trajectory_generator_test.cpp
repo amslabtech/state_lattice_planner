@@ -42,9 +42,11 @@ TEST(TestSuite, test2)
 {
     ros::NodeHandle nh;
     MotionModelDiffDrive mm;
+    MotionModelDiffDrive::VelocityParams vel;
+    vel.v0 = 0.5;
     MotionModelDiffDrive::CurvatureParams curv(0.0, 0.0, 0.0, 5);
     MotionModelDiffDrive::Trajectory trajectory;
-    mm.generate_trajectory(0.01, 0.5, curv, trajectory);
+    mm.generate_trajectory(0.01, MotionModelDiffDrive::ControlParams(vel, curv), trajectory);
 
     EXPECT_NEAR(5, trajectory.trajectory.back()(0), 0.05);
     EXPECT_NEAR(0, trajectory.trajectory.back()(1), 0.05);
@@ -56,7 +58,9 @@ TEST(TestSuite, test3)
     ros::NodeHandle nh;
     TrajectoryGeneratorDiffDrive tg;
     MotionModelDiffDrive::ControlParams output;
-    MotionModelDiffDrive::ControlParams init_params(MotionModelDiffDrive::VelocityParams(0.5, 0), MotionModelDiffDrive::CurvatureParams(0, 0, 0.5, 5));
+    MotionModelDiffDrive::VelocityParams init_v;
+    init_v.v0 = 0.5;
+    MotionModelDiffDrive::ControlParams init_params(init_v, MotionModelDiffDrive::CurvatureParams(0, 0, 0.5, 5));
     Eigen::Vector3d goal(5, 1, 1);
     MotionModelDiffDrive::Trajectory trajectory;
     double cost = tg.generate_optimized_trajectory(goal, init_params, 1e-1, 1e-1, 1000, output, trajectory);

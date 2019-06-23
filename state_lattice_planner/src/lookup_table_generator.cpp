@@ -62,7 +62,9 @@ void LookupTableGenerator::process(void)
         std::cout << state << std::endl;
         double distance = state.segment(0, 2).norm();
         std::cout << "distance: " << distance << std::endl;
-        MotionModelDiffDrive::ControlParams init(MotionModelDiffDrive::VelocityParams(0.5, 0), MotionModelDiffDrive::CurvatureParams(0, 0, 0, distance));
+        MotionModelDiffDrive::VelocityParams init_v;
+        init_v.v0 = 0.5;
+        MotionModelDiffDrive::ControlParams init(init_v, MotionModelDiffDrive::CurvatureParams(0, 0, 0, distance));
         MotionModelDiffDrive::ControlParams output;
         MotionModelDiffDrive::Trajectory trajectory;
         TrajectoryGeneratorDiffDrive tg;

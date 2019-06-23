@@ -64,15 +64,15 @@ TEST(TestSuite, test3)
         std::cout << state << std::endl;
         n++;
     }
-    std::vector<std::vector<Eigen::Vector3d> > trajectories;
+    std::vector<MotionModelDiffDrive::Trajectory> trajectories;
     slp.generate_trajectories(states, trajectories);
     int count = 0;
     for(auto trajectory : trajectories){
         std::cout << "trajectory " << count << std::endl;
-        std::cout << trajectory.back() << std::endl;
+        std::cout << trajectory.trajectory.back() << std::endl;
         count++;
     }
-    Eigen::Vector3d center_state = trajectories[(np*nh)/2].back();
+    Eigen::Vector3d center_state = trajectories[(np*nh)/2].trajectory.back();
     EXPECT_NEAR(center_state.segment(0, 2).norm(), goal.segment(0, 2).norm(), 0.1);
 }
 

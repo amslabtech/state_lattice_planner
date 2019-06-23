@@ -172,13 +172,13 @@ void StateLatticePlanner::generate_biased_polar_states(const int n_s, const Eige
     sample_states(biased_angles, _params, states);
 }
 
-void StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3d>& boundary_states, std::vector<std::vector<Eigen::Vector3d> >& trajectories)
+void StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3d>& boundary_states, std::vector<MotionModelDiffDrive::Trajectory>& trajectories)
 {
     for(auto boundary_state : boundary_states){
         TrajectoryGeneratorDiffDrive tg;
         MotionModelDiffDrive::ControlParams output;
         MotionModelDiffDrive::ControlParams init(MotionModelDiffDrive::VelocityParams(0.5, 0), MotionModelDiffDrive::CurvatureParams(0, 0, 0, boundary_state.segment(0, 2).norm()));
-        std::vector<Eigen::Vector3d> trajectory;
+        MotionModelDiffDrive::Trajectory trajectory;
         double cost = tg.generate_optimized_trajectory(boundary_state, init, 1e-1, 1e-1, N_S, output, trajectory);
         tg.set_param(1e-4, 1e-4, 1e-4);
         if(cost > 0){
@@ -212,10 +212,10 @@ void StateLatticePlanner::process(void)
             Eigen::Vector3d goal(local_goal.pose.position.x, local_goal.pose.position.y, 0);
             std::vector<Eigen::Vector3d> states;
             generate_biased_polar_states(N_S, goal, sampling_params, states);
-            std::vector<std::vector<Eigen::Vector3d> > trajectories;
+            std::vector<MotionModelDiffDrive::Trajectory> trajectories;
             generate_trajectories(states, trajectories);
             for(auto trajectory : trajectories){
-                check_collision(local_map, trajectory);
+                check_collision(local_map, trajectory.trajectory);
             }
 
             /*

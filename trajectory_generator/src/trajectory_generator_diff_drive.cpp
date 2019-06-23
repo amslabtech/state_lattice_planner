@@ -11,7 +11,7 @@ void TrajectoryGeneratorDiffDrive::set_param(const double dkm, const double dkf,
     h << dkm, dkf, dsf;
 }
 
-double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::Vector3d& goal, const MotionModelDiffDrive::ControlParams& init_control_param, const double dt, const double tolerance, const int max_iteration, MotionModelDiffDrive::ControlParams& output, std::vector<Eigen::Vector3d>& trajectory)
+double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::Vector3d& goal, const MotionModelDiffDrive::ControlParams& init_control_param, const double dt, const double tolerance, const int max_iteration, MotionModelDiffDrive::ControlParams& output, MotionModelDiffDrive::Trajectory& trajectory)
 {
     Eigen::Vector3d cost(1, 1, 1);
 
@@ -26,7 +26,9 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
             std::cout << "cannot optimize trajectory" << std::endl;
             return -1;
         }
-        trajectory.clear();
+        trajectory.trajectory.clear();
+        trajectory.velocities.clear();
+        trajectory.angular_velocities.clear();
         double time = goal.norm() / output.vel.v0;
         model.generate_trajectory(dt, output.vel.v0, output.curv, trajectory);
 
@@ -34,7 +36,7 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
         get_jacobian(dt, output.vel.v0, output.curv, h, jacobian);
         //std::cout << "j: \n" << jacobian << std::endl;
         //std::cout << "j^-1: \n" << jacobian.inverse() << std::endl;
-        cost = goal - trajectory.back();
+        cost = goal - trajectory.trajectory.back();
         Eigen::Vector3d dp = jacobian.inverse() * cost;
         //std::cout << "cost: \n" << cost << std::endl;
         //std::cout << "dp: \n" << dp << std::endl;

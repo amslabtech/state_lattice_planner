@@ -57,6 +57,11 @@ MotionModelDiffDrive::ControlParams::ControlParams(const VelocityParams& _vel, c
     curv = _curv;
 }
 
+MotionModelDiffDrive::Trajectory::Trajectory(void)
+{
+
+}
+
 void MotionModelDiffDrive::set_param(const double trajectory_resolution_, const double target_velocity_, const double max_curvature_, const double max_acceleration_, const double max_d_curvature_)
 {
     trajectory_resolution = trajectory_resolution_;
@@ -77,7 +82,7 @@ void MotionModelDiffDrive::update(const State& s, const double v, const double c
     output_s.curvature = curv;
 }
 
-void MotionModelDiffDrive::generate_trajectory(const double dt, const double v0, const CurvatureParams& curv, std::vector<Eigen::Vector3d>& trajectory)
+void MotionModelDiffDrive::generate_trajectory(const double dt, const double v0, const CurvatureParams& curv, Trajectory& trajectory)
 {
     const int N = curv.sf / trajectory_resolution;
 
@@ -98,24 +103,30 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const double v0,
         curv_profile.push_back(c);
     }
     //std::cout << "N: " << N << std::endl;
-    trajectory.resize(N);
     State state(0, 0, 0, v0, _curv.k0);
     State state_(0, 0, 0, v0, _curv.k0);
-    trajectory[0] << state.x, state.y, state.yaw;
+    Eigen::Vector3d pose;
+    pose << state.x, state.y, state.yaw;
+    trajectory.trajectory.push_back(pose);
+    trajectory.velocities.push_back(state.v);
+    trajectory.angular_velocities.push_back(state.v * state.curvature);
 
     for(int i=1;i<N;i++){
         update(state, (s_profile[i]-s_profile[i-1])/dt, curv_profile[i], dt, state_);
         state = state_;
-        trajectory[i] << state.x, state.y, state.yaw;
+        pose << state.x, state.y, state.yaw;
+        trajectory.trajectory.push_back(pose);
+        trajectory.velocities.push_back(state.v);
+        trajectory.angular_velocities.push_back(state.v * state.curvature);
     }
 }
 
 void MotionModelDiffDrive::generate_last_state(const double dt, const double trajectory_length, const double v0, const double k0, const double km, const double kf, Eigen::Vector3d& output)
 {
-    std::vector<Eigen::Vector3d> trajectory;
+    Trajectory trajectory;
     CurvatureParams curv(k0, km, kf, trajectory_length);
     generate_trajectory(dt, v0, curv, trajectory);
-    output << trajectory.back();
+    output << trajectory.trajectory.back();
 }
 
 void MotionModelDiffDrive::CurvatureParams::calculate_spline(void)

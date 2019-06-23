@@ -43,12 +43,12 @@ TEST(TestSuite, test2)
     ros::NodeHandle nh;
     MotionModelDiffDrive mm;
     MotionModelDiffDrive::CurvatureParams curv(0.0, 0.0, 0.0, 5);
-    std::vector<Eigen::Vector3d> trajectory;
+    MotionModelDiffDrive::Trajectory trajectory;
     mm.generate_trajectory(0.01, 0.5, curv, trajectory);
 
-    EXPECT_NEAR(5, trajectory.back()(0), 0.05);
-    EXPECT_NEAR(0, trajectory.back()(1), 0.05);
-    EXPECT_NEAR(0, trajectory.back()(2), 0.05);
+    EXPECT_NEAR(5, trajectory.trajectory.back()(0), 0.05);
+    EXPECT_NEAR(0, trajectory.trajectory.back()(1), 0.05);
+    EXPECT_NEAR(0, trajectory.trajectory.back()(2), 0.05);
 }
 
 TEST(TestSuite, test3)
@@ -58,16 +58,16 @@ TEST(TestSuite, test3)
     MotionModelDiffDrive::ControlParams output;
     MotionModelDiffDrive::ControlParams init_params(MotionModelDiffDrive::VelocityParams(0.5, 0), MotionModelDiffDrive::CurvatureParams(0, 0, 0.5, 5));
     Eigen::Vector3d goal(5, 1, 1);
-    std::vector<Eigen::Vector3d> trajectory;
+    MotionModelDiffDrive::Trajectory trajectory;
     double cost = tg.generate_optimized_trajectory(goal, init_params, 1e-1, 1e-1, 1000, output, trajectory);
     tg.set_param(1e-4, 1e-4, 1e-4);
     std::cout << "trajecotry.back():" << std::endl;
-    std::cout << trajectory.back() << std::endl;
+    std::cout << trajectory.trajectory.back() << std::endl;
     std::cout << "cost: " << cost << std::endl;
 
-    EXPECT_NEAR(5, trajectory.back()(0), 0.01);
-    EXPECT_NEAR(1, trajectory.back()(1), 0.01);
-    EXPECT_NEAR(1, trajectory.back()(2), 0.01);
+    EXPECT_NEAR(5, trajectory.trajectory.back()(0), 0.01);
+    EXPECT_NEAR(1, trajectory.trajectory.back()(1), 0.01);
+    EXPECT_NEAR(1, trajectory.trajectory.back()(2), 0.01);
     EXPECT_GT(cost, 0);// cost > 0
 }
 

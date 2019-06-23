@@ -62,10 +62,23 @@ public:
     private:
     };
 
+    class Trajectory
+    {
+    public:
+        Trajectory(void);
+
+        // these vectors must be same size
+        std::vector<Eigen::Vector3d> trajectory;
+        std::vector<double> velocities;
+        std::vector<double> angular_velocities;
+        double cost;
+    private:
+    };
+
     void set_param(const double, const double, const double, const double, const double);
     void update(const State&, const double, const double, const double, State&);
     void calculate_spline(const CurvatureParams&, Eigen::VectorXd&, Eigen::VectorXd&);
-    void generate_trajectory(const double, const double, const CurvatureParams&, std::vector<Eigen::Vector3d>&);
+    void generate_trajectory(const double, const double, const CurvatureParams&, Trajectory&);
     void generate_last_state(const double, const double, const double, const double, const double, const double, Eigen::Vector3d&);
     double calculate_cubic_function(const double, const Eigen::VectorXd&);
 

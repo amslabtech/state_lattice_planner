@@ -64,7 +64,7 @@ void LookupTableGenerator::process(void)
         std::cout << "distance: " << distance << std::endl;
         MotionModelDiffDrive::ControlParams init(MotionModelDiffDrive::VelocityParams(0.5, 0), MotionModelDiffDrive::CurvatureParams(0, 0, 0, distance));
         MotionModelDiffDrive::ControlParams output;
-        std::vector<Eigen::Vector3d> trajectory;
+        MotionModelDiffDrive::Trajectory trajectory;
         TrajectoryGeneratorDiffDrive tg;
         tg.set_param(0.005, 0.005, 0.5);
 
@@ -72,7 +72,7 @@ void LookupTableGenerator::process(void)
         if(cost > 0){
             std::cout << "successfully optimized" << std::endl;
             std::stringstream data;
-            data << trajectory.back()(0) << "," << trajectory.back()(1) << "," << trajectory.back()(2) << "," << output.curv.km << "," << output.curv.kf << "," << output.curv.sf << "\n";
+            data << trajectory.trajectory.back()(0) << "," << trajectory.trajectory.back()(1) << "," << trajectory.trajectory.back()(2) << "," << output.curv.km << "," << output.curv.kf << "," << output.curv.sf << "\n";
             output_data += data.str();
         }else{
             std::cout << "failed to optimize trajectory" << std::endl;

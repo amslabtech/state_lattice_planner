@@ -40,7 +40,7 @@ public:
     void local_map_callback(const nav_msgs::OccupancyGridConstPtr&);
     void generate_biased_polar_states(const int, const Eigen::Vector3d&, const SamplingParams&, std::vector<Eigen::Vector3d>&);
     void sample_states(const std::vector<double>&, const SamplingParams&, std::vector<Eigen::Vector3d>&);
-    void generate_trajectories(const std::vector<Eigen::Vector3d>&, std::vector<std::vector<Eigen::Vector3d> >&);
+    void generate_trajectories(const std::vector<Eigen::Vector3d>&, std::vector<MotionModelDiffDrive::Trajectory>&);
     bool check_collision(const nav_msgs::OccupancyGrid&, const std::vector<Eigen::Vector3d>&);
 
 

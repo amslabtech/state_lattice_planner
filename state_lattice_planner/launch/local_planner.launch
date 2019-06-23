@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 <launch>
 	<node name="trajectory_manager" pkg="state_lattice_planner" type="trajectory_manager" ns="local_planner"/>
-	<node name="generate_server" pkg="state_lattice_planner" type="generate_server" ns="local_planner"/>
+	<node name="generate_server" pkg="state_lattice_planner" type="generate_server" ns="local_planner">
+		<remap from="/local_map" to="/local_map/expand"/>
+	</node>
 	<node name="motion_planner" pkg="state_lattice_planner" type="motion_planner" ns="local_planner"/>
 </launch>

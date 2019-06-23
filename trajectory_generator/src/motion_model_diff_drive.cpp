@@ -62,6 +62,11 @@ MotionModelDiffDrive::Trajectory::Trajectory(void)
 
 }
 
+bool MotionModelDiffDrive::Trajectory::operator<(const Trajectory& another) const
+{
+    return cost < another.cost;
+}
+
 void MotionModelDiffDrive::set_param(const double trajectory_resolution_, const double target_velocity_, const double max_curvature_, const double max_acceleration_, const double max_d_curvature_)
 {
     trajectory_resolution = trajectory_resolution_;

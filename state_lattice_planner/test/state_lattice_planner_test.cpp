@@ -76,6 +76,33 @@ TEST(TestSuite, test3)
     EXPECT_NEAR(center_state.segment(0, 2).norm(), goal.segment(0, 2).norm(), 0.1);
 }
 
+TEST(TestSuite, test4)
+{
+    StateLatticePlanner slp;
+    int np = 5;
+    int nh = 2;
+    int ns = 20;
+    Eigen::Vector3d goal(5, -1, 1);
+    StateLatticePlanner::SamplingParams params(np, nh, M_PI / 4.0, M_PI / 6.0);
+    std::vector<Eigen::Vector3d> states;
+    slp.generate_biased_polar_states(ns, goal, params, states);
+    std::vector<MotionModelDiffDrive::Trajectory> trajectories;
+    slp.generate_trajectories(states, trajectories);
+    MotionModelDiffDrive::Trajectory trajectory;
+    slp.pickup_trajectory(trajectories, goal, trajectory); 
+    std::cout << "goal" << std::endl;
+    std::cout << goal << std::endl;
+    std::cout << "terminal state" << std::endl;
+    std::cout << trajectory.trajectory.back() << std::endl;
+    std::cout << "velocity" << std::endl;
+    std::cout << trajectory.velocities.back() << std::endl;
+    std::cout << "angular velocity" << std::endl;
+    for(auto w : trajectory.angular_velocities){
+        std::cout << w << "[rad/s]" << std::endl;
+    }
+    EXPECT_LT((goal.segment(0, 2) - trajectory.trajectory.back().segment(0, 2)).norm(), 0.1);
+}
+
 int main(int argc, char** argv)
 {
     testing::InitGoogleTest(&argc, argv);

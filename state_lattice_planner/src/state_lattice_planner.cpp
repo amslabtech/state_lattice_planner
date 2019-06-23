@@ -189,6 +189,9 @@ void StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
 
 bool StateLatticePlanner::check_collision(const nav_msgs::OccupancyGrid& local_costmap, const std::vector<Eigen::Vector3d>& trajectory)
 {
+    /*
+     * if given trajectory is considered to collide with an obstacle, return true
+     */
     double resolution = local_costmap.info.resolution;
     std::vector<Eigen::Vector3d> bresenhams_line;
     generate_bresemhams_line(trajectory, resolution, bresenhams_line);
@@ -197,8 +200,39 @@ bool StateLatticePlanner::check_collision(const nav_msgs::OccupancyGrid& local_c
         int xi = round((bresenhams_line[i](0) + local_costmap.info.origin.position.x) / resolution);
         int yi = round((bresenhams_line[i](1) + local_costmap.info.origin.position.y) / resolution);
         if(local_costmap.data[xi + local_costmap.info.width * yi] != 0){
-            return false;
+            return true;
         }
+    }
+    return false;
+}
+
+bool StateLatticePlanner::pickup_trajectory(const std::vector<MotionModelDiffDrive::Trajectory>& candidate_trajectories, const Eigen::Vector3d& goal, MotionModelDiffDrive::Trajectory& output)
+{
+    /*
+     * outputs a trajectory that is nearest to the goal
+     */
+    std::vector<MotionModelDiffDrive::Trajectory> trajectories;
+    for(auto& candidate_trajectory : candidate_trajectories){
+        MotionModelDiffDrive::Trajectory traj;
+        traj = candidate_trajectory;
+        traj.cost = (candidate_trajectory.trajectory.back().segment(0, 2) - goal.segment(0, 2)).norm();
+        trajectories.push_back(traj);
+    }
+    // ascending sort by cost
+    std::sort(trajectories.begin(), trajectories.end());
+
+    double min_diff_yaw = 100;
+    const int N = ((trajectories.size() < sampling_params.n_h) ? trajectories.size() : sampling_params.n_h);
+    for(int i=0;i<N;i++){
+        double diff_yaw = trajectories[i].trajectory.back()(2) - goal(2);
+        diff_yaw = fabs(atan2(sin(diff_yaw), cos(diff_yaw)));
+        if(min_diff_yaw > diff_yaw){
+            min_diff_yaw = diff_yaw;
+            output = trajectories[i];
+        }
+    }
+    if(!(output.trajectory.size() > 0)){
+        return false;
     }
     return true;
 }
@@ -209,18 +243,19 @@ void StateLatticePlanner::process(void)
 
     while(ros::ok()){
         if(local_goal_subscribed && local_map_updated){
-            Eigen::Vector3d goal(local_goal.pose.position.x, local_goal.pose.position.y, 0);
+            Eigen::Vector3d goal(local_goal.pose.position.x, local_goal.pose.position.y, tf::getYaw(local_goal.pose.orientation));
             std::vector<Eigen::Vector3d> states;
             generate_biased_polar_states(N_S, goal, sampling_params, states);
             std::vector<MotionModelDiffDrive::Trajectory> trajectories;
             generate_trajectories(states, trajectories);
-            for(auto trajectory : trajectories){
-                check_collision(local_map, trajectory.trajectory);
+            std::vector<MotionModelDiffDrive::Trajectory> candidate_trajectories;
+            for(auto& trajectory : trajectories){
+                if(!check_collision(local_map, trajectory.trajectory)){
+                    candidate_trajectories.push_back(trajectory);
+                }
             }
-
-            /*
-             * pickup trajectory
-             */
+            MotionModelDiffDrive::Trajectory trajectory;
+            pickup_trajectory(candidate_trajectories, goal, trajectory); 
 
             /*
              * velocity decision

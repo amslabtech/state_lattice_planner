@@ -2,6 +2,7 @@
 #define __STATE_LATTICE_PLANNER_H
 
 #include <ros/ros.h>
+#include <tf/tf.h>
 #include <geometry_msgs/Twist.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -42,6 +43,7 @@ public:
     void sample_states(const std::vector<double>&, const SamplingParams&, std::vector<Eigen::Vector3d>&);
     void generate_trajectories(const std::vector<Eigen::Vector3d>&, std::vector<MotionModelDiffDrive::Trajectory>&);
     bool check_collision(const nav_msgs::OccupancyGrid&, const std::vector<Eigen::Vector3d>&);
+    bool pickup_trajectory(const std::vector<MotionModelDiffDrive::Trajectory>&, const Eigen::Vector3d&, MotionModelDiffDrive::Trajectory&);
 
 
 private:

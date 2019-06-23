@@ -67,6 +67,8 @@ public:
     public:
         Trajectory(void);
 
+        bool operator<(const Trajectory&) const;
+
         // these vectors must be same size
         std::vector<Eigen::Vector3d> trajectory;
         std::vector<double> velocities;

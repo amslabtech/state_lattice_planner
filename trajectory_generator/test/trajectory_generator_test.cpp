@@ -71,6 +71,20 @@ TEST(TestSuite, test3)
     EXPECT_GT(cost, 0);// cost > 0
 }
 
+TEST(TestSuite, test4)
+{
+    std::vector<MotionModelDiffDrive::Trajectory> trajectories;
+    trajectories.resize(2);
+    int i = 2;
+    for(auto& traj : trajectories){
+        traj.cost = i;
+        i--;
+    }
+    ASSERT_GT(trajectories[0].cost, trajectories[1].cost);
+    std::sort(trajectories.begin(), trajectories.end());
+    ASSERT_LT(trajectories[0].cost, trajectories[1].cost);
+}
+
 int main(int argc, char** argv)
 {
     testing::InitGoogleTest(&argc, argv);

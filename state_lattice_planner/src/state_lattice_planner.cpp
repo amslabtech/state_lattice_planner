@@ -257,9 +257,10 @@ void StateLatticePlanner::process(void)
             MotionModelDiffDrive::Trajectory trajectory;
             pickup_trajectory(candidate_trajectories, goal, trajectory); 
 
-            /*
-             * velocity decision
-             */
+            geometry_msgs::Twist cmd_vel;
+            cmd_vel.linear.x = trajectory.velocities[0];
+            cmd_vel.angular.z = trajectory.angular_velocities[0];
+            velocity_pub.publish(cmd_vel);
 
         }else{
             if(!local_goal_subscribed){

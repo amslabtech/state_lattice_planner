@@ -17,9 +17,11 @@ StateLatticePlanner::StateLatticePlanner(void)
     velocity_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
     local_goal_sub = nh.subscribe("/local_goal", 1, &StateLatticePlanner::local_goal_callback, this);
     local_map_sub = nh.subscribe("/local_map", 1, &StateLatticePlanner::local_map_callback, this);
+    odom_sub = nh.subscribe("/odom", 1, &StateLatticePlanner::odom_callback, this);
 
     local_goal_subscribed = false;
     local_map_updated = false;
+    odom_updated = false;
 }
 
 StateLatticePlanner::SamplingParams::SamplingParams(void)
@@ -71,6 +73,12 @@ void StateLatticePlanner::local_map_callback(const nav_msgs::OccupancyGridConstP
 {
     local_map = *msg;
     local_map_updated = true;
+}
+
+void StateLatticePlanner::odom_callback(const nav_msgs::OdometryConstPtr& msg)
+{
+    current_velocity = msg->twist.twist;
+    odom_updated = true;
 }
 
 void StateLatticePlanner::sample_states(const std::vector<double>& sample_angles, const SamplingParams& params, std::vector<Eigen::Vector3d>& states)
@@ -172,15 +180,15 @@ void StateLatticePlanner::generate_biased_polar_states(const int n_s, const Eige
     sample_states(biased_angles, _params, states);
 }
 
-void StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3d>& boundary_states, std::vector<MotionModelDiffDrive::Trajectory>& trajectories)
+void StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3d>& boundary_states, const double velocity, const double angular_velocity, std::vector<MotionModelDiffDrive::Trajectory>& trajectories)
 {
     for(auto boundary_state : boundary_states){
         TrajectoryGeneratorDiffDrive tg;
         MotionModelDiffDrive::ControlParams output;
-        MotionModelDiffDrive::ControlParams init(MotionModelDiffDrive::VelocityParams(0.5, 0), MotionModelDiffDrive::CurvatureParams(0, 0, 0, boundary_state.segment(0, 2).norm()));
+        double k0 = angular_velocity / velocity;
+        MotionModelDiffDrive::ControlParams init(MotionModelDiffDrive::VelocityParams(velocity, 0), MotionModelDiffDrive::CurvatureParams(k0, 0, 0, boundary_state.segment(0, 2).norm()));
         MotionModelDiffDrive::Trajectory trajectory;
         double cost = tg.generate_optimized_trajectory(boundary_state, init, 1e-1, 1e-1, N_S, output, trajectory);
-        tg.set_param(1e-4, 1e-4, 1e-4);
         if(cost > 0){
             trajectories.push_back(trajectory);
         }
@@ -242,12 +250,12 @@ void StateLatticePlanner::process(void)
     ros::Rate loop_rate(HZ);
 
     while(ros::ok()){
-        if(local_goal_subscribed && local_map_updated){
+        if(local_goal_subscribed && local_map_updated && odom_updated){
             Eigen::Vector3d goal(local_goal.pose.position.x, local_goal.pose.position.y, tf::getYaw(local_goal.pose.orientation));
             std::vector<Eigen::Vector3d> states;
             generate_biased_polar_states(N_S, goal, sampling_params, states);
             std::vector<MotionModelDiffDrive::Trajectory> trajectories;
-            generate_trajectories(states, trajectories);
+            generate_trajectories(states, current_velocity.linear.x, current_velocity.angular.z, trajectories);
             std::vector<MotionModelDiffDrive::Trajectory> candidate_trajectories;
             for(auto& trajectory : trajectories){
                 if(!check_collision(local_map, trajectory.trajectory)){
@@ -262,6 +270,8 @@ void StateLatticePlanner::process(void)
             cmd_vel.angular.z = trajectory.angular_velocities[0];
             velocity_pub.publish(cmd_vel);
 
+            local_map_updated = false;
+            odom_updated = false;
         }else{
             if(!local_goal_subscribed){
                 std::cout << "waiting for local goal" << std::endl;

@@ -5,6 +5,7 @@
 #include <tf/tf.h>
 #include <geometry_msgs/Twist.h>
 #include <nav_msgs/OccupancyGrid.h>
+#include <nav_msgs/Odometry.h>
 #include <geometry_msgs/PoseStamped.h>
 
 #include <Eigen/Dense>
@@ -39,9 +40,10 @@ public:
     void process(void);
     void local_goal_callback(const geometry_msgs::PoseStampedConstPtr&);
     void local_map_callback(const nav_msgs::OccupancyGridConstPtr&);
+    void odom_callback(const nav_msgs::OdometryConstPtr&);
     void generate_biased_polar_states(const int, const Eigen::Vector3d&, const SamplingParams&, std::vector<Eigen::Vector3d>&);
     void sample_states(const std::vector<double>&, const SamplingParams&, std::vector<Eigen::Vector3d>&);
-    void generate_trajectories(const std::vector<Eigen::Vector3d>&, std::vector<MotionModelDiffDrive::Trajectory>&);
+    void generate_trajectories(const std::vector<Eigen::Vector3d>&, const double, const double, std::vector<MotionModelDiffDrive::Trajectory>&);
     bool check_collision(const nav_msgs::OccupancyGrid&, const std::vector<Eigen::Vector3d>&);
     bool pickup_trajectory(const std::vector<MotionModelDiffDrive::Trajectory>&, const Eigen::Vector3d&, MotionModelDiffDrive::Trajectory&);
 
@@ -64,10 +66,13 @@ private:
     ros::Publisher velocity_pub;
     ros::Subscriber local_map_sub;
     ros::Subscriber local_goal_sub;
+    ros::Subscriber odom_sub;
     geometry_msgs::PoseStamped local_goal;
     nav_msgs::OccupancyGrid local_map;
+    geometry_msgs::Twist current_velocity;
     bool local_goal_subscribed;
     bool local_map_updated;
+    bool odom_updated;
     SamplingParams sampling_params;
 };
 

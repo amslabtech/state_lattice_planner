@@ -65,7 +65,7 @@ TEST(TestSuite, test3)
         n++;
     }
     std::vector<MotionModelDiffDrive::Trajectory> trajectories;
-    slp.generate_trajectories(states, trajectories);
+    slp.generate_trajectories(states, 0.5, 0, trajectories);
     int count = 0;
     for(auto trajectory : trajectories){
         std::cout << "trajectory " << count << std::endl;
@@ -87,7 +87,7 @@ TEST(TestSuite, test4)
     std::vector<Eigen::Vector3d> states;
     slp.generate_biased_polar_states(ns, goal, params, states);
     std::vector<MotionModelDiffDrive::Trajectory> trajectories;
-    slp.generate_trajectories(states, trajectories);
+    slp.generate_trajectories(states, 0.5, -0.1, trajectories);
     MotionModelDiffDrive::Trajectory trajectory;
     slp.pickup_trajectory(trajectories, goal, trajectory); 
     std::cout << "goal" << std::endl;

@@ -1,25 +1,18 @@
-FROM osrf/ros:kinetic-desktop
+FROM ros:melodic-ros-base
 
-RUN apt-get update
+RUN apt update
 
-RUN apt-get install -y sudo \
-                       wget \
-                       lsb-release \
-                       mesa-utils
-
-RUN apt-get update
-
-RUN apt-get install -y ros-kinetic-pcl* \
-						libpcl-dev
+RUN apt install -y ros-melodic-tf* \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /root
 
 # ROS setting
 RUN /bin/bash -c "mkdir -p catkin_ws/src"
 
-RUN cd catkin_ws/src && /bin/bash -c "source /opt/ros/kinetic/setup.bash; catkin_init_workspace"
+RUN cd catkin_ws/src && /bin/bash -c "source /opt/ros/melodic/setup.bash; catkin_init_workspace"
 
-RUN cd catkin_ws && /bin/bash -c "source /opt/ros/kinetic/setup.bash; catkin_make"
+RUN cd catkin_ws && /bin/bash -c "source /opt/ros/melodic/setup.bash; catkin_make"
 
 RUN cd /root && echo source /root/catkin_ws/devel/setup.bash >> .bashrc
 

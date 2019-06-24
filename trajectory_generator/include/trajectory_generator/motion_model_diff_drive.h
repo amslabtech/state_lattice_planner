@@ -27,7 +27,7 @@ public:
     {
     public:
         VelocityParams(void);
-        VelocityParams(double, double, double, double, double, double);
+        VelocityParams(double, double, double, double, double);
 
         double v0;
         double a0;
@@ -87,6 +87,8 @@ public:
     void generate_trajectory(const double, const ControlParams&, Trajectory&);
     void generate_last_state(const double, const double, const VelocityParams&, const double, const double, const double, Eigen::Vector3d&);
     double calculate_cubic_function(const double, const Eigen::VectorXd&);
+    void make_velocity_profile(const double, const VelocityParams&);
+    double estimate_driving_time(const ControlParams&);
 
 private:
     double trajectory_resolution;
@@ -94,6 +96,8 @@ private:
     double max_curvature;
     double max_acceleration;
     double max_d_curvature;
+    std::vector<double> v_profile;
+    std::vector<double> s_profile;
 };
 
 #endif //__MOTION_MODEL_DIFF_DRIVE_H

@@ -10,6 +10,18 @@ StateLatticePlanner::StateLatticePlanner(void)
     local_nh.param("MAX_ALPHA", MAX_ALPHA, {M_PI / 3.0});
     local_nh.param("MAX_PSI", MAX_PSI, {M_PI / 6.0});
     local_nh.param("N_S", N_S, {1000});
+    local_nh.param("MAX_ACCELERATION", MAX_ACCELERATION, {1.0});
+    local_nh.param("TARGET_VELOCITY", TARGET_VELOCITY, {0.8});
+
+    std::cout << "HZ: " << HZ << std::endl;
+    std::cout << "ROBOT_FRAME: " << ROBOT_FRAME << std::endl;
+    std::cout << "N_P: " << N_P << std::endl;
+    std::cout << "N_H: " << N_H << std::endl;
+    std::cout << "MAX_ALPHA: " << MAX_ALPHA << std::endl;
+    std::cout << "MAX_PSI: " << MAX_PSI << std::endl;
+    std::cout << "N_S: " << N_S << std::endl;
+    std::cout << "MAX_ACCELERATION: " << MAX_ACCELERATION << std::endl;
+    std::cout << "TARGET_VELOCITY: " << TARGET_VELOCITY << std::endl;
 
     SamplingParams sp(N_P, N_H, MAX_ALPHA, MAX_PSI);
     sampling_params = sp;
@@ -186,8 +198,7 @@ void StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
         TrajectoryGeneratorDiffDrive tg;
         MotionModelDiffDrive::ControlParams output;
         double k0 = angular_velocity / velocity;
-        MotionModelDiffDrive::VelocityParams init_v;
-        init_v.v0 = velocity;
+        MotionModelDiffDrive::VelocityParams init_v(velocity, MAX_ACCELERATION, TARGET_VELOCITY, TARGET_VELOCITY, MAX_ACCELERATION);
         MotionModelDiffDrive::ControlParams init(init_v, MotionModelDiffDrive::CurvatureParams(k0, 0, 0, boundary_state.segment(0, 2).norm()));
         MotionModelDiffDrive::Trajectory trajectory;
         double cost = tg.generate_optimized_trajectory(boundary_state, init, 1e-1, 1e-1, N_S, output, trajectory);
@@ -265,7 +276,7 @@ void StateLatticePlanner::process(void)
                 }
             }
             MotionModelDiffDrive::Trajectory trajectory;
-            pickup_trajectory(candidate_trajectories, goal, trajectory); 
+            pickup_trajectory(candidate_trajectories, goal, trajectory);
 
             geometry_msgs::Twist cmd_vel;
             cmd_vel.linear.x = trajectory.velocities[0];

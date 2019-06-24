@@ -59,6 +59,8 @@ private:
     int N_S;
     double MAX_ALPHA;
     double MAX_PSI;
+    double MAX_ACCELERATION;
+    double TARGET_VELOCITY;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;

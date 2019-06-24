@@ -24,14 +24,14 @@ MotionModelDiffDrive::VelocityParams::VelocityParams(void)
 
 }
 
-MotionModelDiffDrive::VelocityParams::VelocityParams(double _v0, double _a0, double _vt, double _vf, double _af, double _time)
+MotionModelDiffDrive::VelocityParams::VelocityParams(double _v0, double _a0, double _vt, double _vf, double _af)
 {
     v0 = _v0;
     a0 = _a0;
     vt = _vt;
     vf = _vf;
     af = _af;
-    time = _time;
+    time = 0;
 }
 
 MotionModelDiffDrive::CurvatureParams::CurvatureParams(void)
@@ -94,33 +94,32 @@ void MotionModelDiffDrive::update(const State& s, const double v, const double c
 void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlParams& control_param, Trajectory& trajectory)
 {
     CurvatureParams curv = control_param.curv;
-    const int N = curv.sf / trajectory_resolution;
+    VelocityParams vel = control_param.vel;
 
-    std::vector<double> s_profile;
-    for(int i=0;i<N;i++){
-        s_profile.push_back(i * trajectory_resolution);
-    }
-    CurvatureParams _curv = curv;
-    _curv.calculate_spline();
+    vel.time = estimate_driving_time(control_param);
+
+    make_velocity_profile(dt, vel);
+
+    curv.calculate_spline();
     std::vector<double> curv_profile;
     for(auto s : s_profile){
         double c = 0;
-        if(s < _curv.sf / 2.0){
-            c = calculate_cubic_function(s, _curv.coeff_0_m);
+        if(s < curv.sf / 2.0){
+            c = calculate_cubic_function(s, curv.coeff_0_m);
         }else{
-            c = calculate_cubic_function(s, _curv.coeff_m_f);
+            c = calculate_cubic_function(s, curv.coeff_m_f);
         }
         curv_profile.push_back(c);
     }
-    //std::cout << "N: " << N << std::endl;
-    State state(0, 0, 0, control_param.vel.v0, _curv.k0);
-    State state_(0, 0, 0, control_param.vel.v0, _curv.k0);
+    State state(0, 0, 0, vel.v0, curv.k0);
+    State state_(0, 0, 0, vel.v0, curv.k0);
     Eigen::Vector3d pose;
     pose << state.x, state.y, state.yaw;
     trajectory.trajectory.push_back(pose);
     trajectory.velocities.push_back(state.v);
     trajectory.angular_velocities.push_back(state.v * state.curvature);
 
+    const int N = s_profile.size();
     for(int i=1;i<N;i++){
         update(state, (s_profile[i]-s_profile[i-1])/dt, curv_profile[i], dt, state_);
         state = state_;
@@ -173,4 +172,70 @@ void MotionModelDiffDrive::CurvatureParams::calculate_spline(void)
 double MotionModelDiffDrive::calculate_cubic_function(const double x, const Eigen::VectorXd& coeff)
 {
     return coeff(0) * x * x * x + coeff(1) * x * x + coeff(2) * x + coeff(3);
+}
+
+void MotionModelDiffDrive::make_velocity_profile(const double dt, const VelocityParams& v_param)
+{
+    /*
+     *  trapezoid control
+     */
+
+    /***************************************
+         vt  ________________
+           /|                |\
+          / |                | \
+     v0  /  |                |  \ vf
+          a0      a=0         af
+
+    ***************************************/
+    v_profile.clear();
+    s_profile.clear();
+
+    double s = 0;
+    for(double t=0;t<v_param.time;t+=dt){
+        // acceleration time
+        double ta = fabs((v_param.vt - v_param.v0) / v_param.a0);
+        // deceleration time
+        double td = v_param.time - fabs((v_param.vf - v_param.vt) / v_param.af);
+
+        double v = 0;
+        if(t < 0){
+            v = v_param.v0;
+        }else if(t < ta){
+            if(v_param.v0 + v_param.a0 * t < v_param.vt){
+                v = v_param.v0 + v_param.a0 * t;
+            }else{
+                v = v_param.vt;
+            }
+        }else if(ta <= t && t < td){
+            v = v_param.vt;
+        }else if(td <= t && t < v_param.time){
+            if(v_param.vt - v_param.af * (t - td) > v_param.vf){
+                v = v_param.vt - v_param.af * (t - td);
+            }else{
+                v = v_param.vt;
+            }
+        }else{
+            v = v_param.vf;
+        }
+        v_profile.push_back(v);
+        s += fabs(v) * dt;
+        s_profile.push_back(s);
+    }
+}
+
+double MotionModelDiffDrive::estimate_driving_time(const ControlParams& control)
+{
+    // acceleration time
+    double t0 = fabs((control.vel.vt - control.vel.v0) / control.vel.a0);
+    // deceleration time
+    double td = fabs((control.vel.vf - control.vel.vt) / control.vel.af);
+
+    double s0 = 0.5 * fabs(control.vel.vt + control.vel.v0) * t0;
+    double sd = 0.5 * fabs(control.vel.vt + control.vel.vf) * td;
+
+    double st = control.curv.sf - s0 - sd;
+    double tt = st / fabs(control.vel.vt);
+    double driving_time = t0 + tt + td;
+    return driving_time;
 }

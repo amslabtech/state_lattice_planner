@@ -89,7 +89,7 @@ TEST(TestSuite, test4)
     std::vector<MotionModelDiffDrive::Trajectory> trajectories;
     slp.generate_trajectories(states, 0.5, -0.1, trajectories);
     MotionModelDiffDrive::Trajectory trajectory;
-    slp.pickup_trajectory(trajectories, goal, trajectory); 
+    slp.pickup_trajectory(trajectories, goal, trajectory);
     std::cout << "goal" << std::endl;
     std::cout << goal << std::endl;
     std::cout << "terminal state" << std::endl;
@@ -100,7 +100,7 @@ TEST(TestSuite, test4)
     for(auto w : trajectory.angular_velocities){
         std::cout << w << "[rad/s]" << std::endl;
     }
-    EXPECT_LT((goal.segment(0, 2) - trajectory.trajectory.back().segment(0, 2)).norm(), 0.1);
+    EXPECT_LT((goal.segment(0, 2) - trajectory.trajectory.back().segment(0, 2)).norm(), 0.2);
 }
 
 int main(int argc, char** argv)

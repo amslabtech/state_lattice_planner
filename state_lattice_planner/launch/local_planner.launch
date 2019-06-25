@@ -9,8 +9,8 @@
     <arg name="max_acceleration" default="1.0"/>
     <arg name="target_velocity" default="0.8"/>
     <arg name="lookup_table_file_name" default="$(find state_lattice_planner)/lookup_table/lookup_table.csv"/>
-    <arg name="MAX_ITERATION" default="100"/>
-    <arg name="OPTIMIZATION_TOLERANCE" default="0.1"/>
+    <arg name="max_iteration" default="100"/>
+    <arg name="optimization_tolerance" default="0.1"/>
 
     <node pkg="state_lattice_planner" type="state_lattice_planner" name="state_lattice_planner" ns="local_planner">
         <param name="HZ" value="$(arg hz)"/>
@@ -23,6 +23,6 @@
         <param name="TARGET_VELOCITY" value="$(arg target_velocity)"/>
         <param name="LOOKUP_TABLE_FILE_NAME" value="$(arg lookup_table_file_name)"/>
         <param name="MAX_ITERATION" value="$(arg max_iteration)"/>
-        <param name="optimization_tolerance" value="$(arg optimization_tolerance)"/>
+        <param name="OPTIMIZATION_TOLERANCE" value="$(arg optimization_tolerance)"/>
     </node>
 </launch>

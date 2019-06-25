@@ -36,6 +36,8 @@ StateLatticePlanner::StateLatticePlanner(void)
     local_goal_subscribed = false;
     local_map_updated = false;
     odom_updated = false;
+
+    load_lookup_table();
 }
 
 StateLatticePlanner::SamplingParams::SamplingParams(void)
@@ -205,13 +207,24 @@ void StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
         TrajectoryGeneratorDiffDrive tg;
         MotionModelDiffDrive::ControlParams output;
         double k0 = angular_velocity / velocity;
-        MotionModelDiffDrive::VelocityParams init_v(velocity, MAX_ACCELERATION, TARGET_VELOCITY, TARGET_VELOCITY, MAX_ACCELERATION);
-        MotionModelDiffDrive::ControlParams init(init_v, MotionModelDiffDrive::CurvatureParams(k0, 0, 0, boundary_state.segment(0, 2).norm()));
+
+        MotionModelDiffDrive::ControlParams param;
+        get_optimized_param_from_lookup_table(boundary_state, velocity, k0, param);
+
+        MotionModelDiffDrive::ControlParams init(MotionModelDiffDrive::VelocityParams(velocity, MAX_ACCELERATION, TARGET_VELOCITY, TARGET_VELOCITY, MAX_ACCELERATION)
+                                               , MotionModelDiffDrive::CurvatureParams(k0, param.curv.km, param.curv.kf, boundary_state.segment(0, 2).norm()));
+                                               //, MotionModelDiffDrive::CurvatureParams(k0, param.curv.km, param.curv.kf, param.curv.sf));
+
         MotionModelDiffDrive::Trajectory trajectory;
-        double cost = tg.generate_optimized_trajectory(boundary_state, init, 1e-1, 1e-1, N_S, output, trajectory);
+        double cost = tg.generate_optimized_trajectory(boundary_state, init, 1e-1, 1e-1, 100, output, trajectory);
         if(cost > 0){
             trajectories.push_back(trajectory);
         }
+    }
+    if(trajectories.size() == 0)
+    {
+        std::cout << "no trajectory was generated" << std::endl;
+        exit(-1);
     }
 }
 
@@ -267,6 +280,7 @@ bool StateLatticePlanner::pickup_trajectory(const std::vector<MotionModelDiffDri
 
 void StateLatticePlanner::load_lookup_table(void)
 {
+    lookup_table.clear();
     std::cout << "loading lookup table from " << LOOKUP_TABLE_FILE_NAME << std::endl;
     std::ifstream ifs(LOOKUP_TABLE_FILE_NAME);
     if(ifs){
@@ -344,8 +358,6 @@ void StateLatticePlanner::get_optimized_param_from_lookup_table(const Eigen::Vec
 
 void StateLatticePlanner::process(void)
 {
-    load_lookup_table();
-
     ros::Rate loop_rate(HZ);
 
     while(ros::ok()){

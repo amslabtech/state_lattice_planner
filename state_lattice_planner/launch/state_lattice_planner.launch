@@ -1,0 +1,24 @@
+<launch>
+    <arg name="hz" default="20"/>
+    <arg name="robot_frame" default="base_link"/>
+    <arg name="n_p" default="10"/>
+    <arg name="n_h" default="3"/>
+    <arg name="max_alpha" default="1.0471975"/>
+    <arg name="max_psi" default="1.0471975"/>
+    <arg name="n_s" default="1000"/>
+    <arg name="max_acceleration" default="1.0"/>
+    <arg name="target_velocity" default="0.8"/>
+    <arg name="lookup_table_file_name" default="$(find state_lattice_planner)/lookup_table/lookup_table.csv"/>
+
+    <node pkg="state_lattice_planner" type="state_lattice_planner" name="state_lattice_planner" ns="local_planner">
+        <param name="HZ" value="$(arg hz)"/>
+        <param name="N_P" value="$(arg n_p)"/>
+        <param name="N_H" value="$(arg n_h)"/>
+        <param name="MAX_ALPHA" value="$(arg max_alpha)"/>
+        <param name="MAX_PSI" value="$(arg max_psi)"/>
+        <param name="N_S" value="$(arg n_s)"/>
+        <param name="MAX_ACCELERATION" value="$(arg max_acceleration)"/>
+        <param name="TARGET_VELOCITY" value="$(arg target_velocity)"/>
+        <param name="LOOKUP_TABLE_FILE_NAME" value="$(arg lookup_table_file_name)"/>
+    </node>
+</launch>

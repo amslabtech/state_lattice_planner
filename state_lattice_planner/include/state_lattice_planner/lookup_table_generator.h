@@ -16,7 +16,8 @@ class LookupTableGenerator
 public:
     LookupTableGenerator(void);
 
-    void process(void);
+    std::string process(void);
+    void save(std::string&);
 
 private:
     double MIN_X;
@@ -27,6 +28,8 @@ private:
     double MAX_YAW;
     double DELTA_YAW;
     std::string LOOKUP_TABLE_FILE_NAME;
+    double MAX_ACCELERATION;
+    double TARGET_VELOCITY;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;

@@ -11,10 +11,22 @@ LookupTableGenerator::LookupTableGenerator(void)
     local_nh.param("MAX_YAW", MAX_YAW, {M_PI / 3.0});
     local_nh.param("DELTA_YAW", DELTA_YAW, {M_PI / 3.0});
     local_nh.param("LOOKUP_TABLE_FILE_NAME", LOOKUP_TABLE_FILE_NAME, {std::string(std::getenv("HOME")) + "/lookup_table.csv"});
+    local_nh.param("MAX_ACCELERATION", MAX_ACCELERATION, {1.0});
+    local_nh.param("TARGET_VELOCITY", TARGET_VELOCITY, {0.8});
 
+    std::cout << "MIN_X: " << MIN_X << std::endl;
+    std::cout << "MAX_X: " << MAX_X << std::endl;
+    std::cout << "DELTA_X: " << DELTA_X << std::endl;
+    std::cout << "MAX_Y: " << MAX_Y << std::endl;
+    std::cout << "DELTA_Y: " << DELTA_Y << std::endl;
+    std::cout << "MAX_YAW: " << MAX_YAW << std::endl;
+    std::cout << "DELTA_YAW: " << DELTA_YAW << std::endl;
+    std::cout << "LOOKUP_TABLE_FILE_NAME: " << LOOKUP_TABLE_FILE_NAME << std::endl;
+    std::cout << "MAX_ACCELERATION: " << MAX_ACCELERATION << std::endl;
+    std::cout << "TARGET_VELOCITY: " << TARGET_VELOCITY << std::endl;
 }
 
-void LookupTableGenerator::process(void)
+std::string LookupTableGenerator::process(void)
 {
     const int N_X = (MAX_X - MIN_X) / DELTA_X + 1;
     if(N_X < 1){
@@ -56,21 +68,19 @@ void LookupTableGenerator::process(void)
         lookup_table_data.resize(6);
     }
 
-    std::string output_data;
+    std::string output_data = "x, y, yaw, km, kf, sf\n";
     for(auto state : states){
         std::cout << "state:" << std::endl;
         std::cout << state << std::endl;
         double distance = state.segment(0, 2).norm();
         std::cout << "distance: " << distance << std::endl;
-        MotionModelDiffDrive::VelocityParams init_v;
-        init_v.v0 = 0.5;
+        double v0 = 0.5;// temp
+        MotionModelDiffDrive::VelocityParams init_v(v0, MAX_ACCELERATION, TARGET_VELOCITY, TARGET_VELOCITY, MAX_ACCELERATION);
         MotionModelDiffDrive::ControlParams init(init_v, MotionModelDiffDrive::CurvatureParams(0, 0, 0, distance));
         MotionModelDiffDrive::ControlParams output;
         MotionModelDiffDrive::Trajectory trajectory;
         TrajectoryGeneratorDiffDrive tg;
-        tg.set_param(0.005, 0.005, 0.5);
-
-        double cost = tg.generate_optimized_trajectory(state, init, 0.05, 0.1, 100, output, trajectory);
+        double cost = tg.generate_optimized_trajectory(state, init, 1e-1, 1e-1, 100, output, trajectory);
         if(cost > 0){
             std::cout << "successfully optimized" << std::endl;
             std::stringstream data;
@@ -80,9 +90,14 @@ void LookupTableGenerator::process(void)
             std::cout << "failed to optimize trajectory" << std::endl;
         }
     }
+    return output_data;
+}
+
+void LookupTableGenerator::save(std::string& data)
+{
     std::ofstream ofs(LOOKUP_TABLE_FILE_NAME);
     if(ofs){
-        ofs << output_data;
+        ofs << data;
         ofs.close();
     }else{
         std::cout << "cannot open file" << std::endl;

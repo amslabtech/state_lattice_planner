@@ -13,6 +13,8 @@ StateLatticePlanner::StateLatticePlanner(void)
     local_nh.param("MAX_ACCELERATION", MAX_ACCELERATION, {1.0});
     local_nh.param("TARGET_VELOCITY", TARGET_VELOCITY, {0.8});
     local_nh.param("LOOKUP_TABLE_FILE_NAME", LOOKUP_TABLE_FILE_NAME, {std::string(std::getenv("HOME")) + "/lookup_table.csv"});
+    local_nh.param("MAX_ITERATION", MAX_ITERATION, {100});
+    local_nh.param("OPTIMIZATION_TOLERANCE", OPTIMIZATION_TOLERANCE, {0.1});
 
     std::cout << "HZ: " << HZ << std::endl;
     std::cout << "ROBOT_FRAME: " << ROBOT_FRAME << std::endl;
@@ -24,6 +26,8 @@ StateLatticePlanner::StateLatticePlanner(void)
     std::cout << "MAX_ACCELERATION: " << MAX_ACCELERATION << std::endl;
     std::cout << "TARGET_VELOCITY: " << TARGET_VELOCITY << std::endl;
     std::cout << "LOOKUP_TABLE_FILE_NAME: " << LOOKUP_TABLE_FILE_NAME << std::endl;
+    std::cout << "MAX_ITERATION: " << MAX_ITERATION << std::endl;
+    std::cout << "OPTIMIZATION_TOLERANCE: " << OPTIMIZATION_TOLERANCE << std::endl;
 
     SamplingParams sp(N_P, N_H, MAX_ALPHA, MAX_PSI);
     sampling_params = sp;
@@ -220,7 +224,7 @@ void StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
                                                //, MotionModelDiffDrive::CurvatureParams(k0, param.curv.km, param.curv.kf, param.curv.sf));
 
         MotionModelDiffDrive::Trajectory trajectory;
-        double cost = tg.generate_optimized_trajectory(boundary_state, init, 1e-1, 1e-1, 100, output, trajectory);
+        double cost = tg.generate_optimized_trajectory(boundary_state, init, 1.0 / HZ, OPTIMIZATION_TOLERANCE, MAX_ITERATION, output, trajectory);
         if(cost > 0){
             trajectories.push_back(trajectory);
         }

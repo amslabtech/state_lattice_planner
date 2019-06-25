@@ -81,6 +81,8 @@ private:
     double MAX_ACCELERATION;
     double TARGET_VELOCITY;
     std::string LOOKUP_TABLE_FILE_NAME;
+    int MAX_ITERATION;
+    double OPTIMIZATION_TOLERANCE;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;

@@ -10,6 +10,8 @@
 #include <nav_msgs/OccupancyGrid.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 
 #include <Eigen/Dense>
 
@@ -66,6 +68,8 @@ public:
 private:
     void swap(double&, double&);
     void generate_bresemhams_line(const std::vector<Eigen::Vector3d>&, const double&, std::vector<Eigen::Vector3d>&);
+    void visualize_trajectories(const std::vector<MotionModelDiffDrive::Trajectory>&, const int, const int, const int, const ros::Publisher&);
+    void visualize_trajectory(const MotionModelDiffDrive::Trajectory&, const int, const int, const int, const ros::Publisher&);
 
     double HZ;
     std::string ROBOT_FRAME;
@@ -82,6 +86,9 @@ private:
     ros::NodeHandle local_nh;
 
     ros::Publisher velocity_pub;
+    ros::Publisher candidate_trajectories_pub;
+    ros::Publisher candidate_trajectories_no_collision_pub;
+    ros::Publisher selected_trajectory_pub;
     ros::Subscriber local_map_sub;
     ros::Subscriber local_goal_sub;
     ros::Subscriber odom_sub;

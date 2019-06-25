@@ -29,6 +29,10 @@ StateLatticePlanner::StateLatticePlanner(void)
     sampling_params = sp;
 
     velocity_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
+    candidate_trajectories_pub = local_nh.advertise<visualization_msgs::MarkerArray>("candidate_trajectories", 1);
+    candidate_trajectories_no_collision_pub = local_nh.advertise<visualization_msgs::MarkerArray>("candidate_trajectories/no_collision", 1);
+    selected_trajectory_pub = local_nh.advertise<visualization_msgs::Marker>("selected_trajectory", 1);
+
     local_goal_sub = nh.subscribe("/local_goal", 1, &StateLatticePlanner::local_goal_callback, this);
     local_map_sub = nh.subscribe("/local_map", 1, &StateLatticePlanner::local_map_callback, this);
     odom_sub = nh.subscribe("/odom", 1, &StateLatticePlanner::odom_callback, this);
@@ -367,14 +371,19 @@ void StateLatticePlanner::process(void)
             generate_biased_polar_states(N_S, goal, sampling_params, states);
             std::vector<MotionModelDiffDrive::Trajectory> trajectories;
             generate_trajectories(states, current_velocity.linear.x, current_velocity.angular.z, trajectories);
+            visualize_trajectories(trajectories, 0, 255, 0, candidate_trajectories_pub);
+
             std::vector<MotionModelDiffDrive::Trajectory> candidate_trajectories;
             for(auto& trajectory : trajectories){
                 if(!check_collision(local_map, trajectory.trajectory)){
                     candidate_trajectories.push_back(trajectory);
                 }
             }
+            visualize_trajectories(candidate_trajectories, 0, 0, 255, candidate_trajectories_no_collision_pub);
+
             MotionModelDiffDrive::Trajectory trajectory;
             pickup_trajectory(candidate_trajectories, goal, trajectory);
+            visualize_trajectory(trajectory, 255, 0, 0, selected_trajectory_pub);
 
             geometry_msgs::Twist cmd_vel;
             cmd_vel.linear.x = trajectory.velocities[0];
@@ -451,3 +460,55 @@ void StateLatticePlanner::generate_bresemhams_line(const std::vector<Eigen::Vect
 
     }
 }
+
+void StateLatticePlanner::visualize_trajectories(const std::vector<MotionModelDiffDrive::Trajectory>& trajectories, const int r, const int g, const int b, const ros::Publisher& pub)
+{
+    visualization_msgs::MarkerArray v_trajectories;
+    int count = 0;
+    for(const auto& trajectory : trajectories){
+        visualization_msgs::Marker v_trajectory;
+        v_trajectory.header.frame_id = ROBOT_FRAME;
+        v_trajectory.header.stamp = ros::Time::now();
+        v_trajectory.color.r = r;
+        v_trajectory.color.g = g;
+        v_trajectory.color.b = b;
+        v_trajectory.color.a = 0.8;
+        v_trajectory.ns = pub.getTopic();
+        v_trajectory.type = visualization_msgs::Marker::LINE_STRIP;
+        v_trajectory.action = visualization_msgs::Marker::ADD;
+        v_trajectory.lifetime = ros::Duration(0);
+        v_trajectory.id = count;
+        v_trajectory.scale.x = 0.01;
+        geometry_msgs::Point p;
+        for(const auto& pose : trajectory.trajectory){
+            p.x = pose(0);
+            p.y = pose(1);
+            v_trajectory.points.push_back(p);
+        }
+        v_trajectories.markers.push_back(v_trajectory);
+        count++;
+    }
+    pub.publish(v_trajectories);
+}
+
+void StateLatticePlanner::visualize_trajectory(const MotionModelDiffDrive::Trajectory& trajectory, const int r, const int g, const int b, const ros::Publisher& pub)
+{
+    visualization_msgs::Marker v_trajectory;
+    v_trajectory.color.r = r;
+    v_trajectory.color.g = g;
+    v_trajectory.color.b = b;
+    v_trajectory.color.a = 0.8;
+    v_trajectory.ns = pub.getTopic();
+    v_trajectory.type = visualization_msgs::Marker::LINE_STRIP;
+    v_trajectory.action = visualization_msgs::Marker::ADD;
+    v_trajectory.lifetime = ros::Duration(0);
+    v_trajectory.scale.x = 0.01;
+    geometry_msgs::Point p;
+    for(const auto& pose : trajectory.trajectory){
+        p.x = pose(0);
+        p.y = pose(1);
+        v_trajectory.points.push_back(p);
+    }
+    pub.publish(v_trajectory);
+}
+

@@ -74,7 +74,7 @@ std::string LookupTableGenerator::process(void)
         lookup_table_data.resize(6);
     }
 
-    std::string output_data = "x, y, yaw, km, kf, sf\n";
+    std::string output_data = "v0, k0, x, y, yaw, km, kf, sf\n";
     double span_v = MAX_V - MIN_V;
     for(double v0=MIN_V;v0<=MAX_V;v0+=DELTA_V){
         std::cout << "v0: " << v0 << "[m/s]" << std::endl;
@@ -91,8 +91,9 @@ std::string LookupTableGenerator::process(void)
             double cost = tg.generate_optimized_trajectory(state, init, 1e-1, 1e-1, 100, output, trajectory);
             if(cost > 0){
                 std::cout << "successfully optimized" << std::endl;
+                double k0 = 0.0;
                 std::stringstream data;
-                data << trajectory.trajectory.back()(0) << "," << trajectory.trajectory.back()(1) << "," << trajectory.trajectory.back()(2) << "," << output.curv.km << "," << output.curv.kf << "," << output.curv.sf << "\n";
+                data << v0 << "," << k0 << "," << trajectory.trajectory.back()(0) << "," << trajectory.trajectory.back()(1) << "," << trajectory.trajectory.back()(2) << "," << output.curv.km << "," << output.curv.kf << "," << output.curv.sf << "\n";
                 output_data += data.str();
             }else{
                 std::cout << "failed to optimize trajectory" << std::endl;

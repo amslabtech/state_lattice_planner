@@ -30,6 +30,9 @@ private:
     std::string LOOKUP_TABLE_FILE_NAME;
     double MAX_ACCELERATION;
     double TARGET_VELOCITY;
+    double MIN_V;
+    double MAX_V;
+    double DELTA_V;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;

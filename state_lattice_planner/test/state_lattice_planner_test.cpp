@@ -54,7 +54,7 @@ TEST(TestSuite, test3)
     int np = 5;
     int nh = 2;
     int ns = 20;
-    Eigen::Vector3d goal(2, 1, 1);
+    Eigen::Vector3d goal(5, 1, 1);
     StateLatticePlanner::SamplingParams params(np, nh, M_PI / 4.0, M_PI / 6.0);
     std::vector<Eigen::Vector3d> states;
     slp.generate_biased_polar_states(ns, goal, params, states);
@@ -107,6 +107,12 @@ TEST(TestSuite, test5)
 {
     StateLatticePlanner slp;
     slp.load_lookup_table();
+    Eigen::Vector3d goal(3, 1, 0.5);
+    double v0 = 0.5;
+    double k0 = -0.1;
+    MotionModelDiffDrive::ControlParams control;
+    slp.get_optimized_param_from_lookup_table(goal, v0, k0, control);
+    std::cout << control.curv.k0 << ", " << control.curv.km << ", " << control.curv.kf << ", " << control.curv.sf << std::endl;
 }
 
 int main(int argc, char** argv)

@@ -12,6 +12,7 @@ StateLatticePlanner::StateLatticePlanner(void)
     local_nh.param("N_S", N_S, {1000});
     local_nh.param("MAX_ACCELERATION", MAX_ACCELERATION, {1.0});
     local_nh.param("TARGET_VELOCITY", TARGET_VELOCITY, {0.8});
+    local_nh.param("LOOKUP_TABLE_FILE_NAME", LOOKUP_TABLE_FILE_NAME, {std::string(std::getenv("HOME")) + "/lookup_table.csv"});
 
     std::cout << "HZ: " << HZ << std::endl;
     std::cout << "ROBOT_FRAME: " << ROBOT_FRAME << std::endl;
@@ -22,6 +23,7 @@ StateLatticePlanner::StateLatticePlanner(void)
     std::cout << "N_S: " << N_S << std::endl;
     std::cout << "MAX_ACCELERATION: " << MAX_ACCELERATION << std::endl;
     std::cout << "TARGET_VELOCITY: " << TARGET_VELOCITY << std::endl;
+    std::cout << "LOOKUP_TABLE_FILE_NAME: " << LOOKUP_TABLE_FILE_NAME << std::endl;
 
     SamplingParams sp(N_P, N_H, MAX_ALPHA, MAX_PSI);
     sampling_params = sp;
@@ -73,6 +75,11 @@ StateLatticePlanner::SamplingParams::SamplingParams(const int _n_p, const int _n
     max_psi = _max_psi;
     min_psi = -_max_psi;
     span_psi = max_psi - min_psi;
+}
+
+StateLatticePlanner::StateWithControlParams::StateWithControlParams(void)
+{
+
 }
 
 void StateLatticePlanner::local_goal_callback(const geometry_msgs::PoseStampedConstPtr& msg)
@@ -258,8 +265,67 @@ bool StateLatticePlanner::pickup_trajectory(const std::vector<MotionModelDiffDri
     return true;
 }
 
+void StateLatticePlanner::load_lookup_table(void)
+{
+    std::cout << "loading lookup table from " << LOOKUP_TABLE_FILE_NAME << std::endl;
+    std::ifstream ifs(LOOKUP_TABLE_FILE_NAME);
+    if(ifs){
+        bool first_line_flag = true;
+        while(!ifs.eof()){
+            std::string data;
+            std::getline(ifs, data);
+            if(data == ""){
+                continue;
+            }
+            if(first_line_flag){
+                first_line_flag = false;
+                continue;
+            }
+            std::istringstream stream(data);
+            std::vector<double> splitted_data;
+            std::string buffer;
+            while(std::getline(stream, buffer, ',')){
+                splitted_data.push_back(std::stod(buffer));
+            }
+            StateWithControlParams param;
+            auto it = splitted_data.begin();
+            double v0 = *(it);
+            param.control.curv.k0 = *(++it);
+            double x = *(++it);
+            double y = *(++it);
+            double yaw = *(++it);
+            param.state << x, y, yaw;
+            param.control.curv.km = *(++it);
+            param.control.curv.kf = *(++it);
+            param.control.curv.sf = *(++it);
+            lookup_table[v0][param.control.curv.k0].push_back(param);
+        }
+        ifs.close();
+    }else{
+        std::cout << "\033[91mERROR: cannot open file\033[00m" << std::endl;
+        exit(-1);
+    }
+    /*
+    for(auto it=lookup_table.begin();it!=lookup_table.end();++it){
+        double v0 = (*it).first;
+        auto value = (*it).second;
+        std::cout << value.size() << std::endl;
+        for(auto it2=value.begin();it2!=value.end();++it2){
+            double k0 = (*it2).first;
+            std::cout << v0 << ", " << k0 << std::endl;
+            for(auto data : lookup_table[v0][k0]){
+                std::cout << data.state << std::endl;
+                std::cout << data.control.curv.km << ", " << data.control.curv.kf << ", " << data.control.curv.sf << std::endl;
+            }
+        }
+    }
+    */
+}
+
 void StateLatticePlanner::process(void)
 {
+    load_lookup_table();
+
     ros::Rate loop_rate(HZ);
 
     while(ros::ok()){

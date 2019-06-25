@@ -103,6 +103,12 @@ TEST(TestSuite, test4)
     EXPECT_LT((goal.segment(0, 2) - trajectory.trajectory.back().segment(0, 2)).norm(), 0.2);
 }
 
+TEST(TestSuite, test5)
+{
+    StateLatticePlanner slp;
+    slp.load_lookup_table();
+}
+
 int main(int argc, char** argv)
 {
     testing::InitGoogleTest(&argc, argv);

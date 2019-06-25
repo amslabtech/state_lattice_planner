@@ -1,6 +1,9 @@
 #ifndef __STATE_LATTICE_PLANNER_H
 #define __STATE_LATTICE_PLANNER_H
 
+#include <fstream>
+#include <sstream>
+
 #include <ros/ros.h>
 #include <tf/tf.h>
 #include <geometry_msgs/Twist.h>
@@ -35,6 +38,17 @@ public:
     private:
     };
 
+    /// for lookup table
+    class StateWithControlParams
+    {
+    public:
+        StateWithControlParams(void);
+
+        Eigen::Vector3d state;// x, y, yaw
+        MotionModelDiffDrive::ControlParams control;
+    private:
+    };
+
     StateLatticePlanner(void);
 
     void process(void);
@@ -46,7 +60,7 @@ public:
     void generate_trajectories(const std::vector<Eigen::Vector3d>&, const double, const double, std::vector<MotionModelDiffDrive::Trajectory>&);
     bool check_collision(const nav_msgs::OccupancyGrid&, const std::vector<Eigen::Vector3d>&);
     bool pickup_trajectory(const std::vector<MotionModelDiffDrive::Trajectory>&, const Eigen::Vector3d&, MotionModelDiffDrive::Trajectory&);
-
+    void load_lookup_table(void);
 
 private:
     void swap(double&, double&);
@@ -61,6 +75,7 @@ private:
     double MAX_PSI;
     double MAX_ACCELERATION;
     double TARGET_VELOCITY;
+    std::string LOOKUP_TABLE_FILE_NAME;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;
@@ -76,6 +91,7 @@ private:
     bool local_map_updated;
     bool odom_updated;
     SamplingParams sampling_params;
+    std::map<double, std::map<double, std::vector<StateWithControlParams> > > lookup_table;
 };
 
 #endif //__STATE_LATTICE_PLANNER_H

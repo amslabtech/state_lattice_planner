@@ -1,5 +1,7 @@
 <launch>
 
-	<test pkg="state_lattice_planner" type="state_lattice_planner_test" test-name="state_lattice_planner_test"/> 
+    <test pkg="state_lattice_planner" type="state_lattice_planner_test" test-name="state_lattice_planner_test">
+        <param name="LOOKUP_TABLE_FILE_NAME" value="$(find state_lattice_planner)/lookup_table/lookup_table.csv"/>
+    </test>
 
 </launch>

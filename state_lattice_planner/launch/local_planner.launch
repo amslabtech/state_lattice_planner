@@ -1,5 +1,5 @@
 <launch>
-    <arg name="hz" default="20"/>
+    <arg name="hz" default="10"/>
     <arg name="robot_frame" default="base_link"/>
     <arg name="n_p" default="10"/>
     <arg name="n_h" default="3"/>
@@ -9,7 +9,7 @@
     <arg name="max_acceleration" default="1.0"/>
     <arg name="target_velocity" default="0.8"/>
     <arg name="lookup_table_file_name" default="$(find state_lattice_planner)/lookup_table/lookup_table.csv"/>
-    <arg name="max_iteration" default="100"/>
+    <arg name="max_iteration" default="5"/>
     <arg name="optimization_tolerance" default="0.1"/>
 
     <node pkg="state_lattice_planner" type="state_lattice_planner" name="state_lattice_planner" ns="local_planner">

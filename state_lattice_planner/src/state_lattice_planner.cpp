@@ -212,7 +212,9 @@ void StateLatticePlanner::generate_biased_polar_states(const int n_s, const Eige
 bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3d>& boundary_states, const double velocity, const double angular_velocity, std::vector<MotionModelDiffDrive::Trajectory>& trajectories)
 {
     std::cout << "generate trajectories to boundary states" << std::endl;
+    int count = 0;
     for(auto boundary_state : boundary_states){
+        double start = ros::Time::now().toSec();
         TrajectoryGeneratorDiffDrive tg;
         MotionModelDiffDrive::ControlParams output;
         //std::cout << "v: " << velocity << ", " << "w: " << angular_velocity << std::endl;
@@ -224,6 +226,7 @@ bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
         MotionModelDiffDrive::ControlParams param;
         get_optimized_param_from_lookup_table(boundary_state, velocity, k0, param);
         //std::cout << "v0: " << velocity << ", " << "k0: " << k0 << ", " << "km: " << param.curv.km << ", " << "kf: " << param.curv.kf << ", " << "sf: " << param.curv.sf << std::endl;
+        std::cout << "lookup table time " << count << ": " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
         MotionModelDiffDrive::ControlParams init(MotionModelDiffDrive::VelocityParams(velocity, MAX_ACCELERATION, TARGET_VELOCITY, TARGET_VELOCITY, MAX_ACCELERATION)
                                                , MotionModelDiffDrive::CurvatureParams(k0, param.curv.km, param.curv.kf, param.curv.sf));
@@ -232,6 +235,8 @@ bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
         double cost = tg.generate_optimized_trajectory(boundary_state, init, 1.0 / HZ, OPTIMIZATION_TOLERANCE, MAX_ITERATION, output, trajectory);
         if(cost > 0){
             trajectories.push_back(trajectory);
+            std::cout << "generate time " << count << ": " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+            count++;
         }
     }
     if(trajectories.size() == 0)
@@ -377,6 +382,8 @@ void StateLatticePlanner::process(void)
 
     while(ros::ok()){
         if(local_goal_subscribed && local_map_updated && odom_updated){
+            std::cout << "=== state lattice planner ===" << std::endl;
+            double start = ros::Time::now().toSec();
             std::cout << "local goal: \n" << local_goal << std::endl;
             std::cout << "current_velocity: \n" << current_velocity << std::endl;
             Eigen::Vector3d goal(local_goal.pose.position.x, local_goal.pose.position.y, tf::getYaw(local_goal.pose.orientation));
@@ -394,6 +401,7 @@ void StateLatticePlanner::process(void)
                         candidate_trajectories.push_back(trajectory);
                     }
                 }
+                std::cout << "candidate time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
                 if(candidate_trajectories.size() > 0){
                     visualize_trajectories(candidate_trajectories, 0, 0.5, 1, candidate_trajectories_no_collision_pub);
 
@@ -401,6 +409,7 @@ void StateLatticePlanner::process(void)
                     MotionModelDiffDrive::Trajectory trajectory;
                     pickup_trajectory(candidate_trajectories, goal, trajectory);
                     visualize_trajectory(trajectory, 1, 0, 0, selected_trajectory_pub);
+                    std::cout << "pickup time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
                     std::cout << "publish velocity" << std::endl;
                     geometry_msgs::Twist cmd_vel;
@@ -416,7 +425,6 @@ void StateLatticePlanner::process(void)
                     cmd_vel.linear.x = 0;
                     cmd_vel.angular.z = 0;
                     velocity_pub.publish(cmd_vel);
-                    continue;
                 }
             }else{
                 geometry_msgs::Twist cmd_vel;
@@ -424,6 +432,7 @@ void StateLatticePlanner::process(void)
                 cmd_vel.angular.z = 0;
                 velocity_pub.publish(cmd_vel);
             }
+            std::cout << "final time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
         }else{
             if(!local_goal_subscribed){
                 std::cout << "waiting for local goal" << std::endl;
@@ -508,7 +517,7 @@ void StateLatticePlanner::visualize_trajectories(const std::vector<MotionModelDi
         v_trajectory.ns = pub.getTopic();
         v_trajectory.type = visualization_msgs::Marker::LINE_STRIP;
         v_trajectory.action = visualization_msgs::Marker::ADD;
-        v_trajectory.lifetime = ros::Duration(0);
+        v_trajectory.lifetime = ros::Duration();
         v_trajectory.id = count;
         v_trajectory.scale.x = 0.02;
         geometry_msgs::Point p;
@@ -535,7 +544,7 @@ void StateLatticePlanner::visualize_trajectory(const MotionModelDiffDrive::Traje
     v_trajectory.ns = pub.getTopic();
     v_trajectory.type = visualization_msgs::Marker::LINE_STRIP;
     v_trajectory.action = visualization_msgs::Marker::ADD;
-    v_trajectory.lifetime = ros::Duration(0);
+    v_trajectory.lifetime = ros::Duration();
     v_trajectory.scale.x = 0.05;
     geometry_msgs::Point p;
     for(const auto& pose : trajectory.trajectory){

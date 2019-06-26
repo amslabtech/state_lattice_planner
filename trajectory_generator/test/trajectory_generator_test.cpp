@@ -57,11 +57,14 @@ TEST(TestSuite, test3)
     ros::NodeHandle nh;
     TrajectoryGeneratorDiffDrive tg;
     MotionModelDiffDrive::ControlParams output;
-    MotionModelDiffDrive::VelocityParams init_v(0.5, 0.5, 1.0, 0.5, 0.5);
+    MotionModelDiffDrive::VelocityParams init_v(0.0, 0.5, 1.0, 0.5, 0.5);
     MotionModelDiffDrive::ControlParams init_params(init_v, MotionModelDiffDrive::CurvatureParams(0, 0, 0.5, 5));
     Eigen::Vector3d goal(5, 1, 1);
     MotionModelDiffDrive::Trajectory trajectory;
-    double cost = tg.generate_optimized_trajectory(goal, init_params, 1e-1, 1e-1, 1000, output, trajectory);
+    std::cout << "generate optimized trajectory" << std::endl;
+    double start = ros::Time::now().toSec();
+    double cost = tg.generate_optimized_trajectory(goal, init_params, 0.05, 1e-1, 5, output, trajectory);
+    std::cout << "time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     std::cout << "trajecotry.back():" << std::endl;
     std::cout << trajectory.trajectory.back() << std::endl;
     std::cout << "cost: " << cost << std::endl;

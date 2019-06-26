@@ -8,7 +8,7 @@
 TEST(TestSuite, test0)
 {
     LookupTableGenerator ltg;
-    ltg.process();
+    //ltg.process();
     EXPECT_NEAR(1.0, 1.0, 0.01);
 }
 
@@ -87,7 +87,7 @@ TEST(TestSuite, test4)
     std::vector<Eigen::Vector3d> states;
     slp.generate_biased_polar_states(ns, goal, params, states);
     std::vector<MotionModelDiffDrive::Trajectory> trajectories;
-    slp.generate_trajectories(states, 0.5, -0.1, trajectories);
+    slp.generate_trajectories(states, 0.0, 0.0, trajectories);
     MotionModelDiffDrive::Trajectory trajectory;
     slp.pickup_trajectory(trajectories, goal, trajectory);
     std::cout << "goal" << std::endl;

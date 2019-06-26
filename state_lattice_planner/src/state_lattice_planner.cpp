@@ -209,19 +209,24 @@ void StateLatticePlanner::generate_biased_polar_states(const int n_s, const Eige
     sample_states(biased_angles, _params, states);
 }
 
-void StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3d>& boundary_states, const double velocity, const double angular_velocity, std::vector<MotionModelDiffDrive::Trajectory>& trajectories)
+bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3d>& boundary_states, const double velocity, const double angular_velocity, std::vector<MotionModelDiffDrive::Trajectory>& trajectories)
 {
+    std::cout << "generate trajectories to boundary states" << std::endl;
     for(auto boundary_state : boundary_states){
         TrajectoryGeneratorDiffDrive tg;
         MotionModelDiffDrive::ControlParams output;
+        //std::cout << "v: " << velocity << ", " << "w: " << angular_velocity << std::endl;
         double k0 = angular_velocity / velocity;
+        if(fabs(velocity) < 1e-3 && fabs(angular_velocity) < 1e-3){
+            k0 = 0;
+        }
 
         MotionModelDiffDrive::ControlParams param;
         get_optimized_param_from_lookup_table(boundary_state, velocity, k0, param);
+        //std::cout << "v0: " << velocity << ", " << "k0: " << k0 << ", " << "km: " << param.curv.km << ", " << "kf: " << param.curv.kf << ", " << "sf: " << param.curv.sf << std::endl;
 
         MotionModelDiffDrive::ControlParams init(MotionModelDiffDrive::VelocityParams(velocity, MAX_ACCELERATION, TARGET_VELOCITY, TARGET_VELOCITY, MAX_ACCELERATION)
-                                               , MotionModelDiffDrive::CurvatureParams(k0, param.curv.km, param.curv.kf, boundary_state.segment(0, 2).norm()));
-                                               //, MotionModelDiffDrive::CurvatureParams(k0, param.curv.km, param.curv.kf, param.curv.sf));
+                                               , MotionModelDiffDrive::CurvatureParams(k0, param.curv.km, param.curv.kf, param.curv.sf));
 
         MotionModelDiffDrive::Trajectory trajectory;
         double cost = tg.generate_optimized_trajectory(boundary_state, init, 1.0 / HZ, OPTIMIZATION_TOLERANCE, MAX_ITERATION, output, trajectory);
@@ -231,9 +236,10 @@ void StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
     }
     if(trajectories.size() == 0)
     {
-        std::cout << "no trajectory was generated" << std::endl;
-        exit(-1);
+        std::cout << "\033[91mERROR: no trajectory was generated\033[00m" << std::endl;
+        return false;
     }
+    return true;
 }
 
 bool StateLatticePlanner::check_collision(const nav_msgs::OccupancyGrid& local_costmap, const std::vector<Eigen::Vector3d>& trajectory)
@@ -246,8 +252,9 @@ bool StateLatticePlanner::check_collision(const nav_msgs::OccupancyGrid& local_c
     generate_bresemhams_line(trajectory, resolution, bresenhams_line);
     int size = bresenhams_line.size();
     for(int i=0;i<size;i++){
-        int xi = round((bresenhams_line[i](0) + local_costmap.info.origin.position.x) / resolution);
-        int yi = round((bresenhams_line[i](1) + local_costmap.info.origin.position.y) / resolution);
+        int xi = round((bresenhams_line[i](0) - local_costmap.info.origin.position.x) / resolution);
+        int yi = round((bresenhams_line[i](1) - local_costmap.info.origin.position.y) / resolution);
+        //std::cout << xi << ", " << yi << std::endl;
         if(local_costmap.data[xi + local_costmap.info.width * yi] != 0){
             return true;
         }
@@ -370,32 +377,53 @@ void StateLatticePlanner::process(void)
 
     while(ros::ok()){
         if(local_goal_subscribed && local_map_updated && odom_updated){
+            std::cout << "local goal: \n" << local_goal << std::endl;
+            std::cout << "current_velocity: \n" << current_velocity << std::endl;
             Eigen::Vector3d goal(local_goal.pose.position.x, local_goal.pose.position.y, tf::getYaw(local_goal.pose.orientation));
             std::vector<Eigen::Vector3d> states;
             generate_biased_polar_states(N_S, goal, sampling_params, states);
             std::vector<MotionModelDiffDrive::Trajectory> trajectories;
-            generate_trajectories(states, current_velocity.linear.x, current_velocity.angular.z, trajectories);
-            visualize_trajectories(trajectories, 0, 255, 0, candidate_trajectories_pub);
+            bool generated = generate_trajectories(states, current_velocity.linear.x, current_velocity.angular.z, trajectories);
+            if(generated){
+                visualize_trajectories(trajectories, 0, 1, 0, candidate_trajectories_pub);
 
-            std::vector<MotionModelDiffDrive::Trajectory> candidate_trajectories;
-            for(auto& trajectory : trajectories){
-                if(!check_collision(local_map, trajectory.trajectory)){
-                    candidate_trajectories.push_back(trajectory);
+                std::cout << "check candidate trajectories" << std::endl;
+                std::vector<MotionModelDiffDrive::Trajectory> candidate_trajectories;
+                for(auto& trajectory : trajectories){
+                    if(!check_collision(local_map, trajectory.trajectory)){
+                        candidate_trajectories.push_back(trajectory);
+                    }
                 }
+                if(candidate_trajectories.size() > 0){
+                    visualize_trajectories(candidate_trajectories, 0, 0.5, 1, candidate_trajectories_no_collision_pub);
+
+                    std::cout << "pickup a optimal trajectory from candidate trajectories" << std::endl;
+                    MotionModelDiffDrive::Trajectory trajectory;
+                    pickup_trajectory(candidate_trajectories, goal, trajectory);
+                    visualize_trajectory(trajectory, 1, 0, 0, selected_trajectory_pub);
+
+                    std::cout << "publish velocity" << std::endl;
+                    geometry_msgs::Twist cmd_vel;
+                    cmd_vel.linear.x = trajectory.velocities[0];
+                    cmd_vel.angular.z = trajectory.angular_velocities[0];
+                    velocity_pub.publish(cmd_vel);
+
+                    local_map_updated = false;
+                    odom_updated = false;
+                }else{
+                    std::cout << "\033[91mERROR: stacking\033[00m" << std::endl;
+                    geometry_msgs::Twist cmd_vel;
+                    cmd_vel.linear.x = 0;
+                    cmd_vel.angular.z = 0;
+                    velocity_pub.publish(cmd_vel);
+                    continue;
+                }
+            }else{
+                geometry_msgs::Twist cmd_vel;
+                cmd_vel.linear.x = 0;
+                cmd_vel.angular.z = 0;
+                velocity_pub.publish(cmd_vel);
             }
-            visualize_trajectories(candidate_trajectories, 0, 0, 255, candidate_trajectories_no_collision_pub);
-
-            MotionModelDiffDrive::Trajectory trajectory;
-            pickup_trajectory(candidate_trajectories, goal, trajectory);
-            visualize_trajectory(trajectory, 255, 0, 0, selected_trajectory_pub);
-
-            geometry_msgs::Twist cmd_vel;
-            cmd_vel.linear.x = trajectory.velocities[0];
-            cmd_vel.angular.z = trajectory.angular_velocities[0];
-            velocity_pub.publish(cmd_vel);
-
-            local_map_updated = false;
-            odom_updated = false;
         }else{
             if(!local_goal_subscribed){
                 std::cout << "waiting for local goal" << std::endl;
@@ -419,7 +447,7 @@ void StateLatticePlanner::swap(double& a, double& b)
 void StateLatticePlanner::generate_bresemhams_line(const std::vector<Eigen::Vector3d>& trajectory, const double& resolution, std::vector<Eigen::Vector3d>& output)
 {
     int size = trajectory.size();
-    output.resize(size);
+    output.resize(size-2);
     std::vector<Eigen::Vector3d> bresenhams_line;
     for(int i=0;i<size-2;i++){
         double x0 = trajectory[i](0);
@@ -482,7 +510,7 @@ void StateLatticePlanner::visualize_trajectories(const std::vector<MotionModelDi
         v_trajectory.action = visualization_msgs::Marker::ADD;
         v_trajectory.lifetime = ros::Duration(0);
         v_trajectory.id = count;
-        v_trajectory.scale.x = 0.01;
+        v_trajectory.scale.x = 0.02;
         geometry_msgs::Point p;
         for(const auto& pose : trajectory.trajectory){
             p.x = pose(0);
@@ -498,6 +526,8 @@ void StateLatticePlanner::visualize_trajectories(const std::vector<MotionModelDi
 void StateLatticePlanner::visualize_trajectory(const MotionModelDiffDrive::Trajectory& trajectory, const int r, const int g, const int b, const ros::Publisher& pub)
 {
     visualization_msgs::Marker v_trajectory;
+    v_trajectory.header.frame_id = ROBOT_FRAME;
+    v_trajectory.header.stamp = ros::Time::now();
     v_trajectory.color.r = r;
     v_trajectory.color.g = g;
     v_trajectory.color.b = b;
@@ -506,7 +536,7 @@ void StateLatticePlanner::visualize_trajectory(const MotionModelDiffDrive::Traje
     v_trajectory.type = visualization_msgs::Marker::LINE_STRIP;
     v_trajectory.action = visualization_msgs::Marker::ADD;
     v_trajectory.lifetime = ros::Duration(0);
-    v_trajectory.scale.x = 0.01;
+    v_trajectory.scale.x = 0.05;
     geometry_msgs::Point p;
     for(const auto& pose : trajectory.trajectory){
         p.x = pose(0);

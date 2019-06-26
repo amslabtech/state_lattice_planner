@@ -59,7 +59,7 @@ public:
     void odom_callback(const nav_msgs::OdometryConstPtr&);
     void generate_biased_polar_states(const int, const Eigen::Vector3d&, const SamplingParams&, std::vector<Eigen::Vector3d>&);
     void sample_states(const std::vector<double>&, const SamplingParams&, std::vector<Eigen::Vector3d>&);
-    void generate_trajectories(const std::vector<Eigen::Vector3d>&, const double, const double, std::vector<MotionModelDiffDrive::Trajectory>&);
+    bool generate_trajectories(const std::vector<Eigen::Vector3d>&, const double, const double, std::vector<MotionModelDiffDrive::Trajectory>&);
     bool check_collision(const nav_msgs::OccupancyGrid&, const std::vector<Eigen::Vector3d>&);
     bool pickup_trajectory(const std::vector<MotionModelDiffDrive::Trajectory>&, const Eigen::Vector3d&, MotionModelDiffDrive::Trajectory&);
     void load_lookup_table(void);

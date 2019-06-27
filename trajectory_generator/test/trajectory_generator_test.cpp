@@ -12,13 +12,13 @@ TEST(TestSuite, test0)
     MotionModelDiffDrive::CurvatureParams curv(0, 0.5, 1.0, 5);
     curv.calculate_spline();
     MotionModelDiffDrive mm;
-    double cf = mm.calculate_cubic_function(0, curv.coeff_0_m);
+    double cf = mm.calculate_quadratic_function(0, curv.coeff_0_m);
     EXPECT_NEAR(0, cf, 0.01);
-    cf = mm.calculate_cubic_function(2.5, curv.coeff_0_m);
+    cf = mm.calculate_quadratic_function(2.5, curv.coeff_0_m);
     EXPECT_NEAR(0.5, cf, 0.01);
-    cf = mm.calculate_cubic_function(2.5, curv.coeff_m_f);
+    cf = mm.calculate_quadratic_function(2.5-5.0/2.0, curv.coeff_m_f);
     EXPECT_NEAR(0.5, cf, 0.01);
-    cf = mm.calculate_cubic_function(5, curv.coeff_m_f);
+    cf = mm.calculate_quadratic_function(5-5.0/2.0, curv.coeff_m_f);
     EXPECT_NEAR(1.0, cf, 0.01);
 }
 
@@ -28,13 +28,13 @@ TEST(TestSuite, test1)
     MotionModelDiffDrive::CurvatureParams curv(0, -0.5, -1.0, 10);
     curv.calculate_spline();
     MotionModelDiffDrive mm;
-    double cf = mm.calculate_cubic_function(0, curv.coeff_0_m);
+    double cf = mm.calculate_quadratic_function(0, curv.coeff_0_m);
     EXPECT_NEAR(0, cf, 0.01);
-    cf = mm.calculate_cubic_function(5, curv.coeff_0_m);
+    cf = mm.calculate_quadratic_function(5, curv.coeff_0_m);
     EXPECT_NEAR(-0.5, cf, 0.01);
-    cf = mm.calculate_cubic_function(5, curv.coeff_m_f);
+    cf = mm.calculate_quadratic_function(5-10.0/2.0, curv.coeff_m_f);
     EXPECT_NEAR(-0.5, cf, 0.01);
-    cf = mm.calculate_cubic_function(10, curv.coeff_m_f);
+    cf = mm.calculate_quadratic_function(10-10.0/2.0, curv.coeff_m_f);
     EXPECT_NEAR(-1.0, cf, 0.01);
 }
 

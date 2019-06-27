@@ -225,8 +225,8 @@ bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
 
         MotionModelDiffDrive::ControlParams param;
         get_optimized_param_from_lookup_table(boundary_state, velocity, k0, param);
-        //std::cout << "v0: " << velocity << ", " << "k0: " << k0 << ", " << "km: " << param.curv.km << ", " << "kf: " << param.curv.kf << ", " << "sf: " << param.curv.sf << std::endl;
-        std::cout << "lookup table time " << count << ": " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+        std::cout << "v0: " << velocity << ", " << "k0: " << k0 << ", " << "km: " << param.curv.km << ", " << "kf: " << param.curv.kf << ", " << "sf: " << param.curv.sf << std::endl;
+        //std::cout << "lookup table time " << count << ": " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
         MotionModelDiffDrive::ControlParams init(MotionModelDiffDrive::VelocityParams(velocity, MAX_ACCELERATION, TARGET_VELOCITY, TARGET_VELOCITY, MAX_ACCELERATION)
                                                , MotionModelDiffDrive::CurvatureParams(k0, param.curv.km, param.curv.kf, param.curv.sf));

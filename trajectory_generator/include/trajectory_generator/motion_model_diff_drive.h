@@ -87,6 +87,7 @@ public:
     void generate_trajectory(const double, const ControlParams&, Trajectory&);
     void generate_last_state(const double, const double, const VelocityParams&, const double, const double, const double, Eigen::Vector3d&);
     double calculate_cubic_function(const double, const Eigen::VectorXd&);
+    double calculate_quadratic_function(const double, const Eigen::VectorXd&);
     void make_velocity_profile(const double, const VelocityParams&);
     double estimate_driving_time(const ControlParams&);
 

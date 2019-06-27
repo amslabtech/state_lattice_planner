@@ -33,20 +33,20 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
         double time = goal.norm() / output.vel.v0;
         double start = ros::Time::now().toSec();
         model.generate_trajectory(dt, output, trajectory);
-        std::cout << "traj gen time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+        //std::cout << "traj gen time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
         Eigen::Matrix3d jacobian;
         get_jacobian(dt, output, h, jacobian);
-        std::cout << "get jacobian time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+        //std::cout << "get jacobian time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
         //std::cout << "j: \n" << jacobian << std::endl;
         //std::cout << "j^-1: \n" << jacobian.inverse() << std::endl;
         cost = goal - trajectory.trajectory.back();
         Eigen::Vector3d dp = jacobian.inverse() * cost;
         //Eigen::Vector3d dp = jacobian.lu().solve(cost);
-        std::cout << "jacobian inverse time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+        //std::cout << "jacobian inverse time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
         //std::cout << "cost: \n" << cost << std::endl;
         //std::cout << "dp: \n" << dp << std::endl;
-        if(dp.norm() > 1e2){
+        if(dp.norm() > 1){
             std::cout << "diverge to infinity!!!" << std::endl;
             return -1;
         }

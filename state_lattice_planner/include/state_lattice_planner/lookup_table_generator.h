@@ -33,6 +33,8 @@ private:
     double MIN_V;
     double MAX_V;
     double DELTA_V;
+    double MAX_KAPPA;
+    double DELTA_KAPPA;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;

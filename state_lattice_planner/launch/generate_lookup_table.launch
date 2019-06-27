@@ -11,6 +11,8 @@
     <arg name="min_v" default="0.1"/>
     <arg name="max_v" default="0.8"/>
     <arg name="delta_v" default="0.1"/>
+    <arg name="max_kappa" default="1.0"/>
+    <arg name="delta_kappa" default="0.2"/>
 
     <node pkg="state_lattice_planner" type="lookup_table_generator" name="lookup_table_generator">
         <param name="MIN_X" value="$(arg min_x)"/>
@@ -24,6 +26,8 @@
         <param name="MIN_V" value="$(arg min_v)"/>
         <param name="MAX_V" value="$(arg max_v)"/>
         <param name="DELTA_V" value="$(arg delta_v)"/>
+        <param name="MAX_KAPPA" value="$(arg max_kappa)"/>
+        <param name="DELTA_KAPPA" value="$(arg delta_kappa)"/>
     </node>
 
 </launch>

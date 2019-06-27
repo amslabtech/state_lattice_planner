@@ -16,6 +16,8 @@ LookupTableGenerator::LookupTableGenerator(void)
     local_nh.param("MIN_V", MIN_V, {0.1});
     local_nh.param("MAX_V", MAX_V, {0.8});
     local_nh.param("DELTA_V", DELTA_V, {0.1});
+    local_nh.param("MAX_KAPPA", MAX_KAPPA, {1.0});
+    local_nh.param("DELTA_KAPPA", DELTA_KAPPA, {0.2});
 
     std::cout << "MIN_X: " << MIN_X << std::endl;
     std::cout << "MAX_X: " << MAX_X << std::endl;
@@ -30,6 +32,8 @@ LookupTableGenerator::LookupTableGenerator(void)
     std::cout << "MIN_V: " << MIN_V << std::endl;
     std::cout << "MAX_V: " << MAX_V << std::endl;
     std::cout << "DELTA_V: " << DELTA_V << std::endl;
+    std::cout << "MAX_KAPPA: " << MAX_KAPPA << std::endl;
+    std::cout << "DELTA_KAPPA: " << DELTA_KAPPA << std::endl;
 }
 
 std::string LookupTableGenerator::process(void)
@@ -65,7 +69,7 @@ std::string LookupTableGenerator::process(void)
             }
         }
     }
-    std::cout << "states num: " << states.size() << " * " << int((MAX_V - MIN_V) / DELTA_V + 1) << std::endl;
+    std::cout << "states num: " << states.size() << " * " << int((MAX_V - MIN_V) / DELTA_V + 1) << " * " << int(2*MAX_KAPPA / DELTA_KAPPA + 1) << std::endl;
 
     std::vector<std::vector<double> > lookup_table_data_list;
     lookup_table_data_list.resize(N);
@@ -77,26 +81,28 @@ std::string LookupTableGenerator::process(void)
     std::string output_data = "v0, k0, x, y, yaw, km, kf, sf\n";
     double span_v = MAX_V - MIN_V;
     for(double v0=MIN_V;v0<=MAX_V;v0+=DELTA_V){
-        std::cout << "v0: " << v0 << "[m/s]" << std::endl;
-        for(auto state : states){
-            std::cout << "state:" << std::endl;
-            std::cout << state << std::endl;
-            double distance = state.segment(0, 2).norm();
-            std::cout << "distance: " << distance << std::endl;
-            MotionModelDiffDrive::VelocityParams init_v(v0, MAX_ACCELERATION, TARGET_VELOCITY, TARGET_VELOCITY, MAX_ACCELERATION);
-            MotionModelDiffDrive::ControlParams init(init_v, MotionModelDiffDrive::CurvatureParams(0, 0, 0, distance));
-            MotionModelDiffDrive::ControlParams output;
-            MotionModelDiffDrive::Trajectory trajectory;
-            TrajectoryGeneratorDiffDrive tg;
-            double cost = tg.generate_optimized_trajectory(state, init, 1e-1, 1e-1, 100, output, trajectory);
-            if(cost > 0){
-                std::cout << "successfully optimized" << std::endl;
-                double k0 = 0.0;
-                std::stringstream data;
-                data << v0 << "," << k0 << "," << trajectory.trajectory.back()(0) << "," << trajectory.trajectory.back()(1) << "," << trajectory.trajectory.back()(2) << "," << output.curv.km << "," << output.curv.kf << "," << output.curv.sf << "\n";
-                output_data += data.str();
-            }else{
-                std::cout << "failed to optimize trajectory" << std::endl;
+        for(double k0=-MAX_KAPPA;k0<=MAX_KAPPA;k0+=DELTA_KAPPA){
+            for(auto state : states){
+                std::cout << "v0: " << v0 << "[m/s]" << std::endl;
+                std::cout << "k0: " << k0 << "[rad/m]" << std::endl;
+                std::cout << "state:" << std::endl;
+                std::cout << state << std::endl;
+                double distance = state.segment(0, 2).norm();
+                std::cout << "distance: " << distance << std::endl;
+                MotionModelDiffDrive::VelocityParams init_v(v0, MAX_ACCELERATION, TARGET_VELOCITY, TARGET_VELOCITY, MAX_ACCELERATION);
+                MotionModelDiffDrive::ControlParams init(init_v, MotionModelDiffDrive::CurvatureParams(k0, 0, 0, distance));
+                MotionModelDiffDrive::ControlParams output;
+                MotionModelDiffDrive::Trajectory trajectory;
+                TrajectoryGeneratorDiffDrive tg;
+                double cost = tg.generate_optimized_trajectory(state, init, 1e-1, 1e-1, 100, output, trajectory);
+                if(cost > 0){
+                    std::cout << "successfully optimized" << std::endl;
+                    std::stringstream data;
+                    data << v0 << "," << k0 << "," << trajectory.trajectory.back()(0) << "," << trajectory.trajectory.back()(1) << "," << trajectory.trajectory.back()(2) << "," << output.curv.km << "," << output.curv.kf << "," << output.curv.sf << "\n";
+                    output_data += data.str();
+                }else{
+                    std::cout << "failed to optimize trajectory" << std::endl;
+                }
             }
         }
     }

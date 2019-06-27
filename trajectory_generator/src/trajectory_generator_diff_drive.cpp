@@ -21,7 +21,7 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
 
     while(1){
         if(cost.norm() < tolerance){
-            std::cout << "successfully optimized in " << count << " iteration" << std::endl;
+            //std::cout << "successfully optimized in " << count << " iteration" << std::endl;
             break;
         }else if(count >= max_iteration){
             std::cout << "cannot optimize trajectory" << std::endl;

@@ -235,7 +235,7 @@ bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
         double cost = tg.generate_optimized_trajectory(boundary_state, init, 1.0 / HZ, OPTIMIZATION_TOLERANCE, MAX_ITERATION, output, trajectory);
         if(cost > 0){
             trajectories.push_back(trajectory);
-            std::cout << "generate time " << count << ": " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+            //std::cout << "generate time " << count << ": " << ros::Time::now().toSec() - start << "[s]" << std::endl;
             count++;
         }
     }
@@ -413,9 +413,13 @@ void StateLatticePlanner::process(void)
 
                     std::cout << "publish velocity" << std::endl;
                     geometry_msgs::Twist cmd_vel;
-                    cmd_vel.linear.x = trajectory.velocities[0];
-                    cmd_vel.angular.z = trajectory.angular_velocities[0];
+                    double calculation_time = ros::Time::now().toSec() - start;
+                    int delayed_control_index = std::ceil(calculation_time * HZ);
+                    std::cout << calculation_time << ", " << delayed_control_index << std::endl;
+                    cmd_vel.linear.x = trajectory.velocities[delayed_control_index];
+                    cmd_vel.angular.z = trajectory.angular_velocities[delayed_control_index];
                     velocity_pub.publish(cmd_vel);
+                    std::cout << "published velocity: \n" << cmd_vel << std::endl;
 
                     local_map_updated = false;
                     odom_updated = false;

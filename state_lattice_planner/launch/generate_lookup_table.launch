@@ -3,8 +3,8 @@
     <arg name="min_x" default="1.0"/>
     <arg name="max_x" default="7.0"/>
     <arg name="delta_x" default="1.0"/>
-    <arg name="max_y" default="2.0"/>
-    <arg name="delta_y" default="2.0"/>
+    <arg name="max_y" default="3.0"/>
+    <arg name="delta_y" default="1.0"/>
     <arg name="max_yaw" default="1.0471975"/>
     <arg name="delta_yaw" default="1.0471975"/>
     <arg name="lookup_table_file_name" default="$(find state_lattice_planner)/lookup_table/lookup_table.csv"/>

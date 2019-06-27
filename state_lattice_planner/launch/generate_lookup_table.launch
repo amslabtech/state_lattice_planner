@@ -1,0 +1,29 @@
+<launch>
+
+    <arg name="min_x" default="1.0"/>
+    <arg name="max_x" default="7.0"/>
+    <arg name="delta_x" default="1.0"/>
+    <arg name="max_y" default="3.0"/>
+    <arg name="delta_y" default="1.0"/>
+    <arg name="max_yaw" default="1.0471975"/>
+    <arg name="delta_yaw" default="1.0471975"/>
+    <arg name="lookup_table_file_name" default="$(find state_lattice_planner)/lookup_table/lookup_table.csv"/>
+    <arg name="min_v" default="0.1"/>
+    <arg name="max_v" default="0.8"/>
+    <arg name="delta_v" default="0.1"/>
+
+    <node pkg="state_lattice_planner" type="lookup_table_generator" name="lookup_table_generator">
+        <param name="MIN_X" value="$(arg min_x)"/>
+        <param name="MAX_X" value="$(arg max_x)"/>
+        <param name="DELTA_X" value="$(arg delta_x)"/>
+        <param name="MAX_Y" value="$(arg max_y)"/>
+        <param name="DELTA_Y" value="$(arg delta_y)"/>
+        <param name="MAX_YAW" value="$(arg max_yaw)"/>
+        <param name="DELTA_YAW" value="$(arg delta_yaw)"/>
+        <param name="LOOKUP_TABLE_FILE_NAME" value="$(arg lookup_table_file_name)"/>
+        <param name="MIN_V" value="$(arg min_v)"/>
+        <param name="MAX_V" value="$(arg max_v)"/>
+        <param name="DELTA_V" value="$(arg delta_v)"/>
+    </node>
+
+</launch>

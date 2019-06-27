@@ -1,0 +1,5 @@
+<launch>
+
+	<test pkg="trajectory_generator" type="trajectory_generator_test" test-name="trajectory_generator_test"/> 
+
+</launch>

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(state_lattice_planner)
+project(trajectory_generator)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
@@ -14,7 +14,6 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   tf
   cmake_modules
-  trajectory_generator
 )
 
 ## System dependencies are found with CMake's conventions
@@ -109,7 +108,7 @@ find_package(Eigen3 REQUIRED COMPONENTS system)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
    INCLUDE_DIRS include
-#  LIBRARIES state_lattice_planner
+#  LIBRARIES trajectory_generator
 #  CATKIN_DEPENDS geometry_msgs roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
@@ -128,27 +127,26 @@ include_directories(
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/state_lattice_planner.cpp
+#   src/${PROJECT_NAME}/trajectory_generator.cpp
 # )
-add_library(lookup_table_generator_lib
-  src/lookup_table_generator.cpp
+add_library(motion_model_diff_drive
+  src/motion_model_diff_drive.cpp
 )
-add_library(state_lattice_planner_lib
-  src/state_lattice_planner.cpp
+add_library(trajectory_generator_diff_drive
+  src/trajectory_generator_diff_drive.cpp
 )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
-add_dependencies(lookup_table_generator_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(state_lattice_planner_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(motion_model_diff_drive ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(trajectory_generator_diff_drive ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/state_lattice_planner_node.cpp)
-add_executable(state_lattice_planner src/state_lattice_planner_node.cpp)
-add_executable(lookup_table_generator src/lookup_table_generator_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/trajectory_generator_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -159,35 +157,11 @@ add_executable(lookup_table_generator src/lookup_table_generator_node.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(state_lattice_planner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(lookup_table_generator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(lookup_table_generator_lib
-  ${catkin_LIBRARIES}
-  trajectory_generator_diff_drive
-  motion_model_diff_drive
-)
-target_link_libraries(state_lattice_planner_lib
-  ${catkin_LIBRARIES}
-  trajectory_generator_diff_drive
-  motion_model_diff_drive
-)
-target_link_libraries(state_lattice_planner
-  ${catkin_LIBRARIES}
-  trajectory_generator_diff_drive
-  motion_model_diff_drive
-  state_lattice_planner_lib
-)
-target_link_libraries(lookup_table_generator
-  ${catkin_LIBRARIES}
-  trajectory_generator_diff_drive
-  motion_model_diff_drive
-  lookup_table_generator_lib
-)
 
 #############
 ## Install ##
@@ -229,7 +203,7 @@ target_link_libraries(lookup_table_generator
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_state_lattice_planner.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_trajectory_generator.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
@@ -238,16 +212,14 @@ target_link_libraries(lookup_table_generator
 # catkin_add_nosetests(test)
 
 if(CATKIN_ENABLE_TESTING)
-    find_package(rostest REQUIRED)
-    add_rostest_gtest(state_lattice_planner_test
-        test/state_lattice_planner.test
-        test/state_lattice_planner_test.cpp
-    )
-    target_link_libraries(state_lattice_planner_test
+	find_package(rostest REQUIRED)
+    add_rostest_gtest(trajectory_generator_test 
+		test/trajectory_generator.test
+		test/trajectory_generator_test.cpp
+	)
+	target_link_libraries(trajectory_generator_test 
         ${catkin_LIBRARIES}
         motion_model_diff_drive
         trajectory_generator_diff_drive
-        lookup_table_generator_lib
-        state_lattice_planner_lib
-    )
+    ) 
 endif()

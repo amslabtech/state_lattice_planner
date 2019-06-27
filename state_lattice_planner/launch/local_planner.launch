@@ -1,8 +1,28 @@
-<?xml version="1.0"?>
 <launch>
-	<node name="trajectory_manager" pkg="state_lattice_planner" type="trajectory_manager" ns="local_planner"/>
-	<node name="generate_server" pkg="state_lattice_planner" type="generate_server" ns="local_planner">
-		<remap from="/local_map" to="/local_map/expand"/>
-	</node>
-	<node name="motion_planner" pkg="state_lattice_planner" type="motion_planner" ns="local_planner"/>
+    <arg name="hz" default="10"/>
+    <arg name="robot_frame" default="base_link"/>
+    <arg name="n_p" default="17"/>
+    <arg name="n_h" default="5"/>
+    <arg name="max_alpha" default="1.6"/>
+    <arg name="max_psi" default="1.0"/>
+    <arg name="n_s" default="1000"/>
+    <arg name="max_acceleration" default="1.0"/>
+    <arg name="target_velocity" default="0.8"/>
+    <arg name="lookup_table_file_name" default="$(find state_lattice_planner)/lookup_table/lookup_table.csv"/>
+    <arg name="max_iteration" default="5"/>
+    <arg name="optimization_tolerance" default="0.1"/>
+
+    <node pkg="state_lattice_planner" type="state_lattice_planner" name="state_lattice_planner" ns="local_planner">
+        <param name="HZ" value="$(arg hz)"/>
+        <param name="N_P" value="$(arg n_p)"/>
+        <param name="N_H" value="$(arg n_h)"/>
+        <param name="MAX_ALPHA" value="$(arg max_alpha)"/>
+        <param name="MAX_PSI" value="$(arg max_psi)"/>
+        <param name="N_S" value="$(arg n_s)"/>
+        <param name="MAX_ACCELERATION" value="$(arg max_acceleration)"/>
+        <param name="TARGET_VELOCITY" value="$(arg target_velocity)"/>
+        <param name="LOOKUP_TABLE_FILE_NAME" value="$(arg lookup_table_file_name)"/>
+        <param name="MAX_ITERATION" value="$(arg max_iteration)"/>
+        <param name="OPTIMIZATION_TOLERANCE" value="$(arg optimization_tolerance)"/>
+    </node>
 </launch>

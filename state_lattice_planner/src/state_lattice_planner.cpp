@@ -225,7 +225,7 @@ bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
 
         MotionModelDiffDrive::ControlParams param;
         get_optimized_param_from_lookup_table(boundary_state, velocity, k0, param);
-        std::cout << "v0: " << velocity << ", " << "k0: " << k0 << ", " << "km: " << param.curv.km << ", " << "kf: " << param.curv.kf << ", " << "sf: " << param.curv.sf << std::endl;
+        //std::cout << "v0: " << velocity << ", " << "k0: " << k0 << ", " << "km: " << param.curv.km << ", " << "kf: " << param.curv.kf << ", " << "sf: " << param.curv.sf << std::endl;
         //std::cout << "lookup table time " << count << ": " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
         MotionModelDiffDrive::ControlParams init(MotionModelDiffDrive::VelocityParams(velocity, MAX_ACCELERATION, TARGET_VELOCITY, TARGET_VELOCITY, MAX_ACCELERATION)
@@ -392,7 +392,7 @@ void StateLatticePlanner::process(void)
             std::vector<MotionModelDiffDrive::Trajectory> trajectories;
             bool generated = generate_trajectories(states, current_velocity.linear.x, current_velocity.angular.z, trajectories);
             if(generated){
-                visualize_trajectories(trajectories, 0, 1, 0, candidate_trajectories_pub);
+                visualize_trajectories(trajectories, 0, 1, 0, N_P * N_H, candidate_trajectories_pub);
 
                 std::cout << "check candidate trajectories" << std::endl;
                 std::vector<MotionModelDiffDrive::Trajectory> candidate_trajectories;
@@ -403,7 +403,7 @@ void StateLatticePlanner::process(void)
                 }
                 std::cout << "candidate time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
                 if(candidate_trajectories.size() > 0){
-                    visualize_trajectories(candidate_trajectories, 0, 0.5, 1, candidate_trajectories_no_collision_pub);
+                    visualize_trajectories(candidate_trajectories, 0, 0.5, 1, N_P * N_H, candidate_trajectories_no_collision_pub);
 
                     std::cout << "pickup a optimal trajectory from candidate trajectories" << std::endl;
                     MotionModelDiffDrive::Trajectory trajectory;
@@ -502,11 +502,12 @@ void StateLatticePlanner::generate_bresemhams_line(const std::vector<Eigen::Vect
     }
 }
 
-void StateLatticePlanner::visualize_trajectories(const std::vector<MotionModelDiffDrive::Trajectory>& trajectories, const int r, const int g, const int b, const ros::Publisher& pub)
+void StateLatticePlanner::visualize_trajectories(const std::vector<MotionModelDiffDrive::Trajectory>& trajectories, const double r, const double g, const double b, const int trajectories_size, const ros::Publisher& pub)
 {
     visualization_msgs::MarkerArray v_trajectories;
     int count = 0;
-    for(const auto& trajectory : trajectories){
+    const int size = trajectories.size();
+    for(;count<size;count++){
         visualization_msgs::Marker v_trajectory;
         v_trajectory.header.frame_id = ROBOT_FRAME;
         v_trajectory.header.stamp = ros::Time::now();
@@ -521,18 +522,29 @@ void StateLatticePlanner::visualize_trajectories(const std::vector<MotionModelDi
         v_trajectory.id = count;
         v_trajectory.scale.x = 0.02;
         geometry_msgs::Point p;
-        for(const auto& pose : trajectory.trajectory){
+        for(const auto& pose : trajectories[count].trajectory){
             p.x = pose(0);
             p.y = pose(1);
             v_trajectory.points.push_back(p);
         }
+        v_trajectories.markers.push_back(v_trajectory);
+    }
+    for(;count<trajectories_size;){
+        visualization_msgs::Marker v_trajectory;
+        v_trajectory.header.frame_id = ROBOT_FRAME;
+        v_trajectory.header.stamp = ros::Time::now();
+        v_trajectory.ns = pub.getTopic();
+        v_trajectory.type = visualization_msgs::Marker::LINE_STRIP;
+        v_trajectory.action = visualization_msgs::Marker::DELETE;
+        v_trajectory.lifetime = ros::Duration();
+        v_trajectory.id = count;
         v_trajectories.markers.push_back(v_trajectory);
         count++;
     }
     pub.publish(v_trajectories);
 }
 
-void StateLatticePlanner::visualize_trajectory(const MotionModelDiffDrive::Trajectory& trajectory, const int r, const int g, const int b, const ros::Publisher& pub)
+void StateLatticePlanner::visualize_trajectory(const MotionModelDiffDrive::Trajectory& trajectory, const double r, const double g, const double b, const ros::Publisher& pub)
 {
     visualization_msgs::Marker v_trajectory;
     v_trajectory.header.frame_id = ROBOT_FRAME;

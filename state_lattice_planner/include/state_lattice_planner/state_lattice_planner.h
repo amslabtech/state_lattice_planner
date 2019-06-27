@@ -68,8 +68,8 @@ public:
 private:
     void swap(double&, double&);
     void generate_bresemhams_line(const std::vector<Eigen::Vector3d>&, const double&, std::vector<Eigen::Vector3d>&);
-    void visualize_trajectories(const std::vector<MotionModelDiffDrive::Trajectory>&, const int, const int, const int, const ros::Publisher&);
-    void visualize_trajectory(const MotionModelDiffDrive::Trajectory&, const int, const int, const int, const ros::Publisher&);
+    void visualize_trajectories(const std::vector<MotionModelDiffDrive::Trajectory>&, const double, const double, const double, const int, const ros::Publisher&);
+    void visualize_trajectory(const MotionModelDiffDrive::Trajectory&, const double, const double, const double, const ros::Publisher&);
 
     double HZ;
     std::string ROBOT_FRAME;

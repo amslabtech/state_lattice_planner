@@ -31,7 +31,7 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
         trajectory.velocities.clear();
         trajectory.angular_velocities.clear();
         double time = goal.norm() / output.vel.v0;
-        double start = ros::Time::now().toSec();
+        //double start = ros::Time::now().toSec();
         model.generate_trajectory(dt, output, trajectory);
         //std::cout << "traj gen time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
@@ -57,7 +57,7 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
 
         //std::cout << "count: " << count << std::endl;
         count++;
-        std::cout << "optimization loop: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+        //std::cout << "optimization loop: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     }
     return cost.norm();
 }

@@ -42,6 +42,7 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
         //std::cout << "j^-1: \n" << jacobian.inverse() << std::endl;
         cost = goal - trajectory.trajectory.back();
         Eigen::Vector3d dp = jacobian.inverse() * cost;
+        //Eigen::Vector3d dp = jacobian.lu().solve(cost);
         std::cout << "jacobian inverse time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
         //std::cout << "cost: \n" << cost << std::endl;
         //std::cout << "dp: \n" << dp << std::endl;

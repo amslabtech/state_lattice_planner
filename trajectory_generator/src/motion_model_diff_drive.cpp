@@ -99,16 +99,18 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlPar
     VelocityParams vel = control_param.vel;
 
     vel.time = estimate_driving_time(control_param);
-    //std::cout << "estimate time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+    std::cout << "estimate time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
     make_velocity_profile(dt, vel);
-    //std::cout << "v prof: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+    std::cout << "v prof: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+    const int N = s_profile.size();
+    std::cout << "n: " << N << std::endl;
 
     curv.calculate_spline();
-    //std::cout << "spline: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+    std::cout << "spline: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     std::vector<double> curv_profile;
     double sf_2 = curv.sf * 0.5;
-    for(auto s : s_profile){
+    for(const auto& s : s_profile){
         double c = 0;
         if(s < sf_2){
             c = calculate_cubic_function(s, curv.coeff_0_m);
@@ -117,25 +119,40 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlPar
         }
         curv_profile.push_back(c);
     }
-    //std::cout << "curv prof: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+    std::cout << "curv prof: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     State state(0, 0, 0, vel.v0, curv.k0);
     State state_(0, 0, 0, vel.v0, curv.k0);
     Eigen::Vector3d pose;
     pose << state.x, state.y, state.yaw;
+    trajectory.trajectory.resize(N);
+    trajectory.velocities.resize(N);
+    trajectory.angular_velocities.resize(N);
+    /*
     trajectory.trajectory.push_back(pose);
     trajectory.velocities.push_back(state.v);
     trajectory.angular_velocities.push_back(state.v * state.curvature);
-    //std::cout << "prof: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+    */
+    trajectory.trajectory[0] = pose;
+    trajectory.velocities[0] = state.v;
+    trajectory.angular_velocities[0] = state.v * state.curvature;
+    std::cout << "prof: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
-    const int N = s_profile.size();
-    std::cout << "n: " << N << std::endl;
+    start = ros::Time::now().toSec();
+    const double _dt = 1.0  / dt;
     for(int i=1;i<N;i++){
-        update(state, (s_profile[i]-s_profile[i-1])/dt, curv_profile[i], dt, state_);
+        //double u_start = ros::Time::now().toSec();
+        update(state, (s_profile[i]-s_profile[i-1]) * _dt, curv_profile[i], dt, state_);
         state = state_;
         pose << state.x, state.y, state.yaw;
+        /*
         trajectory.trajectory.push_back(pose);
         trajectory.velocities.push_back(state.v);
         trajectory.angular_velocities.push_back(state.v * state.curvature);
+        */
+        trajectory.trajectory[i] = pose;
+        trajectory.velocities[i] = state.v;
+        trajectory.angular_velocities[i] = state.v * state.curvature;
+        //std::cout << "t" << i << ": " << ros::Time::now().toSec() - u_start << "[s]" << std::endl;
     }
     std::cout << "gen t: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 }
@@ -157,7 +174,7 @@ void MotionModelDiffDrive::CurvatureParams::calculate_spline(void)
     double start = ros::Time::now().toSec();
     Eigen::Vector3d x;
     x(0) = 0;
-    x(1) = sf / 2.0;
+    x(1) = sf * 0.5;
     x(2) = sf;
     Eigen::Vector3d y;
     y << k0, km, kf;
@@ -188,7 +205,7 @@ void MotionModelDiffDrive::CurvatureParams::calculate_spline(void)
     std::cout << "spline end: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 }
 
-double MotionModelDiffDrive::calculate_cubic_function(const double x, const Eigen::VectorXd& coeff)
+inline double MotionModelDiffDrive::calculate_cubic_function(const double x, const Eigen::VectorXd& coeff)
 {
     return coeff(0) * x * x * x + coeff(1) * x * x + coeff(2) * x + coeff(3);
 }

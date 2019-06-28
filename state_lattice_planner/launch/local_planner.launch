@@ -24,7 +24,7 @@
         <param name="LOOKUP_TABLE_FILE_NAME" value="$(arg lookup_table_file_name)"/>
         <param name="MAX_ITERATION" value="$(arg max_iteration)"/>
         <param name="OPTIMIZATION_TOLERANCE" value="$(arg optimization_tolerance)"/>
-		<remap from="/local_map" to="/local_map/expand"/>
-		<remap from="/cmd_vel" to="/local_path/cmd_vel"/>
+        <remap from="/local_map" to="/local_map/expand"/>
+        <remap from="/cmd_vel" to="/local_path/cmd_vel"/>
     </node>
 </launch>

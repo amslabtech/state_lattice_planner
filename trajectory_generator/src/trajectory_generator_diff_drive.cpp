@@ -13,7 +13,9 @@ void TrajectoryGeneratorDiffDrive::set_param(const double dkm, const double dkf,
 
 double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::Vector3d& goal, const MotionModelDiffDrive::ControlParams& init_control_param, const double dt, const double tolerance, const int max_iteration, MotionModelDiffDrive::ControlParams& output, MotionModelDiffDrive::Trajectory& trajectory)
 {
-    Eigen::Vector3d cost(1, 1, 1);
+    Eigen::Vector3d cost(1e2, 1e2, 1e2);
+    double last_cost = cost.norm();
+    double last_dp_norm = 100;
 
     output = init_control_param;
 
@@ -31,7 +33,7 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
         trajectory.velocities.clear();
         trajectory.angular_velocities.clear();
         double time = goal.norm() / output.vel.v0;
-        //double start = ros::Time::now().toSec();
+        double start = ros::Time::now().toSec();
         model.generate_trajectory(dt, output, trajectory);
         //std::cout << "traj gen time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
@@ -46,19 +48,27 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
         //std::cout << "jacobian inverse time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
         //std::cout << "cost: \n" << cost << std::endl;
         //std::cout << "dp: \n" << dp << std::endl;
-        if(dp.norm() > 1){
+        if((cost.norm() > last_cost) || (dp.norm() > last_dp_norm) || std::isnan(dp(0)) || std::isnan(dp(1)) || std::isnan(dp(2)) || std::isinf(dp(0)) || std::isinf(dp(1)) || std::isinf(dp(2))){
             std::cout << "diverge to infinity!!!" << std::endl;
             return -1;
         }
+        last_cost = cost.norm();
+        last_dp_norm = dp.norm();
 
         output.curv.km += dp(0);
         output.curv.kf += dp(1);
         output.curv.sf += dp(2);
 
+        if(output.curv.sf < 0){
+            std::cout << "optimization error!!!" << std::endl;
+            return -1;
+        }
+
         //std::cout << "count: " << count << std::endl;
         count++;
         //std::cout << "optimization loop: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     }
+    //std::cout << "final cost: \n" << cost << std::endl;
     return cost.norm();
 }
 

@@ -11,6 +11,8 @@
     <arg name="lookup_table_file_name" default="$(find state_lattice_planner)/lookup_table/lookup_table.csv"/>
     <arg name="max_iteration" default="5"/>
     <arg name="optimization_tolerance" default="0.1"/>
+    <arg name="shortening_trajectory_length_step" default="0.5"/>
+    <arg name="shortening_trajectory_min_length" default="0.5"/>
 
     <node pkg="state_lattice_planner" type="state_lattice_planner" name="state_lattice_planner" ns="local_planner">
         <param name="HZ" value="$(arg hz)"/>
@@ -24,6 +26,8 @@
         <param name="LOOKUP_TABLE_FILE_NAME" value="$(arg lookup_table_file_name)"/>
         <param name="MAX_ITERATION" value="$(arg max_iteration)"/>
         <param name="OPTIMIZATION_TOLERANCE" value="$(arg optimization_tolerance)"/>
+        <param name="SHORTENING_TRAJECTORY_LENGTH_STEP" value="$(arg shortening_trajectory_length_step)"/>
+        <param name="SHORTENING_TRAJECTORY_MIN_LENGTH" value="$(arg shortening_trajectory_min_length)"/>
         <remap from="/local_map" to="/local_map/expand"/>
         <remap from="/cmd_vel" to="/local_path/cmd_vel"/>
     </node>

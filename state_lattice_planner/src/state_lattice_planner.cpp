@@ -430,6 +430,11 @@ void StateLatticePlanner::process(void)
                     cmd_vel.linear.x = 0;
                     cmd_vel.angular.z = 0;
                     velocity_pub.publish(cmd_vel);
+                    // for clear
+                    std::vector<MotionModelDiffDrive::Trajectory> clear_trajectories;
+                    visualize_trajectories(clear_trajectories, 0, 1, 0, N_P * N_H, candidate_trajectories_pub);
+                    visualize_trajectories(clear_trajectories, 0, 0.5, 1, N_P * N_H, candidate_trajectories_no_collision_pub);
+                    visualize_trajectory(MotionModelDiffDrive::Trajectory(), 1, 0, 0, selected_trajectory_pub);
                 }
             }else{
                 std::cout << "stop" << std::endl;
@@ -437,6 +442,11 @@ void StateLatticePlanner::process(void)
                 cmd_vel.linear.x = 0;
                 cmd_vel.angular.z = 0;
                 velocity_pub.publish(cmd_vel);
+                // for clear
+                std::vector<MotionModelDiffDrive::Trajectory> clear_trajectories;
+                visualize_trajectories(clear_trajectories, 0, 1, 0, N_P * N_H, candidate_trajectories_pub);
+                visualize_trajectories(clear_trajectories, 0, 0.5, 1, N_P * N_H, candidate_trajectories_no_collision_pub);
+                visualize_trajectory(MotionModelDiffDrive::Trajectory(), 1, 0, 0, selected_trajectory_pub);
             }
             std::cout << "final time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
         }else{

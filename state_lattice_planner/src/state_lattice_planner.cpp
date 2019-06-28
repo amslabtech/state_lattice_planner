@@ -437,10 +437,12 @@ void StateLatticePlanner::process(void)
                     visualize_trajectory(MotionModelDiffDrive::Trajectory(), 1, 0, 0, selected_trajectory_pub);
                 }
             }else{
-                std::cout << "stop" << std::endl;
+                std::cout << "\033[91mERROR: no optimized trajectory was generated\033[00m" << std::endl;
+                std::cout << "\033[91mturn for local goal\033[00m" << std::endl;
+                double relative_direction = atan2(local_goal.pose.position.y, local_goal.pose.position.x);
                 geometry_msgs::Twist cmd_vel;
                 cmd_vel.linear.x = 0;
-                cmd_vel.angular.z = 0;
+                cmd_vel.angular.z = 0.1 * ((relative_direction > 0) ? -1 : 1);
                 velocity_pub.publish(cmd_vel);
                 // for clear
                 std::vector<MotionModelDiffDrive::Trajectory> clear_trajectories;

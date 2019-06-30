@@ -30,7 +30,7 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
     Eigen::Matrix3d jacobian;
 
     while(1){
-        double start = ros::Time::now().toSec();
+        //double start = ros::Time::now().toSec();
         if(cost.norm() < tolerance){
             //std::cout << "successfully optimized in " << count << " iteration" << std::endl;
             break;
@@ -93,7 +93,7 @@ void TrajectoryGeneratorDiffDrive::get_jacobian(const double dt, const MotionMod
      * h: (dkm, dkf, dsf)
      */
     //std::cout << "j start" << std::endl;
-    //double start = ros::Time::now().toSec();
+    double start = ros::Time::now().toSec();
     MotionModelDiffDrive::CurvatureParams curv = control.curv;
     Eigen::Vector3d x0;
     model.generate_last_state(dt, curv.sf, control.vel, curv.k0, curv.km - h(0), curv.kf, x0);

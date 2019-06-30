@@ -96,21 +96,8 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlPar
     curv.calculate_spline();
     //std::cout << "spline: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     const int N = s_profile.size();
-    std::vector<double> curv_profile;
-    curv_profile.resize(N);
     double sf_2 = curv.sf * 0.5;
-    int count = 0;
-    for(const auto& s : s_profile){
-        double c = 0;
-        if(s < sf_2){
-            c = calculate_quadratic_function(s, curv.coeff_0_m);
-        }else{
-            c = calculate_quadratic_function(s-sf_2, curv.coeff_m_f);
-        }
-        curv_profile[count] = c;
-        count++;
-    }
-    //std::cout << "curv prof: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+
     State state(0, 0, 0, vel.v0, curv.k0);
     State state_(0, 0, 0, vel.v0, curv.k0);
     Eigen::Vector3d pose;
@@ -125,7 +112,14 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlPar
     //start = ros::Time::now().toSec();
     for(int i=1;i<N;i++){
         //double u_start = ros::Time::now().toSec();
-        update(state, v_profile[i], curv_profile[i], dt, state_);
+        double s = s_profile[i];
+        double k = 0;
+        if(s < sf_2){
+            k = calculate_quadratic_function(s, curv.coeff_0_m);
+        }else{
+            k = calculate_quadratic_function(s-sf_2, curv.coeff_m_f);
+        }
+        update(state, v_profile[i], k, dt, state_);
         state = state_;
         pose << state.x, state.y, state.yaw;
         trajectory.trajectory[i] = pose;
@@ -152,25 +146,18 @@ void MotionModelDiffDrive::generate_last_state(const double dt, const double tra
     curv.calculate_spline();
     //std::cout << "spline time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     const int N = s_profile.size();
-    curv_profile.resize(N);
     double sf_2 = curv.sf * 0.5;
-    int count = 0;
-    for(const auto& s : s_profile){
-        double c = 0;
-        if(s < sf_2){
-            c = calculate_quadratic_function(s, curv.coeff_0_m);
-        }else{
-            c = calculate_quadratic_function(s-sf_2, curv.coeff_m_f);
-        }
-        curv_profile[count] = c;
-        count++;
-    }
-    //std::cout << "c_profile time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     State state(0, 0, 0, vel.v0, curv.k0);
     output << state.x, state.y, state.yaw;
-
     for(int i=1;i<N;i++){
-        update(state, v_profile[i], curv_profile[i], dt, state);
+        double s = s_profile[i];
+        double k = 0;
+        if(s < sf_2){
+            k = calculate_quadratic_function(s, curv.coeff_0_m);
+        }else{
+            k = calculate_quadratic_function(s-sf_2, curv.coeff_m_f);
+        }
+        update(state, v_profile[i], k, dt, state);
         output << state.x, state.y, state.yaw;
     }
     //std::cout << "finish time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;

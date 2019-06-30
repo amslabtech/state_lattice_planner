@@ -251,11 +251,13 @@ void MotionModelDiffDrive::make_velocity_profile(const double dt, const Velocity
           a0      a=0         af
 
     ***************************************/
-    v_profile.clear();
-    s_profile.clear();
+    int size = v_param.time / dt;
+    v_profile.resize(size);
+    s_profile.resize(size);
 
     double s = 0;
-    for(double t=0;t<v_param.time;t+=dt){
+    double t = 0;
+    for(int i=0;i<size;++i){
         // acceleration time
         double ta = fabs((v_param.vt - v_param.v0) / v_param.a0);
         // deceleration time
@@ -281,9 +283,10 @@ void MotionModelDiffDrive::make_velocity_profile(const double dt, const Velocity
         }else{
             v = v_param.vf;
         }
-        v_profile.push_back(v);
+        v_profile[i] = v;
         s += fabs(v) * dt;
-        s_profile.push_back(s);
+        s_profile[i] = s;
+        t += dt;
     }
 }
 

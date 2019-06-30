@@ -81,7 +81,7 @@ public:
     private:
     };
 
-    void set_param(const double);
+    void set_param(const double, const double, const double, const double);
     void update(const State&, const double, const double, const double, State&);
     void calculate_spline(const CurvatureParams&, Eigen::VectorXd&, Eigen::VectorXd&);
     void generate_trajectory(const double, const ControlParams&, Trajectory&);
@@ -91,10 +91,14 @@ public:
     void make_velocity_profile(const double, const VelocityParams&);
     double estimate_driving_time(const ControlParams&);
     void response_to_control_inputs(const State&, const double, State&);
-    void control_speed(const State&, const double, State&);
+    void control_speed(const State&, State&);
 
 private:
     double MAX_YAWRATE;
+    double MAX_D_CURVATURE;
+    double MAX_CURVATURE;
+    double MAX_ACCELERATION;
+
     std::vector<double> v_profile;
     std::vector<double> s_profile;
 };

@@ -85,6 +85,9 @@ private:
     double OPTIMIZATION_TOLERANCE;
     double SHORTENING_TRAJECTORY_LENGTH_STEP;
     double SHORTENING_TRAJECTORY_MIN_LENGTH;
+    double MAX_CURVATURE;
+    double MAX_D_CURVATURE;
+    double MAX_YAWRATE;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;

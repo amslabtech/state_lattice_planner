@@ -28,13 +28,16 @@ private:
     double MAX_YAW;
     double DELTA_YAW;
     std::string LOOKUP_TABLE_FILE_NAME;
-    double MAX_ACCELERATION;
     double TARGET_VELOCITY;
     double MIN_V;
     double MAX_V;
     double DELTA_V;
     double MAX_KAPPA;
     double DELTA_KAPPA;
+    double MAX_ACCELERATION;
+    double MAX_CURVATURE;
+    double MAX_D_CURVATURE;
+    double MAX_YAWRATE;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;

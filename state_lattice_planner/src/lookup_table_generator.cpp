@@ -11,13 +11,16 @@ LookupTableGenerator::LookupTableGenerator(void)
     local_nh.param("MAX_YAW", MAX_YAW, {M_PI / 3.0});
     local_nh.param("DELTA_YAW", DELTA_YAW, {M_PI / 3.0});
     local_nh.param("LOOKUP_TABLE_FILE_NAME", LOOKUP_TABLE_FILE_NAME, {std::string(std::getenv("HOME")) + "/lookup_table.csv"});
-    local_nh.param("MAX_ACCELERATION", MAX_ACCELERATION, {1.0});
     local_nh.param("TARGET_VELOCITY", TARGET_VELOCITY, {0.8});
     local_nh.param("MIN_V", MIN_V, {0.1});
     local_nh.param("MAX_V", MAX_V, {0.8});
     local_nh.param("DELTA_V", DELTA_V, {0.1});
     local_nh.param("MAX_KAPPA", MAX_KAPPA, {1.0});
     local_nh.param("DELTA_KAPPA", DELTA_KAPPA, {0.2});
+    local_nh.param("MAX_ACCELERATION", MAX_ACCELERATION, {1.0});
+    local_nh.param("MAX_CURVATURE", MAX_CURVATURE, {1.0});
+    local_nh.param("MAX_D_CURVATURE", MAX_D_CURVATURE, {2.0});
+    local_nh.param("MAX_YAWRATE", MAX_YAWRATE, {0.8});
 
     std::cout << "MIN_X: " << MIN_X << std::endl;
     std::cout << "MAX_X: " << MAX_X << std::endl;
@@ -27,13 +30,16 @@ LookupTableGenerator::LookupTableGenerator(void)
     std::cout << "MAX_YAW: " << MAX_YAW << std::endl;
     std::cout << "DELTA_YAW: " << DELTA_YAW << std::endl;
     std::cout << "LOOKUP_TABLE_FILE_NAME: " << LOOKUP_TABLE_FILE_NAME << std::endl;
-    std::cout << "MAX_ACCELERATION: " << MAX_ACCELERATION << std::endl;
     std::cout << "TARGET_VELOCITY: " << TARGET_VELOCITY << std::endl;
     std::cout << "MIN_V: " << MIN_V << std::endl;
     std::cout << "MAX_V: " << MAX_V << std::endl;
     std::cout << "DELTA_V: " << DELTA_V << std::endl;
     std::cout << "MAX_KAPPA: " << MAX_KAPPA << std::endl;
     std::cout << "DELTA_KAPPA: " << DELTA_KAPPA << std::endl;
+    std::cout << "MAX_ACCELERATION: " << MAX_ACCELERATION << std::endl;
+    std::cout << "MAX_CURVATURE: " << MAX_CURVATURE << std::endl;
+    std::cout << "MAX_D_CURVATURE: " << MAX_D_CURVATURE << std::endl;
+    std::cout << "MAX_YAWRATE: " << MAX_YAWRATE << std::endl;
 }
 
 std::string LookupTableGenerator::process(void)
@@ -94,6 +100,7 @@ std::string LookupTableGenerator::process(void)
                 MotionModelDiffDrive::ControlParams output;
                 MotionModelDiffDrive::Trajectory trajectory;
                 TrajectoryGeneratorDiffDrive tg;
+                tg.set_motion_param(MAX_YAWRATE, MAX_CURVATURE, MAX_D_CURVATURE, MAX_ACCELERATION);
                 double cost = tg.generate_optimized_trajectory(state, init, 1e-1, 1e-1, 100, output, trajectory);
                 if(cost > 0){
                     std::cout << "successfully optimized" << std::endl;

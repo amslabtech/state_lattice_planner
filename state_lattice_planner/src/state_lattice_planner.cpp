@@ -17,6 +17,9 @@ StateLatticePlanner::StateLatticePlanner(void)
     local_nh.param("OPTIMIZATION_TOLERANCE", OPTIMIZATION_TOLERANCE, {0.1});
     local_nh.param("SHORTENING_TRAJECTORY_LENGTH_STEP", SHORTENING_TRAJECTORY_LENGTH_STEP, {0.5});
     local_nh.param("SHORTENING_TRAJECTORY_MIN_LENGTH", SHORTENING_TRAJECTORY_MIN_LENGTH, {0.5});
+    local_nh.param("MAX_CURVATURE", MAX_CURVATURE, {1.0});
+    local_nh.param("MAX_D_CURVATURE", MAX_D_CURVATURE, {2.0});
+    local_nh.param("MAX_YAWRATE", MAX_YAWRATE, {0.8});
 
     std::cout << "HZ: " << HZ << std::endl;
     std::cout << "ROBOT_FRAME: " << ROBOT_FRAME << std::endl;
@@ -32,6 +35,9 @@ StateLatticePlanner::StateLatticePlanner(void)
     std::cout << "OPTIMIZATION_TOLERANCE: " << OPTIMIZATION_TOLERANCE << std::endl;
     std::cout << "SHORTENING_TRAJECTORY_LENGTH_STEP: " << SHORTENING_TRAJECTORY_LENGTH_STEP << std::endl;
     std::cout << "SHORTENING_TRAJECTORY_MIN_LENGTH: " << SHORTENING_TRAJECTORY_MIN_LENGTH << std::endl;
+    std::cout << "MAX_CURVATURE: " << MAX_CURVATURE << std::endl;
+    std::cout << "MAX_D_CURVATURE: " << MAX_D_CURVATURE << std::endl;
+    std::cout << "MAX_YAWRATE: " << MAX_YAWRATE << std::endl;
 
     SamplingParams sp(N_P, N_H, MAX_ALPHA, MAX_PSI);
     sampling_params = sp;
@@ -225,6 +231,7 @@ bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
     for(auto boundary_state : boundary_states){
         double start = ros::Time::now().toSec();
         TrajectoryGeneratorDiffDrive tg;
+        tg.set_motion_param(MAX_YAWRATE, MAX_CURVATURE, MAX_D_CURVATURE, MAX_ACCELERATION);
         MotionModelDiffDrive::ControlParams output;
         //std::cout << "v: " << velocity << ", " << "w: " << angular_velocity << std::endl;
         double _velocity = velocity;

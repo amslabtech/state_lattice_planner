@@ -15,7 +15,6 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
 {
     Eigen::Vector3d cost(1e2, 1e2, 1e2);
     double last_cost = cost.norm();
-    double last_dp_norm = 100;
 
     output = init_control_param;
 
@@ -48,12 +47,11 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
         //std::cout << "jacobian inverse time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
         //std::cout << "cost: \n" << cost << std::endl;
         //std::cout << "dp: \n" << dp << std::endl;
-        if((cost.norm() > last_cost) || (dp.norm() > last_dp_norm) || std::isnan(dp(0)) || std::isnan(dp(1)) || std::isnan(dp(2)) || std::isinf(dp(0)) || std::isinf(dp(1)) || std::isinf(dp(2))){
+        if((cost.norm() > last_cost) || std::isnan(dp(0)) || std::isnan(dp(1)) || std::isnan(dp(2)) || std::isinf(dp(0)) || std::isinf(dp(1)) || std::isinf(dp(2))){
             std::cout << "diverge to infinity!!!" << std::endl;
             return -1;
         }
         last_cost = cost.norm();
-        last_dp_norm = dp.norm();
 
         output.curv.km += dp(0);
         output.curv.kf += dp(1);

@@ -3,11 +3,7 @@
 MotionModelDiffDrive::MotionModelDiffDrive()
 {
     // default setting
-    trajectory_resolution = 0.05;
-    target_velocity = 0.5;
-    max_curvature = 0.5;
-    max_acceleration = 1.0;
-    max_d_curvature = 0.5;
+    MAX_YAWRATE = 0.8;
 }
 
 MotionModelDiffDrive::State::State(double _x, double _y, double _yaw, double _v, double _curvature)
@@ -71,13 +67,9 @@ bool MotionModelDiffDrive::Trajectory::operator<(const Trajectory& another) cons
     return cost < another.cost;
 }
 
-void MotionModelDiffDrive::set_param(const double trajectory_resolution_, const double target_velocity_, const double max_curvature_, const double max_acceleration_, const double max_d_curvature_)
+void MotionModelDiffDrive::set_param(const double max_yawrate)
 {
-    trajectory_resolution = trajectory_resolution_;
-    target_velocity = target_velocity_;
-    max_curvature = max_curvature_;
-    max_acceleration = max_acceleration_;
-    max_d_curvature = max_d_curvature_;
+    MAX_YAWRATE = max_yawrate;
 }
 
 void MotionModelDiffDrive::update(const State& s, const double v, const double curv, const double dt, State& output_s)
@@ -89,6 +81,7 @@ void MotionModelDiffDrive::update(const State& s, const double v, const double c
     output_s.yaw = atan2(sin(output_s.yaw), cos(output_s.yaw));
     output_s.v = v;
     output_s.curvature = curv;
+    response_to_control_inputs(output_s, dt, output_s);
 }
 
 void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlParams& control_param, Trajectory& trajectory)
@@ -141,10 +134,9 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlPar
     //std::cout << "prof: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
     start = ros::Time::now().toSec();
-    const double _dt = 1.0  / dt;
     for(int i=1;i<N;i++){
         //double u_start = ros::Time::now().toSec();
-        update(state, (s_profile[i]-s_profile[i-1]) * _dt, curv_profile[i], dt, state_);
+        update(state, v_profile[i], curv_profile[i], dt, state_);
         state = state_;
         pose << state.x, state.y, state.yaw;
         /*
@@ -306,4 +298,19 @@ double MotionModelDiffDrive::estimate_driving_time(const ControlParams& control)
     //std::cout << st << ", " << tt << std::endl;
     double driving_time = t0 + tt + td;
     return driving_time;
+}
+
+void MotionModelDiffDrive::response_to_control_inputs(const State& state, const double dt, State& _state)
+{
+    _state = state;
+    control_speed(_state, dt, _state);
+}
+
+void MotionModelDiffDrive::control_speed(const State& state, const double dt, State& _state)
+{
+    _state = state;
+    double yawrate = _state.curvature * _state.v;
+    if(fabs(yawrate) > MAX_YAWRATE){
+        _state.v = MAX_YAWRATE / yawrate;
+    }
 }

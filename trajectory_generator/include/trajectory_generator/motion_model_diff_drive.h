@@ -142,6 +142,7 @@ private:
 
     std::vector<double> v_profile;
     std::vector<double> s_profile;
+    std::vector<double> curv_profile;
 };
 
 #endif //__MOTION_MODEL_DIFF_DRIVE_H

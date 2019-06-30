@@ -149,7 +149,6 @@ void MotionModelDiffDrive::generate_last_state(const double dt, const double tra
 
     curv.calculate_spline();
     const int N = s_profile.size();
-    std::vector<double> curv_profile;
     curv_profile.resize(N);
     double sf_2 = curv.sf * 0.5;
     for(int i=0;i<N;i++){

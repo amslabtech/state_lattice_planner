@@ -79,7 +79,7 @@ TEST(TestSuite, test3)
 TEST(TestSuite, test4)
 {
     StateLatticePlanner slp;
-    int np = 5;
+    int np = 10;
     int nh = 3;
     int ns = 1000;
     Eigen::Vector3d goal(5, -1, 1);

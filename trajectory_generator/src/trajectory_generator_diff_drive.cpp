@@ -21,6 +21,8 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
     Eigen::Vector3d cost(1e2, 1e2, 1e2);
     double last_cost = cost.norm();
 
+    double distance_to_goal = goal.segment(0, 2).norm();
+
     output = init_control_param;
 
     int count = 0;
@@ -36,13 +38,16 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
         trajectory.trajectory.clear();
         trajectory.velocities.clear();
         trajectory.angular_velocities.clear();
-        double time = goal.norm() / output.vel.v0;
-        double start = ros::Time::now().toSec();
+        double time = distance_to_goal / output.vel.v0;
+        //double start = ros::Time::now().toSec();
         model.generate_trajectory(dt, output, trajectory);
+        /*
+        std::cout << "size: " << trajectory.trajectory.size() << std::endl;
         if(trajectory.trajectory.size() <= 1){
             std::cout << "failed to generate trajecotry!!!" << std::endl;
             return -1;
         }
+        */
         //std::cout << "traj gen time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
         Eigen::Matrix3d jacobian;
@@ -66,7 +71,7 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
         output.curv.kf += dp(1);
         output.curv.sf += dp(2);
 
-        if(output.curv.sf < 0){
+        if(fabs(output.curv.sf - distance_to_goal) > distance_to_goal * 0.5){
             std::cout << "optimization error!!!" << std::endl;
             return -1;
         }

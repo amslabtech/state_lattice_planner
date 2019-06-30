@@ -39,6 +39,10 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
         double time = goal.norm() / output.vel.v0;
         double start = ros::Time::now().toSec();
         model.generate_trajectory(dt, output, trajectory);
+        if(trajectory.trajectory.size() <= 1){
+            std::cout << "failed to generate trajecotry!!!" << std::endl;
+            return -1;
+        }
         //std::cout << "traj gen time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
         Eigen::Matrix3d jacobian;
@@ -66,6 +70,7 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
             std::cout << "optimization error!!!" << std::endl;
             return -1;
         }
+        //std::cout << output.curv.km << ", " << output.curv.kf << ", " << output.curv.sf << std::endl; 
 
         //std::cout << "count: " << count << std::endl;
         count++;

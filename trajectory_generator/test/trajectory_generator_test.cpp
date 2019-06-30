@@ -89,6 +89,28 @@ TEST(TestSuite, test4)
     ASSERT_LT(trajectories[0].cost, trajectories[1].cost);
 }
 
+TEST(TestSuite, test5)
+{
+    ros::NodeHandle nh;
+    Eigen::Vector3d goal(1, 2, -1.0472);
+    TrajectoryGeneratorDiffDrive tg;
+    tg.set_motion_param(0.8, 1.0, 2.0, 1.0);
+    MotionModelDiffDrive::ControlParams output;
+    MotionModelDiffDrive::VelocityParams init_v(0.5, 1.0, 0.8, 0.8, 1.0);
+    MotionModelDiffDrive::ControlParams init_params(init_v, MotionModelDiffDrive::CurvatureParams(-0.8, 0, 0, goal.segment(0, 2).norm()));
+    MotionModelDiffDrive::Trajectory trajectory;
+    std::cout << "generate optimized trajectory" << std::endl;
+    double start = ros::Time::now().toSec();
+    double cost = tg.generate_optimized_trajectory(goal, init_params, 1e-1, 1e-1, 100, output, trajectory);
+    std::cout << "time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+    std::cout << "trajecotry.back():" << std::endl;
+    std::cout << trajectory.trajectory.back() << std::endl;
+    std::cout << "cost: " << cost << std::endl;
+
+    // expect failure
+    EXPECT_LT(cost, 0);// cost > 0
+}
+
 int main(int argc, char** argv)
 {
     testing::InitGoogleTest(&argc, argv);

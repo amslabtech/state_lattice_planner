@@ -50,8 +50,8 @@ public:
         double km;
         double kf;
         double sf;
-        Eigen::VectorXd coeff_0_m;
-        Eigen::VectorXd coeff_m_f;
+        Eigen::Vector3d coeff_0_m;
+        Eigen::Vector3d coeff_m_f;
     private:
     };
 
@@ -83,11 +83,9 @@ public:
 
     void set_param(const double, const double, const double, const double);
     void update(const State&, const double, const double, const double, State&);
-    void calculate_spline(const CurvatureParams&, Eigen::VectorXd&, Eigen::VectorXd&);
     void generate_trajectory(const double, const ControlParams&, Trajectory&);
     void generate_last_state(const double, const double, const VelocityParams&, const double, const double, const double, Eigen::Vector3d&);
-    double calculate_cubic_function(const double, const Eigen::VectorXd&);
-    double calculate_quadratic_function(const double, const Eigen::VectorXd&);
+    double calculate_quadratic_function(const double, const Eigen::Vector3d&);
     void make_velocity_profile(const double, const VelocityParams&);
     double estimate_driving_time(const ControlParams&);
     void response_to_control_inputs(const State&, const double, State&);

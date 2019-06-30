@@ -35,8 +35,8 @@ MotionModelDiffDrive::VelocityParams::VelocityParams(double _v0, double _a0, dou
 
 MotionModelDiffDrive::CurvatureParams::CurvatureParams(void)
 {
-    coeff_0_m = Eigen::VectorXd::Zero(3);
-    coeff_m_f = Eigen::VectorXd::Zero(3);
+    coeff_0_m = Eigen::Vector3d::Zero();
+    coeff_m_f = Eigen::Vector3d::Zero();
 }
 
 MotionModelDiffDrive::CurvatureParams::CurvatureParams(double _k0, double _km, double _kf, double _sf)
@@ -45,8 +45,8 @@ MotionModelDiffDrive::CurvatureParams::CurvatureParams(double _k0, double _km, d
     km = _km;
     kf = _kf;
     sf = _sf;
-    coeff_0_m = Eigen::VectorXd::Zero(3);
-    coeff_m_f = Eigen::VectorXd::Zero(3);
+    coeff_0_m = Eigen::Vector3d::Zero();
+    coeff_m_f = Eigen::Vector3d::Zero();
 }
 
 MotionModelDiffDrive::ControlParams::ControlParams(void)
@@ -92,7 +92,7 @@ void MotionModelDiffDrive::update(const State& s, const double v, const double c
 
 void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlParams& control_param, Trajectory& trajectory)
 {
-    double start = ros::Time::now().toSec();
+    //double start = ros::Time::now().toSec();
     //std::cout << "gen start" << std::endl;
     CurvatureParams curv = control_param.curv;
     VelocityParams vel = control_param.vel;
@@ -103,23 +103,23 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlPar
     make_velocity_profile(dt, vel);
     //std::cout << "v prof: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     //std::cout << vel.v0 << ", " << vel.vt << ", " << vel.vf << ", " << vel.time << ", " << curv.sf << ", " << std::endl;
-    const int N = s_profile.size();
     //std::cout << "n: " << N << std::endl;
 
     curv.calculate_spline();
     //std::cout << "spline: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+    const int N = s_profile.size();
     std::vector<double> curv_profile;
+    curv_profile.resize(N);
     double sf_2 = curv.sf * 0.5;
-    for(const auto& s : s_profile){
+    for(int i=0;i<N;i++){
         double c = 0;
+        double s = s_profile[i];
         if(s < sf_2){
-            //c = calculate_cubic_function(s, curv.coeff_0_m);
             c = calculate_quadratic_function(s, curv.coeff_0_m);
         }else{
-            //c = calculate_cubic_function(s, curv.coeff_m_f);
             c = calculate_quadratic_function(s-sf_2, curv.coeff_m_f);
         }
-        curv_profile.push_back(c);
+        curv_profile[i] = c;
     }
     //std::cout << "curv prof: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     State state(0, 0, 0, vel.v0, curv.k0);
@@ -129,27 +129,16 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlPar
     trajectory.trajectory.resize(N);
     trajectory.velocities.resize(N);
     trajectory.angular_velocities.resize(N);
-    /*
-    trajectory.trajectory.push_back(pose);
-    trajectory.velocities.push_back(state.v);
-    trajectory.angular_velocities.push_back(state.v * state.curvature);
-    */
     trajectory.trajectory[0] = pose;
     trajectory.velocities[0] = state.v;
     trajectory.angular_velocities[0] = state.v * state.curvature;
-    //std::cout << "prof: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
-    start = ros::Time::now().toSec();
+    //start = ros::Time::now().toSec();
     for(int i=1;i<N;i++){
         //double u_start = ros::Time::now().toSec();
         update(state, v_profile[i], curv_profile[i], dt, state_);
         state = state_;
         pose << state.x, state.y, state.yaw;
-        /*
-        trajectory.trajectory.push_back(pose);
-        trajectory.velocities.push_back(state.v);
-        trajectory.angular_velocities.push_back(state.v * state.curvature);
-        */
         trajectory.trajectory[i] = pose;
         trajectory.velocities[i] = state.v;
         trajectory.angular_velocities[i] = state.v * state.curvature;
@@ -227,12 +216,7 @@ void MotionModelDiffDrive::CurvatureParams::calculate_spline(void)
     //std::cout << "spline end: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 }
 
-inline double MotionModelDiffDrive::calculate_cubic_function(const double x, const Eigen::VectorXd& coeff)
-{
-    return coeff(0) * x * x * x + coeff(1) * x * x + coeff(2) * x + coeff(3);
-}
-
-inline double MotionModelDiffDrive::calculate_quadratic_function(const double x, const Eigen::VectorXd& coeff)
+inline double MotionModelDiffDrive::calculate_quadratic_function(const double x, const Eigen::Vector3d& coeff)
 {
     return coeff(0) * x * x + coeff(1) * x + coeff(2);
 }

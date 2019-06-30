@@ -333,6 +333,6 @@ void MotionModelDiffDrive::control_speed(const State& state, State& _state)
     _state = state;
     double yawrate = _state.curvature * _state.v;
     if(fabs(yawrate) > MAX_YAWRATE){
-        _state.v = MAX_YAWRATE / yawrate;
+        _state.v = MAX_YAWRATE / _state.curvature;
     }
 }

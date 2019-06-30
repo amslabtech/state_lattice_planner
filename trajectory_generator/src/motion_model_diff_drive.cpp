@@ -139,8 +139,7 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlPar
 void MotionModelDiffDrive::generate_last_state(const double dt, const double trajectory_length, const VelocityParams& _vel, const double k0, const double km, const double kf, Eigen::Vector3d& output)
 {
     //std::cout << "--- generate last state ---" << std::endl;
-    double start = ros::Time::now().toSec();
-    Trajectory trajectory;
+    //double start = ros::Time::now().toSec();
     CurvatureParams curv(k0, km, kf, trajectory_length);
     VelocityParams vel = _vel;
 
@@ -180,16 +179,19 @@ void MotionModelDiffDrive::generate_last_state(const double dt, const double tra
 void MotionModelDiffDrive::CurvatureParams::calculate_spline(void)
 {
     //std::cout << "spline" << std::endl;
-    //double start = ros::Time::now().toSec();
+    double start = ros::Time::now().toSec();
     // 2d spline interpolation
     Eigen::Vector3d x(0, sf * 0.5, sf);
     Eigen::Vector3d y(k0, km, kf);
     Eigen::Matrix3d s;
+    //std::cout << "spline bfr s: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     s << 2 * (x(1) - x(0)),             x(1), -x(1),
          x(1) * x(1),                   x(1), 0,
          (x(2) - x(1)) * (x(2) - x(1)), 0,    x(2) - x(1);
     Eigen::Vector3d c(0, y(1) - y(0), y(2) - y(1));
+    //std::cout << "spline bfr inv: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     Eigen::Vector3d a = s.inverse() * c;
+    //std::cout << "spline aft inv: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     coeff_0_m << a(0), a(1), y(0);
     coeff_m_f << a(0), a(2), y(1);
     //std::cout << "spline end: " << ros::Time::now().toSec() - start << "[s]" << std::endl;

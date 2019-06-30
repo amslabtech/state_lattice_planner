@@ -78,18 +78,6 @@ void MotionModelDiffDrive::set_param(const double max_yawrate, const double max_
     MAX_ACCELERATION = max_acceleration;
 }
 
-void MotionModelDiffDrive::update(const State& s, const double v, const double curv, const double dt, State& output_s)
-{
-    output_s = s;
-    output_s.x += v * cos(s.yaw) * dt;
-    output_s.y += v * sin(s.yaw) * dt;
-    output_s.yaw += curv * v * dt;
-    output_s.yaw = atan2(sin(output_s.yaw), cos(output_s.yaw));
-    output_s.v = v;
-    output_s.curvature = curv;
-    response_to_control_inputs(s, dt, output_s);
-}
-
 void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlParams& control_param, Trajectory& trajectory)
 {
     //double start = ros::Time::now().toSec();
@@ -147,15 +135,40 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlPar
     //std::cout << "gen t: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 }
 
-void MotionModelDiffDrive::generate_last_state(const double dt, const double trajectory_length, const VelocityParams& vel, const double k0, const double km, const double kf, Eigen::Vector3d& output)
+void MotionModelDiffDrive::generate_last_state(const double dt, const double trajectory_length, const VelocityParams& _vel, const double k0, const double km, const double kf, Eigen::Vector3d& output)
 {
     //std::cout << "--- generate last state ---" << std::endl;
-    double start = ros::Time::now().toSec();
+    //double start = ros::Time::now().toSec();
     Trajectory trajectory;
     CurvatureParams curv(k0, km, kf, trajectory_length);
-    generate_trajectory(dt, ControlParams(vel, curv), trajectory);
-    output << trajectory.trajectory.back();
-    //std::cout << "gls time: " << ros::Time::now().toSec() - start << std::endl;
+    VelocityParams vel = _vel;
+
+    vel.time = estimate_driving_time(ControlParams(vel, curv));
+
+    make_velocity_profile(dt, vel);
+
+    curv.calculate_spline();
+    const int N = s_profile.size();
+    std::vector<double> curv_profile;
+    curv_profile.resize(N);
+    double sf_2 = curv.sf * 0.5;
+    for(int i=0;i<N;i++){
+        double c = 0;
+        double s = s_profile[i];
+        if(s < sf_2){
+            c = calculate_quadratic_function(s, curv.coeff_0_m);
+        }else{
+            c = calculate_quadratic_function(s-sf_2, curv.coeff_m_f);
+        }
+        curv_profile[i] = c;
+    }
+    State state(0, 0, 0, vel.v0, curv.k0);
+    output << state.x, state.y, state.yaw;
+
+    for(int i=1;i<N;i++){
+        update(state, v_profile[i], curv_profile[i], dt, state);
+        output << state.x, state.y, state.yaw;
+    }
 }
 
 void MotionModelDiffDrive::CurvatureParams::calculate_spline(void)
@@ -214,11 +227,6 @@ void MotionModelDiffDrive::CurvatureParams::calculate_spline(void)
     coeff_m_f << a(0), a(2), y(1);
     //std::cout << coeff_m_f << std::endl;
     //std::cout << "spline end: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
-}
-
-inline double MotionModelDiffDrive::calculate_quadratic_function(const double x, const Eigen::Vector3d& coeff)
-{
-    return coeff(0) * x * x + coeff(1) * x + coeff(2);
 }
 
 void MotionModelDiffDrive::make_velocity_profile(const double dt, const VelocityParams& v_param)
@@ -293,33 +301,3 @@ double MotionModelDiffDrive::estimate_driving_time(const ControlParams& control)
     return driving_time;
 }
 
-void MotionModelDiffDrive::response_to_control_inputs(const State& state, const double dt, State& output)
-{
-    double k = state.curvature;
-    double _k = output.curvature;
-    double dk = (_k - k) / dt;
-    dk = std::max(std::min(dk, MAX_D_CURVATURE), -MAX_D_CURVATURE);
-
-    // adjust output.v
-    control_speed(output, output);
-
-    _k += dk * dt;
-    output.curvature = std::max(std::min(_k, MAX_CURVATURE), -MAX_CURVATURE);
-
-    double v = state.v;
-    double _v = output.v;
-    double a = (_v - v) / dt;
-    a = std::max(std::min(a, MAX_ACCELERATION), -MAX_ACCELERATION);
-    _v += a * dt;
-    output.v = _v;
-}
-
-void MotionModelDiffDrive::control_speed(const State& state, State& _state)
-{
-    // speed control logic
-    _state = state;
-    double yawrate = _state.curvature * _state.v;
-    if(fabs(yawrate) > MAX_YAWRATE){
-        _state.v = MAX_YAWRATE / _state.curvature;
-    }
-}

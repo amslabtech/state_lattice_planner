@@ -92,7 +92,9 @@ public:
         output_s.x += v * cos(s.yaw) * dt;
         output_s.y += v * sin(s.yaw) * dt;
         output_s.yaw += curv * v * dt;
-        output_s.yaw = atan2(sin(output_s.yaw), cos(output_s.yaw));
+        if(output_s.yaw < -M_PI || output_s.yaw > M_PI){
+            output_s.yaw = atan2(sin(output_s.yaw), cos(output_s.yaw));
+        }
         output_s.v = v;
         output_s.curvature = curv;
         response_to_control_inputs(s, dt, output_s);

@@ -99,15 +99,16 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlPar
     std::vector<double> curv_profile;
     curv_profile.resize(N);
     double sf_2 = curv.sf * 0.5;
-    for(int i=0;i<N;i++){
+    int count = 0;
+    for(const auto& s : s_profile){
         double c = 0;
-        double s = s_profile[i];
         if(s < sf_2){
             c = calculate_quadratic_function(s, curv.coeff_0_m);
         }else{
             c = calculate_quadratic_function(s-sf_2, curv.coeff_m_f);
         }
-        curv_profile[i] = c;
+        curv_profile[count] = c;
+        count++;
     }
     //std::cout << "curv prof: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     State state(0, 0, 0, vel.v0, curv.k0);
@@ -138,29 +139,34 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlPar
 void MotionModelDiffDrive::generate_last_state(const double dt, const double trajectory_length, const VelocityParams& _vel, const double k0, const double km, const double kf, Eigen::Vector3d& output)
 {
     //std::cout << "--- generate last state ---" << std::endl;
-    //double start = ros::Time::now().toSec();
+    double start = ros::Time::now().toSec();
     Trajectory trajectory;
     CurvatureParams curv(k0, km, kf, trajectory_length);
     VelocityParams vel = _vel;
 
     vel.time = estimate_driving_time(ControlParams(vel, curv));
+    //std::cout << "estimate time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
     make_velocity_profile(dt, vel);
+    //std::cout << "v_profile time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
     curv.calculate_spline();
+    //std::cout << "spline time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     const int N = s_profile.size();
     curv_profile.resize(N);
     double sf_2 = curv.sf * 0.5;
-    for(int i=0;i<N;i++){
+    int count = 0;
+    for(const auto& s : s_profile){
         double c = 0;
-        double s = s_profile[i];
         if(s < sf_2){
             c = calculate_quadratic_function(s, curv.coeff_0_m);
         }else{
             c = calculate_quadratic_function(s-sf_2, curv.coeff_m_f);
         }
-        curv_profile[i] = c;
+        curv_profile[count] = c;
+        count++;
     }
+    //std::cout << "c_profile time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     State state(0, 0, 0, vel.v0, curv.k0);
     output << state.x, state.y, state.yaw;
 
@@ -168,63 +174,24 @@ void MotionModelDiffDrive::generate_last_state(const double dt, const double tra
         update(state, v_profile[i], curv_profile[i], dt, state);
         output << state.x, state.y, state.yaw;
     }
+    //std::cout << "finish time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 }
 
 void MotionModelDiffDrive::CurvatureParams::calculate_spline(void)
 {
     //std::cout << "spline" << std::endl;
     //double start = ros::Time::now().toSec();
-    /*
-    Eigen::Vector3d x;
-    x(0) = 0;
-    x(1) = sf * 0.5;
-    x(2) = sf;
-    Eigen::Vector3d y;
-    y << k0, km, kf;
-
-    // cubic spline interpolation
-    Eigen::MatrixXd s(8, 8);
-    s << x(0) * x(0) * x(0), x(0) * x(0), x(0), 1, 0, 0, 0, 0,
-         x(1) * x(1) * x(1), x(1) * x(1), x(1), 1, 0, 0, 0, 0,
-         0, 0, 0, 0, x(1) * x(1) * x(1), x(1) * x(1), x(1), 1,
-         0, 0, 0, 0, x(2) * x(2) * x(2), x(2) * x(2), x(2), 1,
-         3 * x(1) * x(1), 2 * x(1), 1, 0, -3 * x(1) * x(1), -2 * x(1), -1, 0,
-         6 * x(1), 2, 0, 0, -6 * x(1), -2, 0, 0,
-         6 * x(0), 2, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 6 * x(2), 2, 0, 0;
-    std::cout << "spline mat: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
-
-    Eigen::VectorXd c(8);
-    c << y(0), y(1), y(1), y(2), 0, 0, 0, 0;
-
-    Eigen::VectorXd a(8);
-    //a = s.inverse() * c; inverse() is too slow!!!
-    a = s.lu().solve(c);
-    std::cout << "spline inv: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
-    // ax^3 + bx^2 + cx + d = y
-    // coeff: (a, b, c, d)
-    coeff_0_m = a.segment(0, 4);
-    coeff_m_f = a.segment(4, 4);
-    */
     // 2d spline interpolation
-    Eigen::Vector3d x(0, sf / 2.0, sf);
+    Eigen::Vector3d x(0, sf * 0.5, sf);
     Eigen::Vector3d y(k0, km, kf);
     Eigen::Matrix3d s;
     s << 2 * (x(1) - x(0)),             x(1), -x(1),
          x(1) * x(1),                   x(1), 0,
          (x(2) - x(1)) * (x(2) - x(1)), 0,    x(2) - x(1);
-    /*
-    s << x(1) * x(1), x(1), 0,
-         x(1) * x(1), 0,    x(1),
-         x(2),        1,    -1;
-    */
     Eigen::Vector3d c(0, y(1) - y(0), y(2) - y(1));
-    //Eigen::Vector3d c(y(1) - y(0), y(2) - y(1), 0);
     Eigen::Vector3d a = s.inverse() * c;
     coeff_0_m << a(0), a(1), y(0);
-    //std::cout << coeff_0_m << std::endl;
     coeff_m_f << a(0), a(2), y(1);
-    //std::cout << coeff_m_f << std::endl;
     //std::cout << "spline end: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 }
 

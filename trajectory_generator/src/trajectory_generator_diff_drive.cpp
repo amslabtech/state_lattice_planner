@@ -6,9 +6,14 @@ TrajectoryGeneratorDiffDrive::TrajectoryGeneratorDiffDrive(void)
     h << 0.005, 0.005, 0.1;
 }
 
-void TrajectoryGeneratorDiffDrive::set_param(const double dkm, const double dkf, const double dsf)
+void TrajectoryGeneratorDiffDrive::set_optimization_param(const double dkm, const double dkf, const double dsf)
 {
     h << dkm, dkf, dsf;
+}
+
+void TrajectoryGeneratorDiffDrive::set_motion_param(const double max_yawrate, const double max_curvature, const double max_d_curvature, const double max_acceleration)
+{
+    model.set_param(max_yawrate, max_curvature, max_d_curvature, max_acceleration);
 }
 
 double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::Vector3d& goal, const MotionModelDiffDrive::ControlParams& init_control_param, const double dt, const double tolerance, const int max_iteration, MotionModelDiffDrive::ControlParams& output, MotionModelDiffDrive::Trajectory& trajectory)

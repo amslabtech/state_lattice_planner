@@ -80,8 +80,8 @@ void MotionModelDiffDrive::set_param(const double max_yawrate, const double max_
 
 void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlParams& control_param, Trajectory& trajectory)
 {
-    //double start = ros::Time::now().toSec();
     //std::cout << "gen start" << std::endl;
+    //double start = ros::Time::now().toSec();
     CurvatureParams curv = control_param.curv;
     VelocityParams vel = control_param.vel;
 
@@ -158,15 +158,15 @@ void MotionModelDiffDrive::generate_last_state(const double dt, const double tra
             k = calculate_quadratic_function(s-sf_2, curv.coeff_m_f);
         }
         update(state, v_profile[i], k, dt, state);
-        output << state.x, state.y, state.yaw;
     }
+    output << state.x, state.y, state.yaw;
     //std::cout << "finish time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 }
 
 void MotionModelDiffDrive::CurvatureParams::calculate_spline(void)
 {
     //std::cout << "spline" << std::endl;
-    double start = ros::Time::now().toSec();
+    //double start = ros::Time::now().toSec();
     // 2d spline interpolation
     Eigen::Vector3d x(0, sf * 0.5, sf);
     Eigen::Vector3d y(k0, km, kf);

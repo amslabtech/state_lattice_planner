@@ -88,15 +88,13 @@ public:
     double estimate_driving_time(const ControlParams&);
     void update(const State& s, const double v, const double curv, const double dt, State& output_s)
     {
-        output_s = s;
-        output_s.x += v * cos(s.yaw) * dt;
-        output_s.y += v * sin(s.yaw) * dt;
-        output_s.yaw += curv * v * dt;
+        double vdt = v * dt;
+        output_s.x = s.x + vdt * cos(s.yaw);
+        output_s.y = s.y + vdt * sin(s.yaw);
+        output_s.yaw = s.yaw + curv * vdt;
         if(output_s.yaw < -M_PI || output_s.yaw > M_PI){
             output_s.yaw = atan2(sin(output_s.yaw), cos(output_s.yaw));
         }
-        output_s.v = v;
-        output_s.curvature = curv;
         response_to_control_inputs(s, dt, output_s);
     }
 
@@ -107,9 +105,10 @@ public:
 
     void response_to_control_inputs(const State& state, const double dt, State& output)
     {
+        double _dt = 1.0 / dt;
         double k = state.curvature;
         double _k = output.curvature;
-        double dk = (_k - k) / dt;
+        double dk = (_k - k) * _dt;
         dk = std::max(std::min(dk, MAX_D_CURVATURE), -MAX_D_CURVATURE);
 
         // adjust output.v
@@ -120,7 +119,7 @@ public:
 
         double v = state.v;
         double _v = output.v;
-        double a = (_v - v) / dt;
+        double a = (_v - v) * _dt;
         a = std::max(std::min(a, MAX_ACCELERATION), -MAX_ACCELERATION);
         _v += a * dt;
         output.v = _v;

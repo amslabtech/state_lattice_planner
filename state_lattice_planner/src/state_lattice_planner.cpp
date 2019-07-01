@@ -73,7 +73,7 @@ StateLatticePlanner::SamplingParams::SamplingParams(void)
     span_psi = 0.0;
 }
 
-StateLatticePlanner::SamplingParams::SamplingParams(const int _n_p, const int _n_h, const double _length, const double _max_alpha, const double _max_psi)
+StateLatticePlanner::SamplingParams::SamplingParams(const int _n_p, const int _n_h, const float _length, const float _max_alpha, const float _max_psi)
 {
     n_p = _n_p;
     n_h = _n_h;
@@ -86,7 +86,7 @@ StateLatticePlanner::SamplingParams::SamplingParams(const int _n_p, const int _n
     span_psi = max_psi - min_psi;
 }
 
-StateLatticePlanner::SamplingParams::SamplingParams(const int _n_p, const int _n_h, const double _max_alpha, const double _max_psi)
+StateLatticePlanner::SamplingParams::SamplingParams(const int _n_p, const int _n_h, const float _max_alpha, const float _max_psi)
 {
     n_p = _n_p;
     n_h = _n_h;
@@ -122,26 +122,26 @@ void StateLatticePlanner::odom_callback(const nav_msgs::OdometryConstPtr& msg)
     odom_updated = true;
 }
 
-void StateLatticePlanner::sample_states(const std::vector<double>& sample_angles, const SamplingParams& params, std::vector<Eigen::Vector3d>& states)
+void StateLatticePlanner::sample_states(const std::vector<float>& sample_angles, const SamplingParams& params, std::vector<Eigen::Vector3f>& states)
 {
     /*
      * sample_angles: [0, 1]
      */
-    std::vector<Eigen::Vector3d> _states;
+    std::vector<Eigen::Vector3f> _states;
     for(auto angle_ratio : sample_angles){
-        double angle = params.min_alpha + (params.max_alpha - params.min_alpha) * angle_ratio;
+        float angle = params.min_alpha + (params.max_alpha - params.min_alpha) * angle_ratio;
         for(int i=0;i<params.n_h;i++){
-            double x = params.length * cos(angle);
-            double y = params.length * sin(angle);
+            float x = params.length * cos(angle);
+            float y = params.length * sin(angle);
             if(params.n_h > 0){
-                double yaw = 0;
+                float yaw = 0;
                 if(params.n_h != 1){
-                    double ratio = double(i) / (params.n_h - 1);
+                    float ratio = float(i) / (params.n_h - 1);
                     yaw = params.min_psi + (params.span_psi) * ratio + angle;
                 }else{
                     yaw = (params.span_psi) * 0.5 + angle;
                 }
-                Eigen::Vector3d state(x, y, yaw);
+                Eigen::Vector3f state(x, y, yaw);
                 _states.push_back(state);
             }else{
                 std::cout << "sampling param error" << std::endl;
@@ -152,7 +152,7 @@ void StateLatticePlanner::sample_states(const std::vector<double>& sample_angles
     states = _states;
 }
 
-void StateLatticePlanner::generate_biased_polar_states(const int n_s, const Eigen::Vector3d& goal, const SamplingParams& params, std::vector<Eigen::Vector3d>& states)
+void StateLatticePlanner::generate_biased_polar_states(const int n_s, const Eigen::Vector3f& goal, const SamplingParams& params, std::vector<Eigen::Vector3f>& states)
 {
     /*
      * n_s: param for biased polar sampling
@@ -160,23 +160,23 @@ void StateLatticePlanner::generate_biased_polar_states(const int n_s, const Eige
     // params.length is ignored in this function (distance for goal is used)
     SamplingParams _params = params;
     std::cout << "biased polar sampling" << std::endl;
-    double alpha_coeff = _params.span_alpha / double(n_s - 1);
-    std::vector<double> cnav;
-    double goal_distance = goal.segment(0, 2).norm();
+    float alpha_coeff = _params.span_alpha / float(n_s - 1);
+    std::vector<float> cnav;
+    float goal_distance = goal.segment(0, 2).norm();
     if(fabs(goal_distance - shortening_trajectory_length) > SHORTENING_TRAJECTORY_MIN_LENGTH){
         goal_distance -= shortening_trajectory_length;
     }
     for(int i=0;i<n_s;i++){
-        double angle = _params.min_alpha + double(i) * alpha_coeff;
+        float angle = _params.min_alpha + float(i) * alpha_coeff;
         _params.length = goal_distance;
-        Eigen::Vector2d terminal;
+        Eigen::Vector2f terminal;
         terminal <<  _params.length * cos(angle),
                      _params.length * sin(angle);
-        double diff = (goal.segment(0, 2) - terminal).norm();
+        float diff = (goal.segment(0, 2) - terminal).norm();
         cnav.push_back(diff);
     }
-    double cnav_sum = 0;
-    double cnav_max = 0;
+    float cnav_sum = 0;
+    float cnav_max = 0;
     for(auto& alpha_s : cnav){
         cnav_sum += alpha_s;
         if(cnav_max < alpha_s){
@@ -191,9 +191,9 @@ void StateLatticePlanner::generate_biased_polar_states(const int n_s, const Eige
     }
     // cumsum
     //std::cout << "cumsum" << std::endl;
-    std::vector<double> cnav2;
-    double cumsum = 0;
-    std::vector<double> cumsum_list;
+    std::vector<float> cnav2;
+    float cumsum = 0;
+    std::vector<float> cumsum_list;
     for(auto cnav_it=cnav.begin();cnav_it!=cnav.end()-1;++cnav_it){
         cumsum += *cnav_it;
         cnav2.push_back(cumsum);
@@ -201,9 +201,9 @@ void StateLatticePlanner::generate_biased_polar_states(const int n_s, const Eige
     }
 
     // sampling
-    std::vector<double> biased_angles;
+    std::vector<float> biased_angles;
     for(int i=0;i<_params.n_p;i++){
-        double sample_angle = double(i) / (_params.n_p - 1);
+        float sample_angle = float(i) / (_params.n_p - 1);
         //std::cout << "sample angle: " << sample_angle << std::endl;
         int count = 0;
         for(;count<n_s-1;count++){
@@ -213,7 +213,7 @@ void StateLatticePlanner::generate_biased_polar_states(const int n_s, const Eige
             }
         }
         //std::cout << "count: " << count << std::endl;
-        biased_angles.push_back(count / double(n_s - 1));
+        biased_angles.push_back(count / float(n_s - 1));
     }
     //std::cout << "biased angles" << std::endl;
     /*
@@ -224,7 +224,7 @@ void StateLatticePlanner::generate_biased_polar_states(const int n_s, const Eige
     sample_states(biased_angles, _params, states);
 }
 
-bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3d>& boundary_states, const double velocity, const double angular_velocity, std::vector<MotionModelDiffDrive::Trajectory>& trajectories)
+bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3f>& boundary_states, const float velocity, const float angular_velocity, std::vector<MotionModelDiffDrive::Trajectory>& trajectories)
 {
     std::cout << "generate trajectories to boundary states" << std::endl;
     int count = 0;
@@ -234,11 +234,11 @@ bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
         tg.set_motion_param(MAX_YAWRATE, MAX_CURVATURE, MAX_D_CURVATURE, MAX_ACCELERATION);
         MotionModelDiffDrive::ControlParams output;
         //std::cout << "v: " << velocity << ", " << "w: " << angular_velocity << std::endl;
-        double _velocity = velocity;
+        float _velocity = velocity;
         if(fabs(_velocity) < 1e-3){
             _velocity = 1e-3 * ((_velocity > 0) ? 1 : -1);
         }
-        double k0 = angular_velocity / _velocity;
+        float k0 = angular_velocity / _velocity;
 
         MotionModelDiffDrive::ControlParams param;
         get_optimized_param_from_lookup_table(boundary_state, velocity, k0, param);
@@ -249,7 +249,7 @@ bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
                                                , MotionModelDiffDrive::CurvatureParams(k0, param.curv.km, param.curv.kf, param.curv.sf));
 
         MotionModelDiffDrive::Trajectory trajectory;
-        double cost = tg.generate_optimized_trajectory(boundary_state, init, 1.0 / HZ, OPTIMIZATION_TOLERANCE, MAX_ITERATION, output, trajectory);
+        float cost = tg.generate_optimized_trajectory(boundary_state, init, 1.0 / HZ, OPTIMIZATION_TOLERANCE, MAX_ITERATION, output, trajectory);
         if(cost > 0){
             trajectories.push_back(trajectory);
             //std::cout << "generate time " << count << ": " << ros::Time::now().toSec() - start << "[s]" << std::endl;
@@ -264,13 +264,13 @@ bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
     return true;
 }
 
-bool StateLatticePlanner::check_collision(const nav_msgs::OccupancyGrid& local_costmap, const std::vector<Eigen::Vector3d>& trajectory)
+bool StateLatticePlanner::check_collision(const nav_msgs::OccupancyGrid& local_costmap, const std::vector<Eigen::Vector3f>& trajectory)
 {
     /*
      * if given trajectory is considered to collide with an obstacle, return true
      */
-    double resolution = local_costmap.info.resolution;
-    std::vector<Eigen::Vector3d> bresenhams_line;
+    float resolution = local_costmap.info.resolution;
+    std::vector<Eigen::Vector3f> bresenhams_line;
     generate_bresemhams_line(trajectory, resolution, bresenhams_line);
     int size = bresenhams_line.size();
     for(int i=0;i<size;i++){
@@ -284,7 +284,7 @@ bool StateLatticePlanner::check_collision(const nav_msgs::OccupancyGrid& local_c
     return false;
 }
 
-bool StateLatticePlanner::pickup_trajectory(const std::vector<MotionModelDiffDrive::Trajectory>& candidate_trajectories, const Eigen::Vector3d& goal, MotionModelDiffDrive::Trajectory& output)
+bool StateLatticePlanner::pickup_trajectory(const std::vector<MotionModelDiffDrive::Trajectory>& candidate_trajectories, const Eigen::Vector3f& goal, MotionModelDiffDrive::Trajectory& output)
 {
     /*
      * outputs a trajectory that is nearest to the goal
@@ -299,10 +299,10 @@ bool StateLatticePlanner::pickup_trajectory(const std::vector<MotionModelDiffDri
     // ascending sort by cost
     std::sort(trajectories.begin(), trajectories.end());
 
-    double min_diff_yaw = 100;
+    float min_diff_yaw = 100;
     const int N = ((trajectories.size() < sampling_params.n_h) ? trajectories.size() : sampling_params.n_h);
     for(int i=0;i<N;i++){
-        double diff_yaw = trajectories[i].trajectory.back()(2) - goal(2);
+        float diff_yaw = trajectories[i].trajectory.back()(2) - goal(2);
         diff_yaw = fabs(atan2(sin(diff_yaw), cos(diff_yaw)));
         if(min_diff_yaw > diff_yaw){
             min_diff_yaw = diff_yaw;
@@ -333,18 +333,18 @@ void StateLatticePlanner::load_lookup_table(void)
                 continue;
             }
             std::istringstream stream(data);
-            std::vector<double> splitted_data;
+            std::vector<float> splitted_data;
             std::string buffer;
             while(std::getline(stream, buffer, ',')){
                 splitted_data.push_back(std::stod(buffer));
             }
             StateWithControlParams param;
             auto it = splitted_data.begin();
-            double v0 = *(it);
+            float v0 = *(it);
             param.control.curv.k0 = *(++it);
-            double x = *(++it);
-            double y = *(++it);
-            double yaw = *(++it);
+            float x = *(++it);
+            float y = *(++it);
+            float yaw = *(++it);
             param.state << x, y, yaw;
             param.control.curv.km = *(++it);
             param.control.curv.kf = *(++it);
@@ -358,33 +358,33 @@ void StateLatticePlanner::load_lookup_table(void)
     }
 }
 
-void StateLatticePlanner::get_optimized_param_from_lookup_table(const Eigen::Vector3d goal, const double v0, const double k0, MotionModelDiffDrive::ControlParams& param)
+void StateLatticePlanner::get_optimized_param_from_lookup_table(const Eigen::Vector3f goal, const float v0, const float k0, MotionModelDiffDrive::ControlParams& param)
 {
-    double min_v_diff = 1e3;
-    double v = 0;
+    float min_v_diff = 1e3;
+    float v = 0;
     for(const auto& v_data : lookup_table){
-        double _v = v_data.first;
-        double diff = fabs(_v - v0);
+        float _v = v_data.first;
+        float diff = fabs(_v - v0);
         if(diff < min_v_diff){
             min_v_diff = diff;
             v = _v;
         }
     }
-    double min_k_diff = 1e3;
-    double k = 0;
+    float min_k_diff = 1e3;
+    float k = 0;
     for(const auto& k_data : lookup_table[v]){
-        double _k = k_data.first;
-        double diff = fabs(_k - k0);
+        float _k = k_data.first;
+        float diff = fabs(_k - k0);
         if(diff < min_k_diff){
             min_k_diff = diff;
             k = _k;
         }
     }
-    double min_cost = 1e3;
+    float min_cost = 1e3;
     StateWithControlParams _param;
     for(const auto& data : lookup_table[v][k]){
         // sqrt(x^2 + y^2 + yaw^2)
-        double cost = (goal - data.state).norm();
+        float cost = (goal - data.state).norm();
         if(cost < min_cost){
             min_cost = cost;
             _param = data;
@@ -403,8 +403,8 @@ void StateLatticePlanner::process(void)
             double start = ros::Time::now().toSec();
             std::cout << "local goal: \n" << local_goal << std::endl;
             std::cout << "current_velocity: \n" << current_velocity << std::endl;
-            Eigen::Vector3d goal(local_goal.pose.position.x, local_goal.pose.position.y, tf::getYaw(local_goal.pose.orientation));
-            std::vector<Eigen::Vector3d> states;
+            Eigen::Vector3f goal(local_goal.pose.position.x, local_goal.pose.position.y, tf::getYaw(local_goal.pose.orientation));
+            std::vector<Eigen::Vector3f> states;
             generate_biased_polar_states(N_S, goal, sampling_params, states);
             std::vector<MotionModelDiffDrive::Trajectory> trajectories;
             bool generated = generate_trajectories(states, current_velocity.linear.x, current_velocity.angular.z, trajectories);
@@ -430,7 +430,7 @@ void StateLatticePlanner::process(void)
 
                     std::cout << "publish velocity" << std::endl;
                     geometry_msgs::Twist cmd_vel;
-                    double calculation_time = ros::Time::now().toSec() - start;
+                    float calculation_time = ros::Time::now().toSec() - start;
                     int delayed_control_index = std::ceil(calculation_time * HZ);
                     std::cout << calculation_time << ", " << delayed_control_index << std::endl;
                     cmd_vel.linear.x = trajectory.velocities[delayed_control_index];
@@ -457,7 +457,7 @@ void StateLatticePlanner::process(void)
             }else{
                 std::cout << "\033[91mERROR: no optimized trajectory was generated\033[00m" << std::endl;
                 std::cout << "\033[91mturn for local goal\033[00m" << std::endl;
-                double relative_direction = atan2(local_goal.pose.position.y, local_goal.pose.position.x);
+                float relative_direction = atan2(local_goal.pose.position.y, local_goal.pose.position.x);
                 geometry_msgs::Twist cmd_vel;
                 cmd_vel.linear.x = 0;
                 cmd_vel.angular.z = 0.1 * ((relative_direction > 0) ? -1 : 1);
@@ -482,23 +482,23 @@ void StateLatticePlanner::process(void)
     }
 }
 
-void StateLatticePlanner::swap(double& a, double& b)
+void StateLatticePlanner::swap(float& a, float& b)
 {
-    double temp = a;
+    float temp = a;
     a = b;
     b = temp;
 }
 
-void StateLatticePlanner::generate_bresemhams_line(const std::vector<Eigen::Vector3d>& trajectory, const double& resolution, std::vector<Eigen::Vector3d>& output)
+void StateLatticePlanner::generate_bresemhams_line(const std::vector<Eigen::Vector3f>& trajectory, const float& resolution, std::vector<Eigen::Vector3f>& output)
 {
     int size = trajectory.size();
     output.resize(size-2);
-    std::vector<Eigen::Vector3d> bresenhams_line;
+    std::vector<Eigen::Vector3f> bresenhams_line;
     for(int i=0;i<size-2;i++){
-        double x0 = trajectory[i](0);
-        double y0 = trajectory[i](1);
-        double x1 = trajectory[i+1](0);
-        double y1 = trajectory[i+1](1);
+        float x0 = trajectory[i](0);
+        float y0 = trajectory[i](1);
+        float x1 = trajectory[i+1](0);
+        float y1 = trajectory[i+1](1);
 
         bool steep = fabs(y1 - y0) > fabs(x1 - x0);
 
@@ -511,16 +511,16 @@ void StateLatticePlanner::generate_bresemhams_line(const std::vector<Eigen::Vect
             swap(y0, y1);
         }
 
-        double delta_x = x1 - x0;
-        double delta_y = fabs(y1 - y0);
-        double error = 0;
-        double delta_error = delta_y / delta_x;
-        double y_step;
-        double yt = y0;
+        float delta_x = x1 - x0;
+        float delta_y = fabs(y1 - y0);
+        float error = 0;
+        float delta_error = delta_y / delta_x;
+        float y_step;
+        float yt = y0;
 
         y_step = (y0 < y1) ? resolution : -resolution;
 
-        for(double xt=x0;xt<x1;xt+=resolution){
+        for(float xt=x0;xt<x1;xt+=resolution){
             if(steep){
                 output[i](0) = yt;
                 output[i](1) = xt;
@@ -538,7 +538,7 @@ void StateLatticePlanner::generate_bresemhams_line(const std::vector<Eigen::Vect
     }
 }
 
-void StateLatticePlanner::visualize_trajectories(const std::vector<MotionModelDiffDrive::Trajectory>& trajectories, const double r, const double g, const double b, const int trajectories_size, const ros::Publisher& pub)
+void StateLatticePlanner::visualize_trajectories(const std::vector<MotionModelDiffDrive::Trajectory>& trajectories, const float r, const float g, const float b, const int trajectories_size, const ros::Publisher& pub)
 {
     visualization_msgs::MarkerArray v_trajectories;
     int count = 0;
@@ -580,7 +580,7 @@ void StateLatticePlanner::visualize_trajectories(const std::vector<MotionModelDi
     pub.publish(v_trajectories);
 }
 
-void StateLatticePlanner::visualize_trajectory(const MotionModelDiffDrive::Trajectory& trajectory, const double r, const double g, const double b, const ros::Publisher& pub)
+void StateLatticePlanner::visualize_trajectory(const MotionModelDiffDrive::Trajectory& trajectory, const float r, const float g, const float b, const ros::Publisher& pub)
 {
     visualization_msgs::Marker v_trajectory;
     v_trajectory.header.frame_id = ROBOT_FRAME;

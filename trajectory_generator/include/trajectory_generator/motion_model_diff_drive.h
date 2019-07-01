@@ -13,13 +13,13 @@ public:
     class State
     {
     public:
-        State(double, double, double, double, double);
+        State(float, float, float, float, float);
 
-        double x;// robot position x
-        double y;// robot posiiton y
-        double yaw;// robot orientation yaw
-        double v;// robot linear velocity
-        double curvature;// trajectory curvature
+        float x;// robot position x
+        float y;// robot posiiton y
+        float yaw;// robot orientation yaw
+        float v;// robot linear velocity
+        float curvature;// trajectory curvature
     private:
     };
 
@@ -27,14 +27,14 @@ public:
     {
     public:
         VelocityParams(void);
-        VelocityParams(double, double, double, double, double);
+        VelocityParams(float, float, float, float, float);
 
-        double v0;
-        double a0;
-        double vt;
-        double vf;
-        double af;
-        double time;
+        float v0;
+        float a0;
+        float vt;
+        float vf;
+        float af;
+        float time;
     private:
     };
 
@@ -42,16 +42,16 @@ public:
     {
     public:
         CurvatureParams(void);
-        CurvatureParams(double, double, double, double);
+        CurvatureParams(float, float, float, float);
 
         void calculate_spline(void);
 
-        double k0;
-        double km;
-        double kf;
-        double sf;
-        Eigen::Vector3d coeff_0_m;
-        Eigen::Vector3d coeff_m_f;
+        float k0;
+        float km;
+        float kf;
+        float sf;
+        Eigen::Vector3f coeff_0_m;
+        Eigen::Vector3f coeff_m_f;
     private:
     };
 
@@ -74,21 +74,21 @@ public:
         bool operator<(const Trajectory&) const;
 
         // these vectors must be same size
-        std::vector<Eigen::Vector3d> trajectory;
-        std::vector<double> velocities;
-        std::vector<double> angular_velocities;
-        double cost;
+        std::vector<Eigen::Vector3f> trajectory;
+        std::vector<float> velocities;
+        std::vector<float> angular_velocities;
+        float cost;
     private:
     };
 
-    void set_param(const double, const double, const double, const double);
-    void generate_trajectory(const double, const ControlParams&, Trajectory&);
-    void generate_last_state(const double, const double, const VelocityParams&, const double, const double, const double, Eigen::Vector3d&);
-    void make_velocity_profile(const double, const VelocityParams&);
-    double estimate_driving_time(const ControlParams&);
-    void update(const State& s, const double v, const double curv, const double dt, State& output_s)
+    void set_param(const float, const float, const float, const float);
+    void generate_trajectory(const float, const ControlParams&, Trajectory&);
+    void generate_last_state(const float, const float, const VelocityParams&, const float, const float, const float, Eigen::Vector3f&);
+    void make_velocity_profile(const float, const VelocityParams&);
+    float estimate_driving_time(const ControlParams&);
+    void update(const State& s, const float v, const float curv, const float dt, State& output_s)
     {
-        double vdt = v * dt;
+        float vdt = v * dt;
         output_s.x = s.x + vdt * cos(s.yaw);
         output_s.y = s.y + vdt * sin(s.yaw);
         output_s.yaw = s.yaw + curv * vdt;
@@ -98,17 +98,17 @@ public:
         response_to_control_inputs(s, dt, output_s);
     }
 
-    double calculate_quadratic_function(const double x, const Eigen::Vector3d& coeff)
+    float calculate_quadratic_function(const float x, const Eigen::Vector3f& coeff)
     {
         return coeff(0) * x * x + coeff(1) * x + coeff(2);
     }
 
-    void response_to_control_inputs(const State& state, const double dt, State& output)
+    void response_to_control_inputs(const State& state, const float dt, State& output)
     {
-        double _dt = 1.0 / dt;
-        double k = state.curvature;
-        double _k = output.curvature;
-        double dk = (_k - k) * _dt;
+        float _dt = 1.0 / dt;
+        float k = state.curvature;
+        float _k = output.curvature;
+        float dk = (_k - k) * _dt;
         dk = std::max(std::min(dk, MAX_D_CURVATURE), -MAX_D_CURVATURE);
 
         // adjust output.v
@@ -117,9 +117,9 @@ public:
         _k += dk * dt;
         output.curvature = std::max(std::min(_k, MAX_CURVATURE), -MAX_CURVATURE);
 
-        double v = state.v;
-        double _v = output.v;
-        double a = (_v - v) * _dt;
+        float v = state.v;
+        float _v = output.v;
+        float a = (_v - v) * _dt;
         a = std::max(std::min(a, MAX_ACCELERATION), -MAX_ACCELERATION);
         _v += a * dt;
         output.v = _v;
@@ -129,20 +129,20 @@ public:
     {
         // speed control logic
         _state = state;
-        double yawrate = _state.curvature * _state.v;
+        float yawrate = _state.curvature * _state.v;
         if(fabs(yawrate) > MAX_YAWRATE){
             _state.v = MAX_YAWRATE / _state.curvature;
         }
     }
 
 private:
-    double MAX_YAWRATE;
-    double MAX_D_CURVATURE;
-    double MAX_CURVATURE;
-    double MAX_ACCELERATION;
+    float MAX_YAWRATE;
+    float MAX_D_CURVATURE;
+    float MAX_CURVATURE;
+    float MAX_ACCELERATION;
 
-    std::vector<double> v_profile;
-    std::vector<double> s_profile;
+    std::vector<float> v_profile;
+    std::vector<float> s_profile;
 };
 
 #endif //__MOTION_MODEL_DIFF_DRIVE_H

@@ -63,11 +63,11 @@ std::string LookupTableGenerator::process(void)
     std::cout << "N_X: " << N_X << std::endl;
     std::cout << "N_Y: " << N_Y << std::endl;
     std::cout << "N_YAW: " << N_YAW << std::endl;
-    std::vector<Eigen::Vector3d> states;
+    std::vector<Eigen::Vector3f> states;
     for(int i=0;i<N_YAW;i++){
         for(int j=0;j<N_Y;j++){
             for(int k=0;k<N_X;k++){
-                Eigen::Vector3d state;
+                Eigen::Vector3f state;
                 state << MIN_X + DELTA_X * k,
                          -MAX_Y + DELTA_Y * j,
                          -MAX_YAW + DELTA_YAW * i;
@@ -77,7 +77,7 @@ std::string LookupTableGenerator::process(void)
     }
     std::cout << "states num: " << states.size() << " * " << int((MAX_V - MIN_V) / DELTA_V + 1) << " * " << int(2*MAX_KAPPA / DELTA_KAPPA + 1) << std::endl;
 
-    std::vector<std::vector<double> > lookup_table_data_list;
+    std::vector<std::vector<float> > lookup_table_data_list;
     lookup_table_data_list.resize(N);
     for(auto& lookup_table_data : lookup_table_data_list){
         // x, y, yaw, km, kf, sf
@@ -85,15 +85,15 @@ std::string LookupTableGenerator::process(void)
     }
 
     std::string output_data = "v0, k0, x, y, yaw, km, kf, sf\n";
-    double span_v = MAX_V - MIN_V;
-    for(double v0=MIN_V;v0<=MAX_V;v0+=DELTA_V){
-        for(double k0=-MAX_KAPPA;k0<=MAX_KAPPA;k0+=DELTA_KAPPA){
+    float span_v = MAX_V - MIN_V;
+    for(float v0=MIN_V;v0<=MAX_V;v0+=DELTA_V){
+        for(float k0=-MAX_KAPPA;k0<=MAX_KAPPA;k0+=DELTA_KAPPA){
             for(auto state : states){
                 std::cout << "v0: " << v0 << "[m/s]" << std::endl;
                 std::cout << "k0: " << k0 << "[rad/m]" << std::endl;
                 std::cout << "state:" << std::endl;
                 std::cout << state << std::endl;
-                double distance = state.segment(0, 2).norm();
+                float distance = state.segment(0, 2).norm();
                 std::cout << "distance: " << distance << std::endl;
                 MotionModelDiffDrive::VelocityParams init_v(v0, MAX_ACCELERATION, TARGET_VELOCITY, TARGET_VELOCITY, MAX_ACCELERATION);
                 MotionModelDiffDrive::ControlParams init(init_v, MotionModelDiffDrive::CurvatureParams(k0, 0, 0, distance));
@@ -101,7 +101,7 @@ std::string LookupTableGenerator::process(void)
                 MotionModelDiffDrive::Trajectory trajectory;
                 TrajectoryGeneratorDiffDrive tg;
                 tg.set_motion_param(MAX_YAWRATE, MAX_CURVATURE, MAX_D_CURVATURE, MAX_ACCELERATION);
-                double cost = tg.generate_optimized_trajectory(state, init, 1e-1, 1e-1, 100, output, trajectory);
+                float cost = tg.generate_optimized_trajectory(state, init, 1e-1, 1e-1, 100, output, trajectory);
                 if(cost > 0){
                     std::cout << "successfully optimized" << std::endl;
                     std::stringstream data;
@@ -121,7 +121,7 @@ void LookupTableGenerator::save(std::string& data)
     std::ofstream ofs(LOOKUP_TABLE_FILE_NAME);
     if(ofs){
         ofs << data;
-        ofs.close();
+        //ofs.close();
         std::cout << "lookup table saved as " << LOOKUP_TABLE_FILE_NAME << std::endl;
     }else{
         std::cout << "cannot open file" << std::endl;

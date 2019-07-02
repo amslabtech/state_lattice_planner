@@ -41,7 +41,6 @@ float TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::V
         trajectory.trajectory.clear();
         trajectory.velocities.clear();
         trajectory.angular_velocities.clear();
-        float time = distance_to_goal / output.vel.v0;
         //std::cout << "bfr traj gen time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
         model.generate_trajectory(dt, output, trajectory);
         /*
@@ -58,8 +57,8 @@ float TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::V
         //std::cout << "j: \n" << jacobian << std::endl;
         //std::cout << "j^-1: \n" << jacobian.inverse() << std::endl;
         cost = goal - trajectory.trajectory.back();
-        Eigen::Vector3f dp = jacobian.inverse() * cost;
-        //Eigen::Vector3f dp = jacobian.lu().solve(cost);
+        //Eigen::Vector3f dp = jacobian.inverse() * cost;
+        Eigen::Vector3f dp = jacobian.lu().solve(cost);
         //std::cout << "jacobian inverse time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
         //std::cout << "cost: \n" << cost << std::endl;
         //std::cout << "dp: \n" << dp << std::endl;
@@ -73,7 +72,7 @@ float TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::V
         output.curv.kf += dp(1);
         output.curv.sf += dp(2);
 
-        if(fabs(output.curv.sf - distance_to_goal) > distance_to_goal * 0.5){
+        if(fabsf(output.curv.sf - distance_to_goal) > distance_to_goal * 0.5){
             std::cout << "optimization error!!!" << std::endl;
             return -1;
         }

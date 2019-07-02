@@ -206,9 +206,9 @@ void MotionModelDiffDrive::make_velocity_profile(const float dt, const VelocityP
     float t = 0;
     for(int i=0;i<size;++i){
         // acceleration time
-        float ta = fabs((v_param.vt - v_param.v0) / v_param.a0);
+        float ta = fabsf((v_param.vt - v_param.v0) / v_param.a0);
         // deceleration time
-        float td = v_param.time - fabs((v_param.vf - v_param.vt) / v_param.af);
+        float td = v_param.time - fabsf((v_param.vf - v_param.vt) / v_param.af);
 
         float v = 0;
         if(t < 0){
@@ -231,7 +231,7 @@ void MotionModelDiffDrive::make_velocity_profile(const float dt, const VelocityP
             v = v_param.vf;
         }
         v_profile[i] = v;
-        s += fabs(v) * dt;
+        s += fabsf(v) * dt;
         s_profile[i] = s;
         t += dt;
     }
@@ -240,17 +240,17 @@ void MotionModelDiffDrive::make_velocity_profile(const float dt, const VelocityP
 float MotionModelDiffDrive::estimate_driving_time(const ControlParams& control)
 {
     // acceleration time
-    float t0 = fabs((control.vel.vt - control.vel.v0) / control.vel.a0);
+    float t0 = fabsf((control.vel.vt - control.vel.v0) / control.vel.a0);
     // deceleration time
-    float td = fabs((control.vel.vf - control.vel.vt) / control.vel.af);
+    float td = fabsf((control.vel.vf - control.vel.vt) / control.vel.af);
     //std::cout << t0 << ", " << td << std::endl;
 
-    float s0 = 0.5 * fabs(control.vel.vt + control.vel.v0) * t0;
-    float sd = 0.5 * fabs(control.vel.vt + control.vel.vf) * td;
+    float s0 = 0.5 * fabsf(control.vel.vt + control.vel.v0) * t0;
+    float sd = 0.5 * fabsf(control.vel.vt + control.vel.vf) * td;
     //std::cout << s0 << ", " << sd << std::endl;
 
     float st = control.curv.sf - s0 - sd;
-    float tt = st / fabs(control.vel.vt);
+    float tt = st / fabsf(control.vel.vt);
     //std::cout << st << ", " << tt << std::endl;
     float driving_time = t0 + tt + td;
     return driving_time;

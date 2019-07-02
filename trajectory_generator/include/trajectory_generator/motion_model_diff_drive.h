@@ -89,11 +89,11 @@ public:
     void update(const State& s, const float v, const float curv, const float dt, State& output_s)
     {
         float vdt = v * dt;
-        output_s.x = s.x + vdt * cos(s.yaw);
-        output_s.y = s.y + vdt * sin(s.yaw);
+        output_s.x = s.x + vdt * cosf(s.yaw);
+        output_s.y = s.y + vdt * sinf(s.yaw);
         output_s.yaw = s.yaw + curv * vdt;
         if(output_s.yaw < -M_PI || output_s.yaw > M_PI){
-            output_s.yaw = atan2(sin(output_s.yaw), cos(output_s.yaw));
+            output_s.yaw = atan2f(sinf(output_s.yaw), cosf(output_s.yaw));
         }
         response_to_control_inputs(s, dt, output_s);
     }
@@ -130,7 +130,7 @@ public:
         // speed control logic
         _state = state;
         float yawrate = _state.curvature * _state.v;
-        if(fabs(yawrate) > MAX_YAWRATE){
+        if(fabsf(yawrate) > MAX_YAWRATE){
             _state.v = MAX_YAWRATE / _state.curvature;
         }
     }

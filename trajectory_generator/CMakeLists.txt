@@ -4,6 +4,8 @@ project(trajectory_generator)
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
 
+SET(CMAKE_CXX_FLAGS "-std=c++11 -O2 -g -Wall ${CMAKE_CXX_FLAGS}")
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -213,13 +215,13 @@ add_dependencies(trajectory_generator_diff_drive ${${PROJECT_NAME}_EXPORTED_TARG
 
 if(CATKIN_ENABLE_TESTING)
 	find_package(rostest REQUIRED)
-    add_rostest_gtest(trajectory_generator_test 
+    add_rostest_gtest(trajectory_generator_test
 		test/trajectory_generator.test
 		test/trajectory_generator_test.cpp
 	)
-	target_link_libraries(trajectory_generator_test 
+	target_link_libraries(trajectory_generator_test
         ${catkin_LIBRARIES}
         motion_model_diff_drive
         trajectory_generator_diff_drive
-    ) 
+    )
 endif()

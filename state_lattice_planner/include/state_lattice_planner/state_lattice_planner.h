@@ -25,18 +25,18 @@ public:
     {
     public:
         SamplingParams(void);
-        SamplingParams(const int, const int, const float, const float);
-        SamplingParams(const int, const int, const float, const float, const float);
+        SamplingParams(const int, const int, const double, const double);
+        SamplingParams(const int, const int, const double, const double, const double);
 
         int n_p;// num of sampling positions
         int n_h;// num of sampling angle by position
-        float length;// sample trajectory length
-        float max_alpha;// max trajectories angle
-        float min_alpha;// min trajectories angle
-        float span_alpha;// max - min alpha
-        float max_psi;// max heading angle
-        float min_psi;// min trajectories angle
-        float span_psi;// max - min psi
+        double length;// sample trajectory length
+        double max_alpha;// max trajectories angle
+        double min_alpha;// min trajectories angle
+        double span_alpha;// max - min alpha
+        double max_psi;// max heading angle
+        double min_psi;// min trajectories angle
+        double span_psi;// max - min psi
     private:
     };
 
@@ -46,7 +46,7 @@ public:
     public:
         StateWithControlParams(void);
 
-        Eigen::Vector3f state;// x, y, yaw
+        Eigen::Vector3d state;// x, y, yaw
         MotionModelDiffDrive::ControlParams control;
     private:
     };
@@ -57,37 +57,37 @@ public:
     void local_goal_callback(const geometry_msgs::PoseStampedConstPtr&);
     void local_map_callback(const nav_msgs::OccupancyGridConstPtr&);
     void odom_callback(const nav_msgs::OdometryConstPtr&);
-    void generate_biased_polar_states(const int, const Eigen::Vector3f&, const SamplingParams&, std::vector<Eigen::Vector3f>&);
-    void sample_states(const std::vector<float>&, const SamplingParams&, std::vector<Eigen::Vector3f>&);
-    bool generate_trajectories(const std::vector<Eigen::Vector3f>&, const float, const float, std::vector<MotionModelDiffDrive::Trajectory>&);
-    bool check_collision(const nav_msgs::OccupancyGrid&, const std::vector<Eigen::Vector3f>&);
-    bool pickup_trajectory(const std::vector<MotionModelDiffDrive::Trajectory>&, const Eigen::Vector3f&, MotionModelDiffDrive::Trajectory&);
+    void generate_biased_polar_states(const int, const Eigen::Vector3d&, const SamplingParams&, std::vector<Eigen::Vector3d>&);
+    void sample_states(const std::vector<double>&, const SamplingParams&, std::vector<Eigen::Vector3d>&);
+    bool generate_trajectories(const std::vector<Eigen::Vector3d>&, const double, const double, std::vector<MotionModelDiffDrive::Trajectory>&);
+    bool check_collision(const nav_msgs::OccupancyGrid&, const std::vector<Eigen::Vector3d>&);
+    bool pickup_trajectory(const std::vector<MotionModelDiffDrive::Trajectory>&, const Eigen::Vector3d&, MotionModelDiffDrive::Trajectory&);
     void load_lookup_table(void);
-    void get_optimized_param_from_lookup_table(const Eigen::Vector3f, const float, const float, MotionModelDiffDrive::ControlParams&);
+    void get_optimized_param_from_lookup_table(const Eigen::Vector3d, const double, const double, MotionModelDiffDrive::ControlParams&);
 
 private:
-    void swap(float&, float&);
-    void generate_bresemhams_line(const std::vector<Eigen::Vector3f>&, const float&, std::vector<Eigen::Vector3f>&);
-    void visualize_trajectories(const std::vector<MotionModelDiffDrive::Trajectory>&, const float, const float, const float, const int, const ros::Publisher&);
-    void visualize_trajectory(const MotionModelDiffDrive::Trajectory&, const float, const float, const float, const ros::Publisher&);
+    void swap(double&, double&);
+    void generate_bresemhams_line(const std::vector<Eigen::Vector3d>&, const double&, std::vector<Eigen::Vector3d>&);
+    void visualize_trajectories(const std::vector<MotionModelDiffDrive::Trajectory>&, const double, const double, const double, const int, const ros::Publisher&);
+    void visualize_trajectory(const MotionModelDiffDrive::Trajectory&, const double, const double, const double, const ros::Publisher&);
 
-    float HZ;
+    double HZ;
     std::string ROBOT_FRAME;
     int N_P;
     int N_H;
     int N_S;
-    float MAX_ALPHA;
-    float MAX_PSI;
-    float MAX_ACCELERATION;
-    float TARGET_VELOCITY;
+    double MAX_ALPHA;
+    double MAX_PSI;
+    double MAX_ACCELERATION;
+    double TARGET_VELOCITY;
     std::string LOOKUP_TABLE_FILE_NAME;
     int MAX_ITERATION;
-    float OPTIMIZATION_TOLERANCE;
-    float SHORTENING_TRAJECTORY_LENGTH_STEP;
-    float SHORTENING_TRAJECTORY_MIN_LENGTH;
-    float MAX_CURVATURE;
-    float MAX_D_CURVATURE;
-    float MAX_YAWRATE;
+    double OPTIMIZATION_TOLERANCE;
+    double SHORTENING_TRAJECTORY_LENGTH_STEP;
+    double SHORTENING_TRAJECTORY_MIN_LENGTH;
+    double MAX_CURVATURE;
+    double MAX_D_CURVATURE;
+    double MAX_YAWRATE;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;
@@ -106,8 +106,8 @@ private:
     bool local_map_updated;
     bool odom_updated;
     SamplingParams sampling_params;
-    std::map<float, std::map<float, std::vector<StateWithControlParams> > > lookup_table;
-    float shortening_trajectory_length;
+    std::map<double, std::map<double, std::vector<StateWithControlParams> > > lookup_table;
+    double shortening_trajectory_length;
 };
 
 #endif //__STATE_LATTICE_PLANNER_H

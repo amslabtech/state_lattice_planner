@@ -20,24 +20,24 @@ public:
     void save(std::string&);
 
 private:
-    float MIN_X;
-    float MAX_X;
-    float DELTA_X;
-    float MAX_Y;
-    float DELTA_Y;
-    float MAX_YAW;
-    float DELTA_YAW;
+    double MIN_X;
+    double MAX_X;
+    double DELTA_X;
+    double MAX_Y;
+    double DELTA_Y;
+    double MAX_YAW;
+    double DELTA_YAW;
     std::string LOOKUP_TABLE_FILE_NAME;
-    float TARGET_VELOCITY;
-    float MIN_V;
-    float MAX_V;
-    float DELTA_V;
-    float MAX_KAPPA;
-    float DELTA_KAPPA;
-    float MAX_ACCELERATION;
-    float MAX_CURVATURE;
-    float MAX_D_CURVATURE;
-    float MAX_YAWRATE;
+    double TARGET_VELOCITY;
+    double MIN_V;
+    double MAX_V;
+    double DELTA_V;
+    double MAX_KAPPA;
+    double DELTA_KAPPA;
+    double MAX_ACCELERATION;
+    double MAX_CURVATURE;
+    double MAX_D_CURVATURE;
+    double MAX_YAWRATE;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;

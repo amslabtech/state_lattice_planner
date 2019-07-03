@@ -6,28 +6,28 @@ TrajectoryGeneratorDiffDrive::TrajectoryGeneratorDiffDrive(void)
     h << 0.005, 0.005, 0.1;
 }
 
-void TrajectoryGeneratorDiffDrive::set_optimization_param(const float dkm, const float dkf, const float dsf)
+void TrajectoryGeneratorDiffDrive::set_optimization_param(const double dkm, const double dkf, const double dsf)
 {
     h << dkm, dkf, dsf;
 }
 
-void TrajectoryGeneratorDiffDrive::set_motion_param(const float max_yawrate, const float max_curvature, const float max_d_curvature, const float max_acceleration)
+void TrajectoryGeneratorDiffDrive::set_motion_param(const double max_yawrate, const double max_curvature, const double max_d_curvature, const double max_acceleration)
 {
     model.set_param(max_yawrate, max_curvature, max_d_curvature, max_acceleration);
 }
 
-float TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::Vector3f& goal, const MotionModelDiffDrive::ControlParams& init_control_param, const float dt, const float tolerance, const int max_iteration, MotionModelDiffDrive::ControlParams& output, MotionModelDiffDrive::Trajectory& trajectory)
+double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::Vector3d& goal, const MotionModelDiffDrive::ControlParams& init_control_param, const double dt, const double tolerance, const int max_iteration, MotionModelDiffDrive::ControlParams& output, MotionModelDiffDrive::Trajectory& trajectory)
 {
-    Eigen::Vector3f cost(1e2, 1e2, 1e2);
-    float last_cost = cost.norm();
+    Eigen::Vector3d cost(1e2, 1e2, 1e2);
+    double last_cost = cost.norm();
 
-    float distance_to_goal = goal.segment(0, 2).norm();
+    double distance_to_goal = goal.segment(0, 2).norm();
 
     output = init_control_param;
 
     int count = 0;
 
-    Eigen::Matrix3f jacobian;
+    Eigen::Matrix3d jacobian;
 
     while(1){
         //double start = ros::Time::now().toSec();
@@ -57,8 +57,8 @@ float TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::V
         //std::cout << "j: \n" << jacobian << std::endl;
         //std::cout << "j^-1: \n" << jacobian.inverse() << std::endl;
         cost = goal - trajectory.trajectory.back();
-        //Eigen::Vector3f dp = jacobian.inverse() * cost;
-        Eigen::Vector3f dp = jacobian.lu().solve(cost);
+        //Eigen::Vector3d dp = jacobian.inverse() * cost;
+        Eigen::Vector3d dp = jacobian.lu().solve(cost);
         //std::cout << "jacobian inverse time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
         //std::cout << "cost: \n" << cost << std::endl;
         //std::cout << "dp: \n" << dp << std::endl;
@@ -86,7 +86,7 @@ float TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::V
     return cost.norm();
 }
 
-void TrajectoryGeneratorDiffDrive::get_jacobian(const float dt, const MotionModelDiffDrive::ControlParams& control, const Eigen::Vector3f& h, Eigen::Matrix3f& j)
+void TrajectoryGeneratorDiffDrive::get_jacobian(const double dt, const MotionModelDiffDrive::ControlParams& control, const Eigen::Vector3d& h, Eigen::Matrix3d& j)
 {
     /*
      * h: (dkm, dkf, dsf)
@@ -94,26 +94,26 @@ void TrajectoryGeneratorDiffDrive::get_jacobian(const float dt, const MotionMode
     //std::cout << "j start" << std::endl;
     double start = ros::Time::now().toSec();
     MotionModelDiffDrive::CurvatureParams curv = control.curv;
-    Eigen::Vector3f x0;
+    Eigen::Vector3d x0;
     model.generate_last_state(dt, curv.sf, control.vel, curv.k0, curv.km - h(0), curv.kf, x0);
-    Eigen::Vector3f x1;
+    Eigen::Vector3d x1;
     model.generate_last_state(dt, curv.sf, control.vel, curv.k0, curv.km + h(0), curv.kf, x1);
 
-    Eigen::Vector3f dx_dkm;
+    Eigen::Vector3d dx_dkm;
     dx_dkm << (x1 - x0) / (2.0 * h(0));
     //std::cout << "dx_dkm time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
     model.generate_last_state(dt, curv.sf, control.vel, curv.k0, curv.km, curv.kf - h(1), x0);
     model.generate_last_state(dt, curv.sf, control.vel, curv.k0, curv.km, curv.kf + h(1), x1);
 
-    Eigen::Vector3f dx_dkf;
+    Eigen::Vector3d dx_dkf;
     dx_dkf << (x1 - x0) / (2.0 * h(1));
     //std::cout << "dx_dkf time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
     model.generate_last_state(dt, curv.sf - h(2), control.vel, curv.k0, curv.km, curv.kf, x0);
     model.generate_last_state(dt, curv.sf + h(2), control.vel, curv.k0, curv.km, curv.kf, x1);
 
-    Eigen::Vector3f dx_dsf;
+    Eigen::Vector3d dx_dsf;
     dx_dsf << (x1 - x0) / (2.0 * h(2));
     //std::cout << "dx_dsf time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 

@@ -59,7 +59,7 @@ TEST(TestSuite, test3)
     MotionModelDiffDrive::ControlParams output;
     MotionModelDiffDrive::VelocityParams init_v(0.0, 0.5, 1.0, 0.5, 0.5);
     MotionModelDiffDrive::ControlParams init_params(init_v, MotionModelDiffDrive::CurvatureParams(0, 0, 0.5, 5));
-    Eigen::Vector3f goal(5, 1, 1);
+    Eigen::Vector3d goal(5, 1, 1);
     MotionModelDiffDrive::Trajectory trajectory;
     std::cout << "generate optimized trajectory" << std::endl;
     double start = ros::Time::now().toSec();
@@ -92,7 +92,7 @@ TEST(TestSuite, test4)
 TEST(TestSuite, test5)
 {
     ros::NodeHandle nh;
-    Eigen::Vector3f goal(1, 2, -1.0472);
+    Eigen::Vector3d goal(1, 2, -1.0472);
     TrajectoryGeneratorDiffDrive tg;
     tg.set_motion_param(0.8, 1.0, 2.0, 1.0);
     MotionModelDiffDrive::ControlParams output;

@@ -87,6 +87,8 @@ void MotionModelDiffDrive::update(const State& s, const double v, const double c
     if(output_s.yaw < -M_PI || output_s.yaw > M_PI){
         output_s.yaw = atan2(sin(output_s.yaw), cos(output_s.yaw));
     }
+    output_s.v = v;
+    output_s.curvature = curv;
     response_to_control_inputs(s, dt, output_s);
 }
 

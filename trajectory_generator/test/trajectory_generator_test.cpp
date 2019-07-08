@@ -68,6 +68,9 @@ TEST(TestSuite, test3)
     std::cout << "trajecotry.back():" << std::endl;
     std::cout << trajectory.trajectory.back() << std::endl;
     std::cout << "cost: " << cost << std::endl;
+    for(auto vel : trajectory.velocities){
+        std::cout << vel << "[m/s]" << std::endl;
+    }
 
     EXPECT_NEAR(5, trajectory.trajectory.back()(0), 0.05);
     EXPECT_NEAR(1, trajectory.trajectory.back()(1), 0.05);
@@ -96,7 +99,7 @@ TEST(TestSuite, test5)
     TrajectoryGeneratorDiffDrive tg;
     tg.set_motion_param(0.8, 1.0, 2.0, 1.0);
     MotionModelDiffDrive::ControlParams output;
-    MotionModelDiffDrive::VelocityParams init_v(0.5, 1.0, 0.8, 0.8, 1.0);
+    MotionModelDiffDrive::VelocityParams init_v(0.0, 1.0, 0.8, 0.8, 1.0);
     MotionModelDiffDrive::ControlParams init_params(init_v, MotionModelDiffDrive::CurvatureParams(-0.8, 0, 0, goal.segment(0, 2).norm()));
     MotionModelDiffDrive::Trajectory trajectory;
     std::cout << "generate optimized trajectory" << std::endl;

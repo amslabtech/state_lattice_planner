@@ -9,7 +9,8 @@
 - ROS Kinetic or Melodic
 
 ## Nodes
-### State Lattice Planner
+### state_lattice_planner
+- local planner node
 #### Published topics
 - /cmd_vel (geometry_msgs/Twist)
 - ~/candidate_trajectoryies (visualization_msgs/MarkerArray)
@@ -53,8 +54,13 @@
 - SHORTENING_TRAJECTORY_MIN_LENGTH
   - experimental feautre
 - MAX_CURVATURE
-  - max trajectory curvature (default: [rad/m])
+  - max trajectory curvature (default: 1.0[rad/m])
 - MAX_D_CURVATURE
-  - max time derivative of trajectory curvature (default: [rad/ms]
+  - max time derivative of trajectory curvature (default: 2.0[rad/ms]
 - MAX_YAWRATE 
-  - max robot's yawrate (default: 1.0[rad/s])
+  - max robot's yawrate (default: 0.8[rad/s])
+  
+### lookup_table_generator
+TBW
+## How to use
+TBW

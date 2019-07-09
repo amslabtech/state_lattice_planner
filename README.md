@@ -47,10 +47,14 @@
 - MAX_ITERATION
   - max number of iteration (default: 100)
 - OPTIMIZATION_TOLERANCE
+  - when the cost becomes lower than this parameter, optimization loop is finished 
 - SHORTENING_TRAJECTORY_LENGTH_STEP
   - experimental feature
 - SHORTENING_TRAJECTORY_MIN_LENGTH
   - experimental feautre
 - MAX_CURVATURE
+  - max trajectory curvature (default: [rad/m])
 - MAX_D_CURVATURE
-- MAX_YAWRATE
+  - max time derivative of trajectory curvature (default: [rad/ms]
+- MAX_YAWRATE 
+  - max robot's yawrate (default: 1.0[rad/s])

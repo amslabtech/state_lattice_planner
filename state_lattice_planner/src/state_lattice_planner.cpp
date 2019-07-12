@@ -460,7 +460,7 @@ void StateLatticePlanner::process(void)
                 double relative_direction = atan2(local_goal.pose.position.y, local_goal.pose.position.x);
                 geometry_msgs::Twist cmd_vel;
                 cmd_vel.linear.x = 0;
-                cmd_vel.angular.z = 0.1 * ((relative_direction > 0) ? -1 : 1);
+                cmd_vel.angular.z =  MAX_YAWRATE * 0.5 * ((relative_direction > 0) ? 1 : -1);
                 velocity_pub.publish(cmd_vel);
                 // for clear
                 std::vector<MotionModelDiffDrive::Trajectory> clear_trajectories;

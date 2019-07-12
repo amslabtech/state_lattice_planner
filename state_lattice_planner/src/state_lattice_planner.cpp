@@ -235,10 +235,12 @@ bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
         MotionModelDiffDrive::ControlParams output;
         //std::cout << "v: " << velocity << ", " << "w: " << angular_velocity << std::endl;
         double _velocity = velocity;
+        double k0 = angular_velocity / _velocity;
         if(fabs(_velocity) < 1e-3){
             _velocity = 1e-3 * ((_velocity > 0) ? 1 : -1);
+            // cheat
+            k0 = 0;
         }
-        double k0 = angular_velocity / _velocity;
 
         MotionModelDiffDrive::ControlParams param;
         get_optimized_param_from_lookup_table(boundary_state, velocity, k0, param);
@@ -460,7 +462,7 @@ void StateLatticePlanner::process(void)
                 double relative_direction = atan2(local_goal.pose.position.y, local_goal.pose.position.x);
                 geometry_msgs::Twist cmd_vel;
                 cmd_vel.linear.x = 0;
-                cmd_vel.angular.z =  MAX_YAWRATE * 0.5 * ((relative_direction > 0) ? 1 : -1);
+                cmd_vel.angular.z =  0.2 * ((relative_direction > 0) ? 1 : -1);
                 velocity_pub.publish(cmd_vel);
                 // for clear
                 std::vector<MotionModelDiffDrive::Trajectory> clear_trajectories;

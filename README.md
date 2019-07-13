@@ -1,4 +1,4 @@
-# State_lattice_planner
+# state_lattice_planner
 
 [![Build Status](https://travis-ci.org/amslabtech/state_lattice_planner.svg?branch=master)](https://travis-ci.org/amslabtech/state_lattice_planner)
 ![issue_opened](https://img.shields.io/github/issues/amslabtech/state_lattice_planner.svg)
@@ -114,7 +114,7 @@ catkin_make
 ## How to Use
 - for generating lookup table
 ```
-roslaunch state_lattice_planner generate_lookup_table.launch.launch
+roslaunch state_lattice_planner generate_lookup_table.launch
 ```
 - for local path planning
 ```

@@ -6,34 +6,27 @@
     <arg name="max_alpha" default="1.6"/>
     <arg name="max_psi" default="1.0"/>
     <arg name="n_s" default="1000"/>
-    <arg name="max_acceleration" default="1.0"/>
     <arg name="target_velocity" default="0.8"/>
     <arg name="lookup_table_file_name" default="$(find state_lattice_planner)/lookup_table/lookup_table.csv"/>
     <arg name="max_iteration" default="5"/>
     <arg name="optimization_tolerance" default="0.1"/>
     <arg name="shortening_trajectory_length_step" default="0.5"/>
     <arg name="shortening_trajectory_min_length" default="0.5"/>
-    <arg name="max_curvature" default="1.0"/>
-    <arg name="max_d_curvature" default="2.0"/>
-    <arg name="max_yawrate" default="0.8"/>
 
     <node pkg="state_lattice_planner" type="state_lattice_planner" name="state_lattice_planner" ns="local_planner">
+        <rosparam command="load" file="$(find state_lattice_planner)/config/robot_param.yaml" />
         <param name="HZ" value="$(arg hz)"/>
         <param name="N_P" value="$(arg n_p)"/>
         <param name="N_H" value="$(arg n_h)"/>
         <param name="MAX_ALPHA" value="$(arg max_alpha)"/>
         <param name="MAX_PSI" value="$(arg max_psi)"/>
         <param name="N_S" value="$(arg n_s)"/>
-        <param name="MAX_ACCELERATION" value="$(arg max_acceleration)"/>
         <param name="TARGET_VELOCITY" value="$(arg target_velocity)"/>
         <param name="LOOKUP_TABLE_FILE_NAME" value="$(arg lookup_table_file_name)"/>
         <param name="MAX_ITERATION" value="$(arg max_iteration)"/>
         <param name="OPTIMIZATION_TOLERANCE" value="$(arg optimization_tolerance)"/>
         <param name="SHORTENING_TRAJECTORY_LENGTH_STEP" value="$(arg shortening_trajectory_length_step)"/>
         <param name="SHORTENING_TRAJECTORY_MIN_LENGTH" value="$(arg shortening_trajectory_min_length)"/>
-        <param name="MAX_YAWRATE" value="$(arg max_yawrate)"/>
-        <param name="MAX_CURVATURE" value="$(arg max_curvature)"/>
-        <param name="MAX_D_CURVATURE" value="$(arg max_d_curvature)"/>
         <remap from="/local_map" to="/local_map/expand"/>
         <remap from="/cmd_vel" to="/local_path/cmd_vel"/>
     </node>

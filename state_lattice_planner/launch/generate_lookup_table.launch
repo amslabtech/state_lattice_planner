@@ -14,13 +14,9 @@
     <arg name="delta_v" default="0.1"/>
     <arg name="max_kappa" default="1.0"/>
     <arg name="delta_kappa" default="0.2"/>
-    <!-- motion params -->
-    <arg name="max_acceleration" default="1.0"/>
-    <arg name="max_curvature" default="1.0"/>
-    <arg name="max_d_curvature" default="2.0"/>
-    <arg name="max_yawrate" default="0.8"/>
 
     <node pkg="state_lattice_planner" type="lookup_table_generator" name="lookup_table_generator">
+        <rosparam command="load" file="$(find state_lattice_planner)/config/robot_param.yaml" />
         <param name="MIN_X" value="$(arg min_x)"/>
         <param name="MAX_X" value="$(arg max_x)"/>
         <param name="DELTA_X" value="$(arg delta_x)"/>
@@ -34,10 +30,6 @@
         <param name="DELTA_V" value="$(arg delta_v)"/>
         <param name="MAX_KAPPA" value="$(arg max_kappa)"/>
         <param name="DELTA_KAPPA" value="$(arg delta_kappa)"/>
-        <param name="MAX_ACCELERATION" value="$(arg max_acceleration)"/>
-        <param name="MAX_YAWRATE" value="$(arg max_yawrate)"/>
-        <param name="MAX_CURVATURE" value="$(arg max_curvature)"/>
-        <param name="MAX_D_CURVATURE" value="$(arg max_d_curvature)"/>
     </node>
 
 </launch>

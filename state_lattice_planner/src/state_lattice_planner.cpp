@@ -15,8 +15,6 @@ StateLatticePlanner::StateLatticePlanner(void)
     local_nh.param("LOOKUP_TABLE_FILE_NAME", LOOKUP_TABLE_FILE_NAME, {std::string(std::getenv("HOME")) + "/lookup_table.csv"});
     local_nh.param("MAX_ITERATION", MAX_ITERATION, {100});
     local_nh.param("OPTIMIZATION_TOLERANCE", OPTIMIZATION_TOLERANCE, {0.1});
-    local_nh.param("SHORTENING_TRAJECTORY_LENGTH_STEP", SHORTENING_TRAJECTORY_LENGTH_STEP, {0.5});
-    local_nh.param("SHORTENING_TRAJECTORY_MIN_LENGTH", SHORTENING_TRAJECTORY_MIN_LENGTH, {0.5});
     local_nh.param("MAX_CURVATURE", MAX_CURVATURE, {1.0});
     local_nh.param("MAX_D_CURVATURE", MAX_D_CURVATURE, {2.0});
     local_nh.param("MAX_YAWRATE", MAX_YAWRATE, {0.8});
@@ -33,8 +31,6 @@ StateLatticePlanner::StateLatticePlanner(void)
     std::cout << "LOOKUP_TABLE_FILE_NAME: " << LOOKUP_TABLE_FILE_NAME << std::endl;
     std::cout << "MAX_ITERATION: " << MAX_ITERATION << std::endl;
     std::cout << "OPTIMIZATION_TOLERANCE: " << OPTIMIZATION_TOLERANCE << std::endl;
-    std::cout << "SHORTENING_TRAJECTORY_LENGTH_STEP: " << SHORTENING_TRAJECTORY_LENGTH_STEP << std::endl;
-    std::cout << "SHORTENING_TRAJECTORY_MIN_LENGTH: " << SHORTENING_TRAJECTORY_MIN_LENGTH << std::endl;
     std::cout << "MAX_CURVATURE: " << MAX_CURVATURE << std::endl;
     std::cout << "MAX_D_CURVATURE: " << MAX_D_CURVATURE << std::endl;
     std::cout << "MAX_YAWRATE: " << MAX_YAWRATE << std::endl;
@@ -54,8 +50,6 @@ StateLatticePlanner::StateLatticePlanner(void)
     local_goal_subscribed = false;
     local_map_updated = false;
     odom_updated = false;
-
-    shortening_trajectory_length = 0;
 
     load_lookup_table();
 }
@@ -163,9 +157,6 @@ void StateLatticePlanner::generate_biased_polar_states(const int n_s, const Eige
     double alpha_coeff = _params.span_alpha / double(n_s - 1);
     std::vector<double> cnav;
     double goal_distance = goal.segment(0, 2).norm();
-    if(fabs(goal_distance - shortening_trajectory_length) > SHORTENING_TRAJECTORY_MIN_LENGTH){
-        goal_distance -= shortening_trajectory_length;
-    }
     for(int i=0;i<n_s;i++){
         double angle = _params.min_alpha + double(i) * alpha_coeff;
         _params.length = goal_distance;
@@ -442,14 +433,12 @@ void StateLatticePlanner::process(void)
 
                     local_map_updated = false;
                     odom_updated = false;
-                    shortening_trajectory_length = 0.0;
                 }else{
                     std::cout << "\033[91mERROR: stacking\033[00m" << std::endl;
                     geometry_msgs::Twist cmd_vel;
                     cmd_vel.linear.x = 0;
                     cmd_vel.angular.z = 0;
                     velocity_pub.publish(cmd_vel);
-                    shortening_trajectory_length += SHORTENING_TRAJECTORY_LENGTH_STEP;
                     // for clear
                     std::vector<MotionModelDiffDrive::Trajectory> clear_trajectories;
                     visualize_trajectories(clear_trajectories, 0, 1, 0, N_P * N_H, candidate_trajectories_pub);

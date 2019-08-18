@@ -83,8 +83,6 @@ private:
     std::string LOOKUP_TABLE_FILE_NAME;
     int MAX_ITERATION;
     double OPTIMIZATION_TOLERANCE;
-    double SHORTENING_TRAJECTORY_LENGTH_STEP;
-    double SHORTENING_TRAJECTORY_MIN_LENGTH;
     double MAX_CURVATURE;
     double MAX_D_CURVATURE;
     double MAX_YAWRATE;
@@ -107,7 +105,6 @@ private:
     bool odom_updated;
     SamplingParams sampling_params;
     std::map<double, std::map<double, std::vector<StateWithControlParams> > > lookup_table;
-    double shortening_trajectory_length;
 };
 
 #endif //__STATE_LATTICE_PLANNER_H

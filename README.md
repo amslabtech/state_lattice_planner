@@ -35,7 +35,7 @@ catkin_make
 - /local_goal (geometry_msgs/PoseStamped)
   - the local goal must be in the local map
 - /local_map (nav_msgs/OccupancyGrid)
-  - robot-centered costmap 
+  - robot-centered costmap
 
 #### Parameters
 - HZ
@@ -43,7 +43,7 @@ catkin_make
 - ROBOT_FRAME
   - robot's coordinate frame (default: base_link)
 - N_P
-  - number of terminal state sampling for x-y position (default: 10) 
+  - number of terminal state sampling for x-y position (default: 10)
 - N_H
   - number of terminal state sampling for heading direction (default: 3)
 - MAX_ALPHA
@@ -61,18 +61,14 @@ catkin_make
 - MAX_ITERATION
   - max number of iteration (default: 100)
 - OPTIMIZATION_TOLERANCE
-  - when the cost becomes lower than this parameter, optimization loop is finished 
-- SHORTENING_TRAJECTORY_LENGTH_STEP
-  - experimental feature
-- SHORTENING_TRAJECTORY_MIN_LENGTH
-  - experimental feautre
+  - when the cost becomes lower than this parameter, optimization loop is finished
 - MAX_CURVATURE
   - max trajectory curvature (default: 1.0[rad/m])
 - MAX_D_CURVATURE
   - max time derivative of trajectory curvature (default: 2.0[rad/ms]
-- MAX_YAWRATE 
+- MAX_YAWRATE
   - max robot's yawrate (default: 0.8[rad/s])
-  
+
 ### lookup_table_generator
 - this node is a tool for generating a lookup table, not for planning. so this node doesn't publish or subscribe topics.
 #### Parameters

@@ -18,6 +18,7 @@ StateLatticePlanner::StateLatticePlanner(void)
     local_nh.param("MAX_CURVATURE", MAX_CURVATURE, {1.0});
     local_nh.param("MAX_D_CURVATURE", MAX_D_CURVATURE, {2.0});
     local_nh.param("MAX_YAWRATE", MAX_YAWRATE, {0.8});
+    local_nh.param("IGNORABLE_OBSTACLE_RANGE", IGNORABLE_OBSTACLE_RANGE, {1.0});
 
     std::cout << "HZ: " << HZ << std::endl;
     std::cout << "ROBOT_FRAME: " << ROBOT_FRAME << std::endl;
@@ -34,6 +35,7 @@ StateLatticePlanner::StateLatticePlanner(void)
     std::cout << "MAX_CURVATURE: " << MAX_CURVATURE << std::endl;
     std::cout << "MAX_D_CURVATURE: " << MAX_D_CURVATURE << std::endl;
     std::cout << "MAX_YAWRATE: " << MAX_YAWRATE << std::endl;
+    std::cout << "IGNORABLE_OBSTACLE_RANGE: " << IGNORABLE_OBSTACLE_RANGE << std::endl;
 
     SamplingParams sp(N_P, N_H, MAX_ALPHA, MAX_PSI);
     sampling_params = sp;
@@ -277,6 +279,28 @@ bool StateLatticePlanner::check_collision(const nav_msgs::OccupancyGrid& local_c
     return false;
 }
 
+bool StateLatticePlanner::check_collision(const nav_msgs::OccupancyGrid& local_costmap, const std::vector<Eigen::Vector3d>& trajectory, double range)
+{
+    /*
+     * if given trajectory is considered to collide with an obstacle, return true
+     */
+    double resolution = local_costmap.info.resolution;
+    std::vector<Eigen::Vector3d> bresenhams_line;
+    generate_bresemhams_line(trajectory, resolution, bresenhams_line);
+    int size = bresenhams_line.size();
+    for(int i=0;i<size;i++){
+        int xi = round((bresenhams_line[i](0) - local_costmap.info.origin.position.x) / resolution);
+        int yi = round((bresenhams_line[i](1) - local_costmap.info.origin.position.y) / resolution);
+        //std::cout << xi << ", " << yi << std::endl;
+        if(local_costmap.data[xi + local_costmap.info.width * yi] != 0){
+            if(bresenhams_line[i].norm() > range){
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 bool StateLatticePlanner::pickup_trajectory(const std::vector<MotionModelDiffDrive::Trajectory>& candidate_trajectories, const Eigen::Vector3d& goal, MotionModelDiffDrive::Trajectory& output)
 {
     /*
@@ -406,9 +430,18 @@ void StateLatticePlanner::process(void)
 
                 std::cout << "check candidate trajectories" << std::endl;
                 std::vector<MotionModelDiffDrive::Trajectory> candidate_trajectories;
-                for(auto& trajectory : trajectories){
+                for(const auto& trajectory : trajectories){
                     if(!check_collision(local_map, trajectory.trajectory)){
                         candidate_trajectories.push_back(trajectory);
+                    }
+                }
+                if(candidate_trajectories.empty()){
+                    // if no candidate trajectories
+                    // collision checking with relaxed restrictions
+                    for(const auto& trajectory : trajectories){
+                        if(!check_collision(local_map, trajectory.trajectory, IGNORABLE_OBSTACLE_RANGE)){
+                            candidate_trajectories.push_back(trajectory);
+                        }
                     }
                 }
                 std::cout << "candidate time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;

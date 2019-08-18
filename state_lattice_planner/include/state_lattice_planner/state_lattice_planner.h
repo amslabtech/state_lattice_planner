@@ -61,6 +61,7 @@ public:
     void sample_states(const std::vector<double>&, const SamplingParams&, std::vector<Eigen::Vector3d>&);
     bool generate_trajectories(const std::vector<Eigen::Vector3d>&, const double, const double, std::vector<MotionModelDiffDrive::Trajectory>&);
     bool check_collision(const nav_msgs::OccupancyGrid&, const std::vector<Eigen::Vector3d>&);
+    bool check_collision(const nav_msgs::OccupancyGrid&, const std::vector<Eigen::Vector3d>&, double);
     bool pickup_trajectory(const std::vector<MotionModelDiffDrive::Trajectory>&, const Eigen::Vector3d&, MotionModelDiffDrive::Trajectory&);
     void load_lookup_table(void);
     void get_optimized_param_from_lookup_table(const Eigen::Vector3d, const double, const double, MotionModelDiffDrive::ControlParams&);
@@ -86,6 +87,7 @@ private:
     double MAX_CURVATURE;
     double MAX_D_CURVATURE;
     double MAX_YAWRATE;
+    double IGNORABLE_OBSTACLE_RANGE;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;

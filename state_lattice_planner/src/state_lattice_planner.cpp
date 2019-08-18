@@ -483,15 +483,16 @@ void StateLatticePlanner::swap(double& a, double& b)
 void StateLatticePlanner::generate_bresemhams_line(const std::vector<Eigen::Vector3d>& trajectory, const double& resolution, std::vector<Eigen::Vector3d>& output)
 {
     int size = trajectory.size();
-    output.resize(size-2);
-    std::vector<Eigen::Vector3d> bresenhams_line;
+    output.clear();
+    // maybe too much
+    output.reserve(size * 2);
     for(int i=0;i<size-2;i++){
         double x0 = trajectory[i](0);
         double y0 = trajectory[i](1);
         double x1 = trajectory[i+1](0);
         double y1 = trajectory[i+1](1);
 
-        bool steep = fabs(y1 - y0) > fabs(x1 - x0);
+        bool steep = (fabs(y1 - y0) > fabs(x1 - x0));
 
         if(steep){
             swap(x0, y0);
@@ -513,11 +514,11 @@ void StateLatticePlanner::generate_bresemhams_line(const std::vector<Eigen::Vect
 
         for(double xt=x0;xt<x1;xt+=resolution){
             if(steep){
-                output[i](0) = yt;
-                output[i](1) = xt;
+                Eigen::Vector3d p(yt, xt, 0);
+                output.push_back(p);
             }else{
-                output[i](0) = xt;
-                output[i](1) = yt;
+                Eigen::Vector3d p(xt, yt, 0);
+                output.push_back(p);
             }
             error += delta_error;
             if(error >= 0.5){
@@ -525,7 +526,6 @@ void StateLatticePlanner::generate_bresemhams_line(const std::vector<Eigen::Vect
                 error -= 1;
             }
         }
-
     }
 }
 

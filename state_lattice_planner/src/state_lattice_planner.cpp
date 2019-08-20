@@ -500,6 +500,9 @@ void StateLatticePlanner::process(void)
             if(!local_map_updated){
                 std::cout << "waiting for local map" << std::endl;
             }
+            if(!odom_updated){
+                std::cout << "waiting for odom" << std::endl;
+            }
         }
         ros::spinOnce();
         loop_rate.sleep();

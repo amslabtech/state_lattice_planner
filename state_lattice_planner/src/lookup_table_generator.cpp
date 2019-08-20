@@ -71,6 +71,9 @@ std::string LookupTableGenerator::process(void)
                 state << MIN_X + DELTA_X * k,
                          -MAX_Y + DELTA_Y * j,
                          -MAX_YAW + DELTA_YAW * i;
+                if(state(0) == 0.0){
+                    continue;
+                }
                 states.push_back(state);
             }
         }
@@ -95,7 +98,8 @@ std::string LookupTableGenerator::process(void)
                 std::cout << state << std::endl;
                 double distance = state.segment(0, 2).norm();
                 std::cout << "distance: " << distance << std::endl;
-                MotionModelDiffDrive::VelocityParams init_v(v0, MAX_ACCELERATION, TARGET_VELOCITY, TARGET_VELOCITY, MAX_ACCELERATION);
+                double target_velocity = get_target_velocity(state);
+                MotionModelDiffDrive::VelocityParams init_v(v0, MAX_ACCELERATION, target_velocity, target_velocity, MAX_ACCELERATION);
                 MotionModelDiffDrive::ControlParams init(init_v, MotionModelDiffDrive::CurvatureParams(k0, 0, 0, distance));
                 MotionModelDiffDrive::ControlParams output;
                 MotionModelDiffDrive::Trajectory trajectory;
@@ -126,5 +130,15 @@ void LookupTableGenerator::save(std::string& data)
     }else{
         std::cout << "cannot open file" << std::endl;
         exit(-1);
+    }
+}
+
+double LookupTableGenerator::get_target_velocity(const Eigen::Vector3d& goal)
+{
+    double direction = atan2(goal(1), goal(0));
+    if(fabs(direction) < M_PI * 0.75){
+        return TARGET_VELOCITY;
+    }else{
+        return -TARGET_VELOCITY;
     }
 }

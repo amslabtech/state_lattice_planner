@@ -247,17 +247,16 @@ bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
 
         MotionModelDiffDrive::ControlParams param;
         get_optimized_param_from_lookup_table(boundary_state, velocity, k0, param);
-        std::cout << "------" << std::endl;
-        std::cout << "v0: " << velocity << ", " << "k0: " << k0 << ", " << "km: " << param.curv.km << ", " << "kf: " << param.curv.kf << ", " << "sf: " << param.curv.sf << std::endl;
+        // std::cout << "v0: " << velocity << ", " << "k0: " << k0 << ", " << "km: " << param.curv.km << ", " << "kf: " << param.curv.kf << ", " << "sf: " << param.curv.sf << std::endl;
         //std::cout << "lookup table time " << count << ": " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
         MotionModelDiffDrive::ControlParams init(MotionModelDiffDrive::VelocityParams(velocity, MAX_ACCELERATION, target_velocity, target_velocity, MAX_ACCELERATION)
                                                , MotionModelDiffDrive::CurvatureParams(k0, param.curv.km, param.curv.kf, param.curv.sf));
 
         MotionModelDiffDrive::Trajectory trajectory;
-        std::cout << boundary_state.transpose() << std::endl;
+        // std::cout << boundary_state.transpose() << std::endl;
         double cost = tg.generate_optimized_trajectory(boundary_state, init, 1.0 / HZ, OPTIMIZATION_TOLERANCE, MAX_ITERATION, output, trajectory);
-        std::cout << trajectory.trajectory.back().transpose() << std::endl;
+        // std::cout << trajectory.trajectory.back().transpose() << std::endl;
         if(cost > 0){
             trajectories.push_back(trajectory);
             //std::cout << "generate time " << count << ": " << ros::Time::now().toSec() - start << "[s]" << std::endl;

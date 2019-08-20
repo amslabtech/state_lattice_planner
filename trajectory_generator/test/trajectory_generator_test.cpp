@@ -114,6 +114,37 @@ TEST(TestSuite, test5)
     EXPECT_LT(cost, 0);// cost > 0
 }
 
+// negative value test
+TEST(TestSuite, test6)
+{
+    ros::NodeHandle nh;
+    MotionModelDiffDrive::CurvatureParams curv(0, 0.5, 1.0, -5);
+    curv.calculate_spline();
+    MotionModelDiffDrive mm;
+    double cf = mm.calculate_quadratic_function(0, curv.coeff_0_m);
+    EXPECT_NEAR(0, cf, 0.01);
+    cf = mm.calculate_quadratic_function(-2.5, curv.coeff_0_m);
+    EXPECT_NEAR(0.5, cf, 0.01);
+    cf = mm.calculate_quadratic_function(-2.5-(-5.0/2.0), curv.coeff_m_f);
+    EXPECT_NEAR(0.5, cf, 0.01);
+    cf = mm.calculate_quadratic_function(-5-(-5.0/2.0), curv.coeff_m_f);
+    EXPECT_NEAR(1.0, cf, 0.01);
+}
+
+TEST(TestSuite, test7)
+{
+    ros::NodeHandle nh;
+    MotionModelDiffDrive mm;
+    MotionModelDiffDrive::VelocityParams vel(0.0, 0.5, -0.5, 0.0, 0.5);
+    MotionModelDiffDrive::CurvatureParams curv(0.0, 0.0, 0.0, -5);
+    MotionModelDiffDrive::Trajectory trajectory;
+    mm.generate_trajectory(0.1, MotionModelDiffDrive::ControlParams(vel, curv), trajectory);
+
+    EXPECT_NEAR(-5, trajectory.trajectory.back()(0), 0.05);
+    EXPECT_NEAR(0, trajectory.trajectory.back()(1), 0.05);
+    EXPECT_NEAR(0, trajectory.trajectory.back()(2), 0.05);
+}
+
 int main(int argc, char** argv)
 {
     testing::InitGoogleTest(&argc, argv);

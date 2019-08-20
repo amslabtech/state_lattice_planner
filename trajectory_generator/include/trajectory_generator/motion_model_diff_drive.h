@@ -27,7 +27,7 @@ public:
     {
     public:
         VelocityParams(void);
-        VelocityParams(double, double, double, double, double);
+        VelocityParams(double, double, double, double, double);// v0, a0, vt, vf, af
 
         double v0;
         double a0;

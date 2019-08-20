@@ -18,6 +18,7 @@ public:
 
     std::string process(void);
     void save(std::string&);
+    double get_target_velocity(const Eigen::Vector3d&);
 
 private:
     double MIN_X;

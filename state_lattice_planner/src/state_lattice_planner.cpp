@@ -294,6 +294,8 @@ bool StateLatticePlanner::check_collision(const nav_msgs::OccupancyGrid& local_c
         //std::cout << xi << ", " << yi << std::endl;
         if(local_costmap.data[xi + local_costmap.info.width * yi] != 0){
             if(bresenhams_line[i].norm() > range){
+                return false;
+            }else{
                 return true;
             }
         }
@@ -415,12 +417,22 @@ void StateLatticePlanner::process(void)
     ros::Rate loop_rate(HZ);
 
     while(ros::ok()){
-        if(local_goal_subscribed && local_map_updated && odom_updated){
+        bool goal_transformed = false;
+        geometry_msgs::PoseStamped local_goal_base_link;
+        if(local_goal_subscribed){
+            try{
+                listener.transformPose("/base_link", ros::Time(0), local_goal, local_goal.header.frame_id, local_goal_base_link);
+                goal_transformed = true;
+            }catch(tf::TransformException ex){
+                std::cout << ex.what() << std::endl;
+            }
+        }
+        if(local_goal_subscribed && local_map_updated && odom_updated && goal_transformed){
             std::cout << "=== state lattice planner ===" << std::endl;
             double start = ros::Time::now().toSec();
-            std::cout << "local goal: \n" << local_goal << std::endl;
+            std::cout << "local goal: \n" << local_goal_base_link << std::endl;
             std::cout << "current_velocity: \n" << current_velocity << std::endl;
-            Eigen::Vector3d goal(local_goal.pose.position.x, local_goal.pose.position.y, tf::getYaw(local_goal.pose.orientation));
+            Eigen::Vector3d goal(local_goal_base_link.pose.position.x, local_goal_base_link.pose.position.y, tf::getYaw(local_goal_base_link.pose.orientation));
             std::vector<Eigen::Vector3d> states;
             generate_biased_polar_states(N_S, goal, sampling_params, states);
             std::vector<MotionModelDiffDrive::Trajectory> trajectories;
@@ -435,16 +447,19 @@ void StateLatticePlanner::process(void)
                         candidate_trajectories.push_back(trajectory);
                     }
                 }
+                std::cout << "trajectories: " << trajectories.size() << std::endl;
+                std::cout << "candidate_trajectories: " << candidate_trajectories.size() << std::endl;
                 if(candidate_trajectories.empty()){
                     // if no candidate trajectories
                     // collision checking with relaxed restrictions
+                    std::cout << "candidate_trajectories: " << candidate_trajectories.size() << std::endl;
                     for(const auto& trajectory : trajectories){
                         if(!check_collision(local_map, trajectory.trajectory, IGNORABLE_OBSTACLE_RANGE)){
                             candidate_trajectories.push_back(trajectory);
                         }
                     }
                 }
-                std::cout << "candidate time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+                // std::cout << "candidate time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
                 if(candidate_trajectories.size() > 0){
                     visualize_trajectories(candidate_trajectories, 0, 0.5, 1, N_P * N_H, candidate_trajectories_no_collision_pub);
 
@@ -481,7 +496,7 @@ void StateLatticePlanner::process(void)
             }else{
                 std::cout << "\033[91mERROR: no optimized trajectory was generated\033[00m" << std::endl;
                 std::cout << "\033[91mturn for local goal\033[00m" << std::endl;
-                double relative_direction = atan2(local_goal.pose.position.y, local_goal.pose.position.x);
+                double relative_direction = atan2(local_goal_base_link.pose.position.y, local_goal_base_link.pose.position.x);
                 geometry_msgs::Twist cmd_vel;
                 cmd_vel.linear.x = 0;
                 cmd_vel.angular.z =  0.2 * ((relative_direction > 0) ? 1 : -1);

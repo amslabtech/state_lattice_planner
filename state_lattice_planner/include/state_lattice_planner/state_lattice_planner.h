@@ -12,6 +12,8 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
+#include <tf/tf.h>
+#include <tf/transform_listener.h>
 
 #include <Eigen/Dense>
 
@@ -99,6 +101,7 @@ private:
     ros::Subscriber local_map_sub;
     ros::Subscriber local_goal_sub;
     ros::Subscriber odom_sub;
+    tf::TransformListener listener;
     geometry_msgs::PoseStamped local_goal;
     nav_msgs::OccupancyGrid local_map;
     geometry_msgs::Twist current_velocity;

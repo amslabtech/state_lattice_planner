@@ -26,10 +26,14 @@ MotionModelDiffDrive::VelocityParams::VelocityParams(void)
 MotionModelDiffDrive::VelocityParams::VelocityParams(double _v0, double _a0, double _vt, double _vf, double _af)
 {
     v0 = _v0;
-    a0 = _a0;
     vt = _vt;
     vf = _vf;
-    af = _af;
+    a0 = v0 < vt ? fabs(_a0) : -fabs(_a0);
+    // std::cout << _a0 << ", " << a0 << std::endl;
+    // a0 = _a0;
+    af = vt > vf ? fabs(_af) : -fabs(_af);
+    // std::cout << _af << ", " << af << std::endl;
+    // af = _af;
     time = 0;
 }
 
@@ -131,18 +135,18 @@ void MotionModelDiffDrive::control_speed(const State& state, State& _state)
 
 void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlParams& control_param, Trajectory& trajectory)
 {
-    //std::cout << "gen start" << std::endl;
-    //double start = ros::Time::now().toSec();
+    // std::cout << "gen start" << std::endl;
+    double start = ros::Time::now().toSec();
     CurvatureParams curv = control_param.curv;
     VelocityParams vel = control_param.vel;
 
     vel.time = estimate_driving_time(control_param);
-    //std::cout << "estimate time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+    // std::cout << "estimate time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
     make_velocity_profile(dt, vel);
-    //std::cout << "v prof: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
-    //std::cout << vel.v0 << ", " << vel.vt << ", " << vel.vf << ", " << vel.time << ", " << curv.sf << ", " << std::endl;
-    //std::cout << "n: " << N << std::endl;
+    // std::cout << "v prof: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+    // std::cout << vel.v0 << ", " << vel.vt << ", " << vel.vf << ", " << vel.time << ", " << curv.sf << ", " << std::endl;
+    // std::cout << "n: " << N << std::endl;
 
     curv.calculate_spline();
     //std::cout << "spline: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
@@ -250,6 +254,7 @@ void MotionModelDiffDrive::make_velocity_profile(const double dt, const Velocity
 
     ***************************************/
     int size = v_param.time / dt;
+    // std::cout << "size: " << size << std::endl;
     v_profile.resize(size);
     s_profile.resize(size);
 
@@ -258,14 +263,16 @@ void MotionModelDiffDrive::make_velocity_profile(const double dt, const Velocity
     for(int i=0;i<size;++i){
         // acceleration time
         double ta = fabs((v_param.vt - v_param.v0) / v_param.a0);
+        // std::cout << "ta: " << ta << std::endl;
         // deceleration time
         double td = v_param.time - fabs((v_param.vf - v_param.vt) / v_param.af);
+        // std::cout << "td: " << ta << std::endl;
 
         double v = 0;
         if(t < 0){
             v = v_param.v0;
         }else if(t < ta){
-            if(v_param.v0 + v_param.a0 * t < v_param.vt){
+            if(fabs(v_param.v0 + v_param.a0 * t) < fabs(v_param.vt)){
                 v = v_param.v0 + v_param.a0 * t;
             }else{
                 v = v_param.vt;
@@ -273,7 +280,7 @@ void MotionModelDiffDrive::make_velocity_profile(const double dt, const Velocity
         }else if(ta <= t && t < td){
             v = v_param.vt;
         }else if(td <= t && t < v_param.time){
-            if(v_param.vt - v_param.af * (t - td) > v_param.vf){
+            if(fabs(v_param.vt - v_param.af * (t - td)) > fabs(v_param.vf)){
                 v = v_param.vt - v_param.af * (t - td);
             }else{
                 v = v_param.vt;
@@ -282,8 +289,10 @@ void MotionModelDiffDrive::make_velocity_profile(const double dt, const Velocity
             v = v_param.vf;
         }
         v_profile[i] = v;
-        s += fabs(v) * dt;
+        // std::cout << "v: " << v << std::endl;
+        s += v * dt;
         s_profile[i] = s;
+        // std::cout << "s: " << s << std::endl;
         t += dt;
     }
 }
@@ -294,15 +303,15 @@ double MotionModelDiffDrive::estimate_driving_time(const ControlParams& control)
     double t0 = fabs((control.vel.vt - control.vel.v0) / control.vel.a0);
     // deceleration time
     double td = fabs((control.vel.vf - control.vel.vt) / control.vel.af);
-    //std::cout << t0 << ", " << td << std::endl;
+    // std::cout << t0 << ", " << td << std::endl;
 
     double s0 = 0.5 * fabs(control.vel.vt + control.vel.v0) * t0;
     double sd = 0.5 * fabs(control.vel.vt + control.vel.vf) * td;
-    //std::cout << s0 << ", " << sd << std::endl;
+    // std::cout << s0 << ", " << sd << std::endl;
 
-    double st = control.curv.sf - s0 - sd;
+    double st = fabs(control.curv.sf) - s0 - sd;
     double tt = st / fabs(control.vel.vt);
-    //std::cout << st << ", " << tt << std::endl;
+    // std::cout << st << ", " << tt << std::endl;
     double driving_time = t0 + tt + td;
     return driving_time;
 }

@@ -37,7 +37,8 @@ TEST(TestSuite, test2)
     Eigen::Vector3d goal(2, 2, 0);
     StateLatticePlanner::SamplingParams params(np, nh, 5.0, M_PI / 4.0, M_PI / 6.0);
     std::vector<Eigen::Vector3d> states;
-    slp.generate_biased_polar_states(ns, goal, params, states);
+    double target_velocity = slp.get_target_velocity(goal);
+    slp.generate_biased_polar_states(ns, goal, params, target_velocity, states);
     int n = 0;
     for(auto state : states){
         std::cout << "state " << n << std::endl;
@@ -57,7 +58,8 @@ TEST(TestSuite, test3)
     Eigen::Vector3d goal(5, 1, 1);
     StateLatticePlanner::SamplingParams params(np, nh, M_PI / 4.0, M_PI / 6.0);
     std::vector<Eigen::Vector3d> states;
-    slp.generate_biased_polar_states(ns, goal, params, states);
+    double target_velocity = slp.get_target_velocity(goal);
+    slp.generate_biased_polar_states(ns, goal, params, target_velocity, states);
     int n = 0;
     for(auto state : states){
         std::cout << "state " << n << std::endl;
@@ -65,7 +67,7 @@ TEST(TestSuite, test3)
         n++;
     }
     std::vector<MotionModelDiffDrive::Trajectory> trajectories;
-    slp.generate_trajectories(states, 0.5, 0, trajectories);
+    slp.generate_trajectories(states, 0.5, 0, target_velocity, trajectories);
     int count = 0;
     for(auto trajectory : trajectories){
         std::cout << "trajectory " << count << std::endl;
@@ -86,9 +88,10 @@ TEST(TestSuite, test4)
     StateLatticePlanner::SamplingParams params(np, nh, M_PI / 4.0, M_PI / 6.0);
     double start = ros::Time::now().toSec();
     std::vector<Eigen::Vector3d> states;
-    slp.generate_biased_polar_states(ns, goal, params, states);
+    double target_velocity = slp.get_target_velocity(goal);
+    slp.generate_biased_polar_states(ns, goal, params, target_velocity, states);
     std::vector<MotionModelDiffDrive::Trajectory> trajectories;
-    slp.generate_trajectories(states, 0.0, 0.0, trajectories);
+    slp.generate_trajectories(states, 0.0, 0.0, target_velocity, trajectories);
     MotionModelDiffDrive::Trajectory trajectory;
     slp.pickup_trajectory(trajectories, goal, trajectory);
     std::cout << "time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
@@ -117,6 +120,38 @@ TEST(TestSuite, test5)
     std::cout << control.curv.k0 << ", " << control.curv.km << ", " << control.curv.kf << ", " << control.curv.sf << std::endl;
 }
 
+TEST(TestSuite, test6)
+{
+    StateLatticePlanner slp;
+    int np = 10;
+    int nh = 3;
+    int ns = 1000;
+    Eigen::Vector3d goal(-5, 1, -0.5);
+    StateLatticePlanner::SamplingParams params(np, nh, M_PI / 4.0, M_PI / 6.0);
+    double start = ros::Time::now().toSec();
+    std::vector<Eigen::Vector3d> states;
+    double target_velocity = slp.get_target_velocity(goal);
+    slp.generate_biased_polar_states(ns, goal, params, target_velocity, states);
+    for(const auto& s : states){
+        std::cout << s.transpose() << std::endl;
+    }
+    std::vector<MotionModelDiffDrive::Trajectory> trajectories;
+    slp.generate_trajectories(states, 0.0, 0.0, target_velocity, trajectories);
+    MotionModelDiffDrive::Trajectory trajectory;
+    slp.pickup_trajectory(trajectories, goal, trajectory);
+    std::cout << "time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+    std::cout << "goal" << std::endl;
+    std::cout << goal << std::endl;
+    std::cout << "terminal state" << std::endl;
+    std::cout << trajectory.trajectory.back() << std::endl;
+    std::cout << "velocity" << std::endl;
+    std::cout << trajectory.velocities.back() << std::endl;
+    int size = trajectory.trajectory.size();
+    for(int i=0;i<size;i++){
+        std::cout << trajectory.velocities[i] << "[m/s]" << trajectory.angular_velocities[i] << "[rad/s]" << std::endl;
+    }
+    EXPECT_LT((goal.segment(0, 2) - trajectory.trajectory.back().segment(0, 2)).norm(), 0.2);
+}
 int main(int argc, char** argv)
 {
     testing::InitGoogleTest(&argc, argv);

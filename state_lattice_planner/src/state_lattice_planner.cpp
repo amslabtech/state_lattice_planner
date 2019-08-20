@@ -125,17 +125,22 @@ void StateLatticePlanner::sample_states(const std::vector<double>& sample_angles
      */
     std::vector<Eigen::Vector3d> _states;
     for(auto angle_ratio : sample_angles){
-        double angle = params.min_alpha + (params.max_alpha - params.min_alpha) * angle_ratio;
+        double angle = params.min_alpha + params.span_alpha * angle_ratio;
+        double x = params.length * cos(angle);
+        double y = params.length * sin(angle);
+        double base_angle = angle;
+        if(params.min_alpha > params.max_alpha){
+            base_angle -= M_PI;
+            base_angle = atan2(sin(base_angle), cos(base_angle));
+        }
         for(int i=0;i<params.n_h;i++){
-            double x = params.length * cos(angle);
-            double y = params.length * sin(angle);
             if(params.n_h > 0){
                 double yaw = 0;
                 if(params.n_h != 1){
                     double ratio = double(i) / (params.n_h - 1);
-                    yaw = params.min_psi + (params.span_psi) * ratio + angle;
+                    yaw = params.min_psi + (params.span_psi) * ratio + base_angle;
                 }else{
-                    yaw = (params.span_psi) * 0.5 + angle;
+                    yaw = (params.span_psi) * 0.5 + base_angle;
                 }
                 Eigen::Vector3d state(x, y, yaw);
                 _states.push_back(state);
@@ -148,19 +153,24 @@ void StateLatticePlanner::sample_states(const std::vector<double>& sample_angles
     states = _states;
 }
 
-void StateLatticePlanner::generate_biased_polar_states(const int n_s, const Eigen::Vector3d& goal, const SamplingParams& params, std::vector<Eigen::Vector3d>& states)
+void StateLatticePlanner::generate_biased_polar_states(const int n_s, const Eigen::Vector3d& goal, const SamplingParams& params, double target_velocity, std::vector<Eigen::Vector3d>& states)
 {
     /*
      * n_s: param for biased polar sampling
      */
     // params.length is ignored in this function (distance for goal is used)
     SamplingParams _params = params;
-    std::cout << "biased polar sampling" << std::endl;
     double alpha_coeff = _params.span_alpha / double(n_s - 1);
+    if(target_velocity < 0){
+        _params.min_alpha = M_PI - _params.max_alpha;
+        _params.max_alpha = -_params.min_alpha;
+    }
+    std::cout << "biased polar sampling" << std::endl;
     std::vector<double> cnav;
     double goal_distance = goal.segment(0, 2).norm();
     for(int i=0;i<n_s;i++){
         double angle = _params.min_alpha + double(i) * alpha_coeff;
+        angle = atan2(sin(angle), cos(angle));
         _params.length = goal_distance;
         Eigen::Vector2d terminal;
         terminal <<  _params.length * cos(angle),
@@ -217,7 +227,7 @@ void StateLatticePlanner::generate_biased_polar_states(const int n_s, const Eige
     sample_states(biased_angles, _params, states);
 }
 
-bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3d>& boundary_states, const double velocity, const double angular_velocity, std::vector<MotionModelDiffDrive::Trajectory>& trajectories)
+bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3d>& boundary_states, const double velocity, const double angular_velocity, const double target_velocity, std::vector<MotionModelDiffDrive::Trajectory>& trajectories)
 {
     std::cout << "generate trajectories to boundary states" << std::endl;
     int count = 0;
@@ -237,14 +247,17 @@ bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
 
         MotionModelDiffDrive::ControlParams param;
         get_optimized_param_from_lookup_table(boundary_state, velocity, k0, param);
-        //std::cout << "v0: " << velocity << ", " << "k0: " << k0 << ", " << "km: " << param.curv.km << ", " << "kf: " << param.curv.kf << ", " << "sf: " << param.curv.sf << std::endl;
+        std::cout << "------" << std::endl;
+        std::cout << "v0: " << velocity << ", " << "k0: " << k0 << ", " << "km: " << param.curv.km << ", " << "kf: " << param.curv.kf << ", " << "sf: " << param.curv.sf << std::endl;
         //std::cout << "lookup table time " << count << ": " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
-        MotionModelDiffDrive::ControlParams init(MotionModelDiffDrive::VelocityParams(velocity, MAX_ACCELERATION, TARGET_VELOCITY, TARGET_VELOCITY, MAX_ACCELERATION)
+        MotionModelDiffDrive::ControlParams init(MotionModelDiffDrive::VelocityParams(velocity, MAX_ACCELERATION, target_velocity, target_velocity, MAX_ACCELERATION)
                                                , MotionModelDiffDrive::CurvatureParams(k0, param.curv.km, param.curv.kf, param.curv.sf));
 
         MotionModelDiffDrive::Trajectory trajectory;
+        std::cout << boundary_state.transpose() << std::endl;
         double cost = tg.generate_optimized_trajectory(boundary_state, init, 1.0 / HZ, OPTIMIZATION_TOLERANCE, MAX_ITERATION, output, trajectory);
+        std::cout << trajectory.trajectory.back().transpose() << std::endl;
         if(cost > 0){
             trajectories.push_back(trajectory);
             //std::cout << "generate time " << count << ": " << ros::Time::now().toSec() - start << "[s]" << std::endl;
@@ -434,9 +447,10 @@ void StateLatticePlanner::process(void)
             std::cout << "current_velocity: \n" << current_velocity << std::endl;
             Eigen::Vector3d goal(local_goal_base_link.pose.position.x, local_goal_base_link.pose.position.y, tf::getYaw(local_goal_base_link.pose.orientation));
             std::vector<Eigen::Vector3d> states;
-            generate_biased_polar_states(N_S, goal, sampling_params, states);
+            double target_velocity = get_target_velocity(goal);
+            generate_biased_polar_states(N_S, goal, sampling_params, target_velocity, states);
             std::vector<MotionModelDiffDrive::Trajectory> trajectories;
-            bool generated = generate_trajectories(states, current_velocity.linear.x, current_velocity.angular.z, trajectories);
+            bool generated = generate_trajectories(states, current_velocity.linear.x, current_velocity.angular.z, target_velocity, trajectories);
             if(generated){
                 visualize_trajectories(trajectories, 0, 1, 0, N_P * N_H, candidate_trajectories_pub);
 
@@ -645,3 +659,12 @@ void StateLatticePlanner::visualize_trajectory(const MotionModelDiffDrive::Traje
     pub.publish(v_trajectory);
 }
 
+double StateLatticePlanner::get_target_velocity(const Eigen::Vector3d& goal)
+{
+    double direction = atan2(goal(1), goal(0));
+    if(fabs(direction) < M_PI * 0.75){
+        return TARGET_VELOCITY;
+    }else{
+        return -TARGET_VELOCITY;
+    }
+}

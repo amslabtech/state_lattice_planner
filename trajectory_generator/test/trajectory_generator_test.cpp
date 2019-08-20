@@ -145,6 +145,32 @@ TEST(TestSuite, test7)
     EXPECT_NEAR(0, trajectory.trajectory.back()(2), 0.05);
 }
 
+TEST(TestSuite, test8)
+{
+    ros::NodeHandle nh;
+    TrajectoryGeneratorDiffDrive tg;
+    MotionModelDiffDrive::ControlParams output;
+    MotionModelDiffDrive::VelocityParams init_v(0.0, 0.5, -1.0, 0.0, 0.5);
+    Eigen::Vector3d goal(-5, 1, -0.5);
+    MotionModelDiffDrive::ControlParams init_params(init_v, MotionModelDiffDrive::CurvatureParams(0, 0, 0, goal.segment(0, 2).norm()));
+    MotionModelDiffDrive::Trajectory trajectory;
+    std::cout << "generate optimized trajectory" << std::endl;
+    double start = ros::Time::now().toSec();
+    double cost = tg.generate_optimized_trajectory(goal, init_params, 0.05, 1e-1, 5, output, trajectory);
+    std::cout << "time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+    std::cout << "trajecotry.back():" << std::endl;
+    std::cout << trajectory.trajectory.back() << std::endl;
+    std::cout << "cost: " << cost << std::endl;
+    for(auto vel : trajectory.velocities){
+        std::cout << vel << "[m/s]" << std::endl;
+    }
+
+    EXPECT_NEAR(goal(0), trajectory.trajectory.back()(0), 0.05);
+    EXPECT_NEAR(goal(1), trajectory.trajectory.back()(1), 0.05);
+    EXPECT_NEAR(goal(2), trajectory.trajectory.back()(2), 0.05);
+    EXPECT_GT(cost, 0);// cost > 0
+}
+
 int main(int argc, char** argv)
 {
     testing::InitGoogleTest(&argc, argv);

@@ -36,6 +36,8 @@ catkin_make
   - the local goal must be in the local map
 - /local_map (nav_msgs/OccupancyGrid)
   - robot-centered costmap
+- /odom (nav_msgs/Odometry)
+  - robot odometry
 
 #### Parameters
 - HZ
@@ -61,13 +63,16 @@ catkin_make
 - MAX_ITERATION
   - max number of iteration (default: 100)
 - OPTIMIZATION_TOLERANCE
-  - when the cost becomes lower than this parameter, optimization loop is finished
+  - when the cost becomes lower than this parameter, optimization loop is finished (default: 0.1)
 - MAX_CURVATURE
   - max trajectory curvature (default: 1.0[rad/m])
 - MAX_D_CURVATURE
   - max time derivative of trajectory curvature (default: 2.0[rad/ms]
 - MAX_YAWRATE
   - max robot's yawrate (default: 0.8[rad/s])
+  
+#### Runtime requirement
+- TF (from /odom to /base_link) is required
 
 ### lookup_table_generator
 - this node is a tool for generating a lookup table, not for planning. so this node doesn't publish or subscribe topics.

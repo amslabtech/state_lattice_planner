@@ -185,7 +185,7 @@ void StateLatticePlanner::generate_biased_polar_states(const int n_s, const Eige
     }
     double cnav_sum = 0;
     double cnav_max = 0;
-    for(auto& alpha_s : cnav){
+    for(const auto& alpha_s : cnav){
         cnav_sum += alpha_s;
         if(cnav_max < alpha_s){
             cnav_max = alpha_s;
@@ -326,7 +326,7 @@ bool StateLatticePlanner::pickup_trajectory(const std::vector<MotionModelDiffDri
      * outputs a trajectory that is nearest to the goal
      */
     std::vector<MotionModelDiffDrive::Trajectory> trajectories;
-    for(auto& candidate_trajectory : candidate_trajectories){
+    for(const auto& candidate_trajectory : candidate_trajectories){
         MotionModelDiffDrive::Trajectory traj;
         traj = candidate_trajectory;
         traj.cost = (candidate_trajectory.trajectory.back().segment(0, 2) - goal.segment(0, 2)).norm();
@@ -470,12 +470,12 @@ void StateLatticePlanner::process(void)
                 if(candidate_trajectories.empty()){
                     // if no candidate trajectories
                     // collision checking with relaxed restrictions
-                    std::cout << "candidate_trajectories: " << candidate_trajectories.size() << std::endl;
                     for(const auto& trajectory : trajectories){
                         if(!check_collision(local_map, trajectory.trajectory, IGNORABLE_OBSTACLE_RANGE)){
                             candidate_trajectories.push_back(trajectory);
                         }
                     }
+                    std::cout << "candidate_trajectories(ignore far obstacles): " << candidate_trajectories.size() << std::endl;
                 }
                 // std::cout << "candidate time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
                 if(candidate_trajectories.size() > 0){

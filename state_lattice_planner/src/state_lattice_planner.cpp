@@ -103,7 +103,12 @@ StateLatticePlanner::StateWithControlParams::StateWithControlParams(void)
 void StateLatticePlanner::local_goal_callback(const geometry_msgs::PoseStampedConstPtr& msg)
 {
     local_goal = *msg;
-    local_goal_subscribed = true;
+    try{
+        listener.transformPose("/odom", ros::Time(0), local_goal, local_goal.header.frame_id, local_goal);
+        local_goal_subscribed = true;
+    }catch(tf::TransformException ex){
+        std::cout << ex.what() << std::endl;
+    }
 }
 
 void StateLatticePlanner::local_map_callback(const nav_msgs::OccupancyGridConstPtr& msg)

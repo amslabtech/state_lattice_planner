@@ -2,9 +2,9 @@
 
     <!-- lookup table params -->
     <arg name="min_x" default="-5.0"/>
-    <arg name="max_x" default="5.0"/>
+    <arg name="max_x" default="10.0"/>
     <arg name="delta_x" default="1.0"/>
-    <arg name="max_y" default="3.0"/>
+    <arg name="max_y" default="5.0"/>
     <arg name="delta_y" default="1.0"/>
     <arg name="max_yaw" default="1.0471975"/>
     <arg name="delta_yaw" default="1.0471975"/>

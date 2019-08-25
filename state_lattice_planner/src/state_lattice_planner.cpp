@@ -19,6 +19,7 @@ StateLatticePlanner::StateLatticePlanner(void)
     local_nh.param("MAX_D_CURVATURE", MAX_D_CURVATURE, {2.0});
     local_nh.param("MAX_YAWRATE", MAX_YAWRATE, {0.8});
     local_nh.param("IGNORABLE_OBSTACLE_RANGE", IGNORABLE_OBSTACLE_RANGE, {1.0});
+    local_nh.param("VERBOSE", VERBOSE, {false});
 
     std::cout << "HZ: " << HZ << std::endl;
     std::cout << "ROBOT_FRAME: " << ROBOT_FRAME << std::endl;
@@ -36,6 +37,7 @@ StateLatticePlanner::StateLatticePlanner(void)
     std::cout << "MAX_D_CURVATURE: " << MAX_D_CURVATURE << std::endl;
     std::cout << "MAX_YAWRATE: " << MAX_YAWRATE << std::endl;
     std::cout << "IGNORABLE_OBSTACLE_RANGE: " << IGNORABLE_OBSTACLE_RANGE << std::endl;
+    std::cout << "VERBOSE: " << VERBOSE << std::endl;
 
     SamplingParams sp(N_P, N_H, MAX_ALPHA, MAX_PSI);
     sampling_params = sp;
@@ -239,6 +241,7 @@ bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
     for(auto boundary_state : boundary_states){
         double start = ros::Time::now().toSec();
         TrajectoryGeneratorDiffDrive tg;
+        tg.set_verbose(VERBOSE);
         tg.set_motion_param(MAX_YAWRATE, MAX_CURVATURE, MAX_D_CURVATURE, MAX_ACCELERATION);
         MotionModelDiffDrive::ControlParams output;
         //std::cout << "v: " << velocity << ", " << "w: " << angular_velocity << std::endl;

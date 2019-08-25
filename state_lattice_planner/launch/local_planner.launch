@@ -11,6 +11,7 @@
     <arg name="max_iteration" default="5"/>
     <arg name="optimization_tolerance" default="0.1"/>
     <arg name="ignorable_obstacle_range" default="1.0"/>
+    <arg name="verbose" default="false"/>
 
     <node pkg="state_lattice_planner" type="state_lattice_planner" name="state_lattice_planner" ns="local_planner">
         <rosparam command="load" file="$(find state_lattice_planner)/config/robot_param.yaml" />
@@ -25,9 +26,10 @@
         <param name="MAX_ITERATION" value="$(arg max_iteration)"/>
         <param name="OPTIMIZATION_TOLERANCE" value="$(arg optimization_tolerance)"/>
         <param name="IGNORABLE_OBSTACLE_RANGE" value="$(arg ignorable_obstacle_range)"/>
+        <param name="VERBOSE" value="$(arg verbose)"/>
         <remap from="/local_map" to="/local_map/expand"/>
-        <remap from="/local_goal" to="/local_goal"/>
-        <remap from="/cmd_vel" to="/local_path/cmd_vel"/>
-        <remap from="/odom" to="/odom"/>
+        <remap from="/local_goal" to="/move_base_simple/goal"/>
+        <remap from="/cmd_vel" to="/cats/diff_drive_controller/cmd_vel"/>
+        <remap from="/odom" to="/cats/diff_drive_controller/odom"/>
     </node>
 </launch>

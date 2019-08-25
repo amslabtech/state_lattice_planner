@@ -91,6 +91,7 @@ protected:
     double MAX_D_CURVATURE;
     double MAX_YAWRATE;
     double IGNORABLE_OBSTACLE_RANGE;
+    bool VERBOSE;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;

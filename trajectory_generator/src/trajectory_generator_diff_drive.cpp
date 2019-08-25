@@ -16,6 +16,11 @@ void TrajectoryGeneratorDiffDrive::set_motion_param(const double max_yawrate, co
     model.set_param(max_yawrate, max_curvature, max_d_curvature, max_acceleration);
 }
 
+void TrajectoryGeneratorDiffDrive::set_verbose(bool verbose_)
+{
+    verbose = verbose_;
+}
+
 double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::Vector3d& goal, const MotionModelDiffDrive::ControlParams& init_control_param, const double dt, const double tolerance, const int max_iteration, MotionModelDiffDrive::ControlParams& output, MotionModelDiffDrive::Trajectory& trajectory)
 {
     Eigen::Vector3d cost(1e2, 1e2, 1e2);
@@ -35,7 +40,9 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
             //std::cout << "successfully optimized in " << count << " iteration" << std::endl;
             break;
         }else if(count >= max_iteration){
-            std::cout << "cannot optimize trajectory" << std::endl;
+            if(verbose){
+                std::cout << "cannot optimize trajectory" << std::endl;
+            }
             return -1;
         }
         trajectory.trajectory.clear();
@@ -63,7 +70,9 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
         //std::cout << "cost: \n" << cost << std::endl;
         //std::cout << "dp: \n" << dp << std::endl;
         if((cost.norm() > last_cost) || std::isnan(dp(0)) || std::isnan(dp(1)) || std::isnan(dp(2)) || std::isinf(dp(0)) || std::isinf(dp(1)) || std::isinf(dp(2))){
-            std::cout << "diverge to infinity!!!" << std::endl;
+            if(verbose){
+                std::cout << "diverge to infinity!!!" << std::endl;
+            }
             return -1;
         }
         last_cost = cost.norm();
@@ -73,7 +82,9 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
         output.curv.sf += dp(2);
 
         if(fabsf(output.curv.sf - distance_to_goal) > distance_to_goal * 0.5){
-            std::cout << "optimization error!!!" << std::endl;
+            if(verbose){
+                std::cout << "optimization error!!!" << std::endl;
+            }
             return -1;
         }
         //std::cout << output.curv.km << ", " << output.curv.kf << ", " << output.curv.sf << std::endl;

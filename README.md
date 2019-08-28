@@ -122,3 +122,7 @@ roslaunch state_lattice_planner generate_lookup_table.launch
 roslaunch state_lattice_planner local_planner.launch
 ```
 
+## References
+- https://www.ri.cmu.edu/publications/state-space-sampling-of-feasible-motions-for-high-performance-mobile-robot-navigation-in-complex-environments/
+- https://github.com/AtsushiSakai/PythonRobotics/tree/master/PathPlanning/StateLatticePlanner
+

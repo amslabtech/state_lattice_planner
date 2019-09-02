@@ -441,7 +441,7 @@ void StateLatticePlanner::process(void)
         geometry_msgs::PoseStamped local_goal_base_link;
         if(local_goal_subscribed){
             try{
-                listener.transformPose("/base_link", ros::Time(0), local_goal, local_goal.header.frame_id, local_goal_base_link);
+                listener.transformPose(ROBOT_FRAME, ros::Time(0), local_goal, local_goal.header.frame_id, local_goal_base_link);
                 goal_transformed = true;
             }catch(tf::TransformException ex){
                 std::cout << ex.what() << std::endl;

@@ -170,24 +170,16 @@ add_dependencies(lookup_table_generator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${ca
 # )
 target_link_libraries(lookup_table_generator_lib
   ${catkin_LIBRARIES}
-  trajectory_generator_diff_drive
-  motion_model_diff_drive
 )
 target_link_libraries(state_lattice_planner_lib
   ${catkin_LIBRARIES}
-  trajectory_generator_diff_drive
-  motion_model_diff_drive
 )
 target_link_libraries(state_lattice_planner
   ${catkin_LIBRARIES}
-  trajectory_generator_diff_drive
-  motion_model_diff_drive
   state_lattice_planner_lib
 )
 target_link_libraries(lookup_table_generator
   ${catkin_LIBRARIES}
-  trajectory_generator_diff_drive
-  motion_model_diff_drive
   lookup_table_generator_lib
 )
 
@@ -247,8 +239,6 @@ if(CATKIN_ENABLE_TESTING)
     )
     target_link_libraries(state_lattice_planner_test
         ${catkin_LIBRARIES}
-        motion_model_diff_drive
-        trajectory_generator_diff_drive
         lookup_table_generator_lib
         state_lattice_planner_lib
     )

@@ -120,6 +120,12 @@ void MotionModelDiffDrive::response_to_control_inputs(const State& state, const 
     double a = (_v - v) * _dt;
     a = std::max(std::min(a, MAX_ACCELERATION), -MAX_ACCELERATION);
     output.v = v + a * dt;
+
+    // additional curvature limitation
+    double yawrate = output.v * output.curvature;
+    if(fabs(yawrate) > MAX_YAWRATE){
+        output.curvature = MAX_YAWRATE / fabs(output.v) * (output.curvature > 0 ? 1 : -1);
+    }
 }
 
 void MotionModelDiffDrive::control_speed(const State& state, State& _state)
@@ -128,7 +134,7 @@ void MotionModelDiffDrive::control_speed(const State& state, State& _state)
     _state = state;
     double yawrate = _state.curvature * _state.v;
     if(fabs(yawrate) > MAX_YAWRATE){
-        _state.v = MAX_YAWRATE / _state.curvature * (state.v > 0 ? 1 : -1);
+        _state.v = MAX_YAWRATE / fabs(_state.curvature) * (state.v > 0 ? 1 : -1);
     }
 }
 

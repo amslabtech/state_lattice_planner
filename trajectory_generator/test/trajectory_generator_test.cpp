@@ -179,7 +179,7 @@ TEST(TestSuite, test9)
     tg.set_motion_param(1.0, 1.0, 1.0, 1.0);
     MotionModelDiffDrive::ControlParams output;
     MotionModelDiffDrive::VelocityParams init_v(0.0, 1.0, 1.0, 0.0, 1.0);
-    Eigen::Vector3d goal(1, 2, M_PI/2.0);
+    Eigen::Vector3d goal(0.5, 2, M_PI/2.0);
     MotionModelDiffDrive::ControlParams init_params(init_v, MotionModelDiffDrive::CurvatureParams(0.0, 1.0, 0.0, goal.segment(0, 2).norm()));
     MotionModelDiffDrive::Trajectory trajectory;
     std::cout << "generate optimized trajectory" << std::endl;

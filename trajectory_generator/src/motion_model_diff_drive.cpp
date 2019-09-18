@@ -119,7 +119,7 @@ void MotionModelDiffDrive::response_to_control_inputs(const State& state, const 
     output.curvature = std::max(std::min(_k, MAX_CURVATURE), -MAX_CURVATURE);
 
     // adjust output.v
-    // control_speed(output, output);
+    control_speed(output, output);
 
     double v = state.v;
     double _v = output.v;
@@ -138,10 +138,15 @@ void MotionModelDiffDrive::control_speed(const State& state, State& _state)
 {
     // speed control logic
     _state = state;
-    double yawrate = _state.curvature * _state.v;
-    if(fabs(yawrate) > MAX_YAWRATE){
-        _state.v = MAX_YAWRATE / fabs(_state.curvature) * (state.v > 0 ? 1 : -1);
-    }
+    double WHEEL_RADIUS = 0.125;
+    double TREAD =  0.5;
+    double MAX_WHEEL_ANGULAR_VELOCITY = 11.6;
+    _state.v = WHEEL_RADIUS * std::min(_state.v / WHEEL_RADIUS, MAX_WHEEL_ANGULAR_VELOCITY - 0.5 * fabs(_state.curvature) * TREAD / WHEEL_RADIUS) * (_state.v >= 0.0 ? 1 : -1);
+
+    // double yawrate = _state.curvature * _state.v;
+    // if(fabs(yawrate) > MAX_YAWRATE){
+    //     _state.v = MAX_YAWRATE / fabs(_state.curvature) * (state.v > 0 ? 1 : -1);
+    // }
 }
 
 void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlParams& control_param, Trajectory& trajectory)

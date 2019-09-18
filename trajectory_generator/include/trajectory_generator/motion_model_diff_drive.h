@@ -81,7 +81,7 @@ public:
     private:
     };
 
-    void set_param(const double, const double, const double, const double);
+    void set_param(const double, const double, const double, const double, const double, const double, const double);
     void generate_trajectory(const double, const ControlParams&, Trajectory&);
     void generate_last_state(const double, const double, const VelocityParams&, const double, const double, const double, Eigen::Vector3d&);
     void make_velocity_profile(const double, const VelocityParams&);
@@ -97,6 +97,9 @@ private:
     double MAX_D_CURVATURE;
     double MAX_CURVATURE;
     double MAX_ACCELERATION;
+    double MAX_WHEEL_ANGULAR_VELOCITY;
+    double WHEEL_RADIUS;
+    double TREAD;
 
     std::vector<double> v_profile;
     std::vector<double> s_profile;

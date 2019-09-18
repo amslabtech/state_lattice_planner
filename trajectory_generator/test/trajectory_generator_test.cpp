@@ -97,7 +97,7 @@ TEST(TestSuite, test5)
     ros::NodeHandle nh;
     Eigen::Vector3d goal(1, 2, -1.0472);
     TrajectoryGeneratorDiffDrive tg;
-    tg.set_motion_param(0.8, 1.0, 2.0, 1.0);
+    tg.set_motion_param(0.8, 1.0, 2.0, 1.0, 11.6, 0.125, 0.5);
     MotionModelDiffDrive::ControlParams output;
     MotionModelDiffDrive::VelocityParams init_v(0.0, 1.0, 0.8, 0.8, 1.0);
     MotionModelDiffDrive::ControlParams init_params(init_v, MotionModelDiffDrive::CurvatureParams(-0.8, 0, 0, goal.segment(0, 2).norm()));
@@ -176,7 +176,7 @@ TEST(TestSuite, test9)
 {
     ros::NodeHandle nh;
     TrajectoryGeneratorDiffDrive tg;
-    tg.set_motion_param(1.0, 1.0, 1.0, 1.0);
+    tg.set_motion_param(1.0, 1.0, 1.0, 1.0, 11.6, 0.125, 0.5);
     MotionModelDiffDrive::ControlParams output;
     MotionModelDiffDrive::VelocityParams init_v(0.0, 1.0, 1.0, 0.0, 1.0);
     Eigen::Vector3d goal(0.5, 2, M_PI/2.0);

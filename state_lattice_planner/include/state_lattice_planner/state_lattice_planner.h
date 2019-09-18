@@ -90,6 +90,9 @@ protected:
     double MAX_CURVATURE;
     double MAX_D_CURVATURE;
     double MAX_YAWRATE;
+    double MAX_WHEEL_ANGULAR_VELOCITY;
+    double WHEEL_RADIUS;
+    double TREAD;
     double IGNORABLE_OBSTACLE_RANGE;
     bool VERBOSE;
 

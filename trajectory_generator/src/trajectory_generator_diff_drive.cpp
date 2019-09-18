@@ -11,9 +11,9 @@ void TrajectoryGeneratorDiffDrive::set_optimization_param(const double dkm, cons
     h << dkm, dkf, dsf;
 }
 
-void TrajectoryGeneratorDiffDrive::set_motion_param(const double max_yawrate, const double max_curvature, const double max_d_curvature, const double max_acceleration)
+void TrajectoryGeneratorDiffDrive::set_motion_param(const double max_yawrate, const double max_curvature, const double max_d_curvature, const double max_acceleration, const double max_wheel_angular_velocity, const double wheel_radius, const double tread)
 {
-    model.set_param(max_yawrate, max_curvature, max_d_curvature, max_acceleration);
+    model.set_param(max_yawrate, max_curvature, max_d_curvature, max_acceleration, max_wheel_angular_velocity, wheel_radius, tread);
 }
 
 void TrajectoryGeneratorDiffDrive::set_verbose(bool verbose_)
@@ -104,7 +104,7 @@ void TrajectoryGeneratorDiffDrive::get_jacobian(const double dt, const MotionMod
      * h: (dkm, dkf, dsf)
      */
     //std::cout << "j start" << std::endl;
-    double start = ros::Time::now().toSec();
+    // double start = ros::Time::now().toSec();
     MotionModelDiffDrive::CurvatureParams curv = control.curv;
     Eigen::Vector3d x0;
     model.generate_last_state(dt, curv.sf, control.vel, curv.k0, curv.km - h(0), curv.kf, x0);

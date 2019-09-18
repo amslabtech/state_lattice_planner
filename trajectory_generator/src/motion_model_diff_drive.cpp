@@ -7,6 +7,9 @@ MotionModelDiffDrive::MotionModelDiffDrive()
     MAX_D_CURVATURE = 2.0;
     MAX_CURVATURE = 1.0;
     MAX_ACCELERATION = 1.0;
+    WHEEL_RADIUS = 0.125;
+    TREAD = 0.5;
+    MAX_WHEEL_ANGULAR_VELOCITY = 11.6;
 }
 
 MotionModelDiffDrive::State::State(double _x, double _y, double _yaw, double _v, double _curvature)
@@ -74,12 +77,15 @@ bool MotionModelDiffDrive::Trajectory::operator<(const Trajectory& another) cons
     return cost < another.cost;
 }
 
-void MotionModelDiffDrive::set_param(const double max_yawrate, const double max_curvature, const double max_d_curvature, const double max_acceleration)
+void MotionModelDiffDrive::set_param(const double max_yawrate, const double max_curvature, const double max_d_curvature, const double max_acceleration, const double max_wheel_angular_velocity, const double wheel_radius, const double tread)
 {
     MAX_YAWRATE = max_yawrate;
     MAX_CURVATURE = max_curvature;
     MAX_D_CURVATURE = max_d_curvature;
     MAX_ACCELERATION = max_acceleration;
+    MAX_WHEEL_ANGULAR_VELOCITY = max_wheel_angular_velocity;
+    WHEEL_RADIUS = wheel_radius;
+    TREAD = TREAD;
 }
 
 void MotionModelDiffDrive::update(const State& s, const double v, const double curv, const double dt, State& output_s)
@@ -138,9 +144,6 @@ void MotionModelDiffDrive::control_speed(const State& state, State& _state)
 {
     // speed control logic
     _state = state;
-    double WHEEL_RADIUS = 0.125;
-    double TREAD =  0.5;
-    double MAX_WHEEL_ANGULAR_VELOCITY = 11.6;
     _state.v = WHEEL_RADIUS * std::min(_state.v / WHEEL_RADIUS, MAX_WHEEL_ANGULAR_VELOCITY - 0.5 * fabs(_state.curvature) * TREAD / WHEEL_RADIUS) * (_state.v >= 0.0 ? 1 : -1);
 
     // double yawrate = _state.curvature * _state.v;

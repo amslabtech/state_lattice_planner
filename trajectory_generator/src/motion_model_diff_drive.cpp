@@ -192,7 +192,8 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlPar
 
 void MotionModelDiffDrive::generate_last_state(const double dt, const double trajectory_length, const VelocityParams& _vel, const double k0, const double km, const double kf, Eigen::Vector3d& output)
 {
-    //std::cout << "--- generate last state ---" << std::endl;
+    // std::cout << "--- generate last state ---" << std::endl;
+    // std::cout << k0 << ", " << km << ", " << kf << ", " << trajectory_length << std::endl;
     //double start = ros::Time::now().toSec();
     CurvatureParams curv(k0, km, kf, trajectory_length);
     VelocityParams vel = _vel;

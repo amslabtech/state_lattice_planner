@@ -15,9 +15,8 @@ StateLatticePlanner::StateLatticePlanner(void)
     local_nh.param("LOOKUP_TABLE_FILE_NAME", LOOKUP_TABLE_FILE_NAME, {std::string(std::getenv("HOME")) + "/lookup_table.csv"});
     local_nh.param("MAX_ITERATION", MAX_ITERATION, {100});
     local_nh.param("OPTIMIZATION_TOLERANCE", OPTIMIZATION_TOLERANCE, {0.1});
-    local_nh.param("MAX_CURVATURE", MAX_CURVATURE, {1.0});
-    local_nh.param("MAX_D_CURVATURE", MAX_D_CURVATURE, {2.0});
     local_nh.param("MAX_YAWRATE", MAX_YAWRATE, {0.8});
+    local_nh.param("MAX_D_YAWRATE", MAX_D_YAWRATE, {2.0});
     local_nh.param("MAX_WHEEL_ANGULAR_VELOCITY", MAX_WHEEL_ANGULAR_VELOCITY, {11.6});
     local_nh.param("WHEEL_RADIUS", WHEEL_RADIUS, {0.125});
     local_nh.param("TREAD", TREAD, {0.5});
@@ -36,9 +35,8 @@ StateLatticePlanner::StateLatticePlanner(void)
     std::cout << "LOOKUP_TABLE_FILE_NAME: " << LOOKUP_TABLE_FILE_NAME << std::endl;
     std::cout << "MAX_ITERATION: " << MAX_ITERATION << std::endl;
     std::cout << "OPTIMIZATION_TOLERANCE: " << OPTIMIZATION_TOLERANCE << std::endl;
-    std::cout << "MAX_CURVATURE: " << MAX_CURVATURE << std::endl;
-    std::cout << "MAX_D_CURVATURE: " << MAX_D_CURVATURE << std::endl;
     std::cout << "MAX_YAWRATE: " << MAX_YAWRATE << std::endl;
+    std::cout << "MAX_D_YAWRATE: " << MAX_D_YAWRATE << std::endl;
     std::cout << "MAX_WHEEL_ANGULAR_VELOCITY: " << MAX_WHEEL_ANGULAR_VELOCITY << std::endl;
     std::cout << "WHEEL_RADIUS: " << WHEEL_RADIUS << std::endl;
     std::cout << "TREAD: " << TREAD << std::endl;
@@ -248,16 +246,17 @@ bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
         double start = ros::Time::now().toSec();
         TrajectoryGeneratorDiffDrive tg;
         tg.set_verbose(VERBOSE);
-        tg.set_motion_param(MAX_YAWRATE, MAX_CURVATURE, MAX_D_CURVATURE, MAX_ACCELERATION, MAX_WHEEL_ANGULAR_VELOCITY, WHEEL_RADIUS, TREAD);
+        tg.set_motion_param(MAX_YAWRATE, MAX_D_YAWRATE, MAX_ACCELERATION, MAX_WHEEL_ANGULAR_VELOCITY, WHEEL_RADIUS, TREAD);
         MotionModelDiffDrive::ControlParams output;
         //std::cout << "v: " << velocity << ", " << "w: " << angular_velocity << std::endl;
         double _velocity = velocity;
-        double k0 = angular_velocity / _velocity;
-        if(fabs(_velocity) < 1e-3){
-            _velocity = 1e-3 * ((_velocity > 0) ? 1 : -1);
-            // cheat
-            k0 = 0;
-        }
+        // double k0 = angular_velocity / _velocity;
+        // if(fabs(_velocity) < 1e-3){
+        //     _velocity = 1e-3 * ((_velocity > 0) ? 1 : -1);
+        //     // cheat
+        //     k0 = 0;
+        // }
+        double k0 = angular_velocity;
 
         MotionModelDiffDrive::ControlParams param;
         get_optimized_param_from_lookup_table(boundary_state, velocity, k0, param);
@@ -495,6 +494,11 @@ void StateLatticePlanner::process(void)
                     pickup_trajectory(candidate_trajectories, goal, trajectory);
                     visualize_trajectory(trajectory, 1, 0, 0, selected_trajectory_pub);
                     std::cout << "pickup time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+
+                    // int size = trajectory.trajectory.size();
+                    // for(int i=0;i<size;i++){
+                    //     std::cout << trajectory.trajectory[i].transpose() << ", " << trajectory.velocities[i] << "[m/s], " << trajectory.angular_velocities[i] << "[rad/s]" << std::endl;
+                    // }
 
                     std::cout << "publish velocity" << std::endl;
                     geometry_msgs::Twist cmd_vel;

@@ -4,8 +4,7 @@ MotionModelDiffDrive::MotionModelDiffDrive()
 {
     // default setting
     MAX_YAWRATE = 0.8;
-    MAX_D_CURVATURE = 2.0;
-    MAX_CURVATURE = 1.0;
+    MAX_D_YAWRATE = 2.0;
     MAX_ACCELERATION = 1.0;
     WHEEL_RADIUS = 0.125;
     TREAD = 0.5;
@@ -77,11 +76,10 @@ bool MotionModelDiffDrive::Trajectory::operator<(const Trajectory& another) cons
     return cost < another.cost;
 }
 
-void MotionModelDiffDrive::set_param(const double max_yawrate, const double max_curvature, const double max_d_curvature, const double max_acceleration, const double max_wheel_angular_velocity, const double wheel_radius, const double tread)
+void MotionModelDiffDrive::set_param(const double max_yawrate, const double max_d_yawrate, const double max_acceleration, const double max_wheel_angular_velocity, const double wheel_radius, const double tread)
 {
     MAX_YAWRATE = max_yawrate;
-    MAX_CURVATURE = max_curvature;
-    MAX_D_CURVATURE = max_d_curvature;
+    MAX_D_YAWRATE = max_d_yawrate;
     MAX_ACCELERATION = max_acceleration;
     MAX_WHEEL_ANGULAR_VELOCITY = max_wheel_angular_velocity;
     WHEEL_RADIUS = wheel_radius;
@@ -118,10 +116,10 @@ void MotionModelDiffDrive::response_to_control_inputs(const State& state, const 
     double k = state.omega;
     double _k = output.omega;
     double dk = (_k - k) * _dt;
-    dk = std::max(std::min(dk, MAX_D_CURVATURE), -MAX_D_CURVATURE);
+    dk = std::max(std::min(dk, MAX_D_YAWRATE), -MAX_D_YAWRATE);
 
     _k += dk * dt;
-    output.omega = std::max(std::min(_k, MAX_CURVATURE), -MAX_CURVATURE);
+    output.omega = std::max(std::min(_k, MAX_YAWRATE), -MAX_YAWRATE);
 
     // adjust output.v
     control_speed(output, output);

@@ -11,9 +11,9 @@ void TrajectoryGeneratorDiffDrive::set_optimization_param(const double dkm, cons
     h << dkm, dkf, dsf;
 }
 
-void TrajectoryGeneratorDiffDrive::set_motion_param(const double max_yawrate, const double max_curvature, const double max_d_curvature, const double max_acceleration, const double max_wheel_angular_velocity, const double wheel_radius, const double tread)
+void TrajectoryGeneratorDiffDrive::set_motion_param(const double max_yawrate, const double max_d_yawrate, const double max_acceleration, const double max_wheel_angular_velocity, const double wheel_radius, const double tread)
 {
-    model.set_param(max_yawrate, max_curvature, max_d_curvature, max_acceleration, max_wheel_angular_velocity, wheel_radius, tread);
+    model.set_param(max_yawrate, max_d_yawrate, max_acceleration, max_wheel_angular_velocity, wheel_radius, tread);
 }
 
 void TrajectoryGeneratorDiffDrive::set_verbose(bool verbose_)

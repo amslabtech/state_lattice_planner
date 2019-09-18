@@ -87,9 +87,8 @@ protected:
     std::string LOOKUP_TABLE_FILE_NAME;
     int MAX_ITERATION;
     double OPTIMIZATION_TOLERANCE;
-    double MAX_CURVATURE;
-    double MAX_D_CURVATURE;
     double MAX_YAWRATE;
+    double MAX_D_YAWRATE;
     double MAX_WHEEL_ANGULAR_VELOCITY;
     double WHEEL_RADIUS;
     double TREAD;

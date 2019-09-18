@@ -18,9 +18,8 @@ LookupTableGenerator::LookupTableGenerator(void)
     local_nh.param("MAX_KAPPA", MAX_KAPPA, {1.0});
     local_nh.param("DELTA_KAPPA", DELTA_KAPPA, {0.2});
     local_nh.param("MAX_ACCELERATION", MAX_ACCELERATION, {1.0});
-    local_nh.param("MAX_CURVATURE", MAX_CURVATURE, {1.0});
-    local_nh.param("MAX_D_CURVATURE", MAX_D_CURVATURE, {2.0});
     local_nh.param("MAX_YAWRATE", MAX_YAWRATE, {0.8});
+    local_nh.param("MAX_D_YAWRATE", MAX_D_YAWRATE, {2.0});
     local_nh.param("MAX_WHEEL_ANGULAR_VELOCITY", MAX_WHEEL_ANGULAR_VELOCITY, {11.6});
     local_nh.param("WHEEL_RADIUS", WHEEL_RADIUS, {0.125});
     local_nh.param("TREAD", TREAD, {0.5});
@@ -40,9 +39,8 @@ LookupTableGenerator::LookupTableGenerator(void)
     std::cout << "MAX_KAPPA: " << MAX_KAPPA << std::endl;
     std::cout << "DELTA_KAPPA: " << DELTA_KAPPA << std::endl;
     std::cout << "MAX_ACCELERATION: " << MAX_ACCELERATION << std::endl;
-    std::cout << "MAX_CURVATURE: " << MAX_CURVATURE << std::endl;
-    std::cout << "MAX_D_CURVATURE: " << MAX_D_CURVATURE << std::endl;
     std::cout << "MAX_YAWRATE: " << MAX_YAWRATE << std::endl;
+    std::cout << "MAX_D_YAWRATE: " << MAX_D_YAWRATE << std::endl;
     std::cout << "MAX_WHEEL_ANGULAR_VELOCITY: " << MAX_WHEEL_ANGULAR_VELOCITY << std::endl;
     std::cout << "WHEEL_RADIUS: " << WHEEL_RADIUS << std::endl;
     std::cout << "TREAD: " << TREAD << std::endl;
@@ -110,7 +108,7 @@ std::string LookupTableGenerator::process(void)
                 MotionModelDiffDrive::ControlParams output;
                 MotionModelDiffDrive::Trajectory trajectory;
                 TrajectoryGeneratorDiffDrive tg;
-                tg.set_motion_param(MAX_YAWRATE, MAX_CURVATURE, MAX_D_CURVATURE, MAX_ACCELERATION, MAX_WHEEL_ANGULAR_VELOCITY, WHEEL_RADIUS, TREAD);
+                tg.set_motion_param(MAX_YAWRATE, MAX_D_YAWRATE, MAX_ACCELERATION, MAX_WHEEL_ANGULAR_VELOCITY, WHEEL_RADIUS, TREAD);
                 double cost = tg.generate_optimized_trajectory(state, init, 1e-1, 1e-1, 100, output, trajectory);
                 if(cost > 0){
                     std::cout << "successfully optimized" << std::endl;

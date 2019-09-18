@@ -261,11 +261,11 @@ bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
 
         MotionModelDiffDrive::ControlParams param;
         get_optimized_param_from_lookup_table(boundary_state, velocity, k0, param);
-        // std::cout << "v0: " << velocity << ", " << "k0: " << k0 << ", " << "km: " << param.curv.km << ", " << "kf: " << param.curv.kf << ", " << "sf: " << param.curv.sf << std::endl;
+        // std::cout << "v0: " << velocity << ", " << "k0: " << k0 << ", " << "km: " << param.omega.km << ", " << "kf: " << param.omega.kf << ", " << "sf: " << param.omega.sf << std::endl;
         //std::cout << "lookup table time " << count << ": " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
         MotionModelDiffDrive::ControlParams init(MotionModelDiffDrive::VelocityParams(velocity, MAX_ACCELERATION, target_velocity, target_velocity, MAX_ACCELERATION)
-                                               , MotionModelDiffDrive::CurvatureParams(k0, param.curv.km, param.curv.kf, param.curv.sf));
+                                               , MotionModelDiffDrive::AngularVelocityParams(k0, param.omega.km, param.omega.kf, param.omega.sf));
 
         MotionModelDiffDrive::Trajectory trajectory;
         // std::cout << boundary_state.transpose() << std::endl;
@@ -386,15 +386,15 @@ void StateLatticePlanner::load_lookup_table(void)
             StateWithControlParams param;
             auto it = splitted_data.begin();
             double v0 = *(it);
-            param.control.curv.k0 = *(++it);
+            param.control.omega.k0 = *(++it);
             double x = *(++it);
             double y = *(++it);
             double yaw = *(++it);
             param.state << x, y, yaw;
-            param.control.curv.km = *(++it);
-            param.control.curv.kf = *(++it);
-            param.control.curv.sf = *(++it);
-            lookup_table[v0][param.control.curv.k0].push_back(param);
+            param.control.omega.km = *(++it);
+            param.control.omega.kf = *(++it);
+            param.control.omega.sf = *(++it);
+            lookup_table[v0][param.control.omega.k0].push_back(param);
         }
         ifs.close();
     }else{

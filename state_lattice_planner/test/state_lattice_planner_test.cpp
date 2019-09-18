@@ -117,7 +117,7 @@ TEST(TestSuite, test5)
     double k0 = -0.1;
     MotionModelDiffDrive::ControlParams control;
     slp.get_optimized_param_from_lookup_table(goal, v0, k0, control);
-    std::cout << control.curv.k0 << ", " << control.curv.km << ", " << control.curv.kf << ", " << control.curv.sf << std::endl;
+    std::cout << control.omega.k0 << ", " << control.omega.km << ", " << control.omega.kf << ", " << control.omega.sf << std::endl;
 }
 
 TEST(TestSuite, test6)

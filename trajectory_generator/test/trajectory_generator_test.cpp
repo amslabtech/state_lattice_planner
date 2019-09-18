@@ -9,32 +9,32 @@
 TEST(TestSuite, test0)
 {
     ros::NodeHandle nh;
-    MotionModelDiffDrive::CurvatureParams curv(0, 0.5, 1.0, 5);
-    curv.calculate_spline();
+    MotionModelDiffDrive::AngularVelocityParams omega(0, 0.5, 1.0, 5);
+    omega.calculate_spline();
     MotionModelDiffDrive mm;
-    double cf = mm.calculate_cubic_function(0, curv.coeff_0_m);
+    double cf = mm.calculate_cubic_function(0, omega.coeff_0_m);
     EXPECT_NEAR(0, cf, 0.01);
-    cf = mm.calculate_cubic_function(2.5, curv.coeff_0_m);
+    cf = mm.calculate_cubic_function(2.5, omega.coeff_0_m);
     EXPECT_NEAR(0.5, cf, 0.01);
-    cf = mm.calculate_cubic_function(2.5, curv.coeff_m_f);
+    cf = mm.calculate_cubic_function(2.5, omega.coeff_m_f);
     EXPECT_NEAR(0.5, cf, 0.01);
-    cf = mm.calculate_cubic_function(5, curv.coeff_m_f);
+    cf = mm.calculate_cubic_function(5, omega.coeff_m_f);
     EXPECT_NEAR(1.0, cf, 0.01);
 }
 
 TEST(TestSuite, test1)
 {
     ros::NodeHandle nh;
-    MotionModelDiffDrive::CurvatureParams curv(0, -0.5, -1.0, 10);
-    curv.calculate_spline();
+    MotionModelDiffDrive::AngularVelocityParams omega(0, -0.5, -1.0, 10);
+    omega.calculate_spline();
     MotionModelDiffDrive mm;
-    double cf = mm.calculate_cubic_function(0, curv.coeff_0_m);
+    double cf = mm.calculate_cubic_function(0, omega.coeff_0_m);
     EXPECT_NEAR(0, cf, 0.01);
-    cf = mm.calculate_cubic_function(5, curv.coeff_0_m);
+    cf = mm.calculate_cubic_function(5, omega.coeff_0_m);
     EXPECT_NEAR(-0.5, cf, 0.01);
-    cf = mm.calculate_cubic_function(5, curv.coeff_m_f);
+    cf = mm.calculate_cubic_function(5, omega.coeff_m_f);
     EXPECT_NEAR(-0.5, cf, 0.01);
-    cf = mm.calculate_cubic_function(10, curv.coeff_m_f);
+    cf = mm.calculate_cubic_function(10, omega.coeff_m_f);
     EXPECT_NEAR(-1.0, cf, 0.01);
 }
 
@@ -43,9 +43,9 @@ TEST(TestSuite, test2)
     ros::NodeHandle nh;
     MotionModelDiffDrive mm;
     MotionModelDiffDrive::VelocityParams vel(0.5, 0.5, 1.0, 0.5, 0.5);
-    MotionModelDiffDrive::CurvatureParams curv(0.0, 0.0, 0.0, 5);
+    MotionModelDiffDrive::AngularVelocityParams omega(0.0, 0.0, 0.0, 5);
     MotionModelDiffDrive::Trajectory trajectory;
-    mm.generate_trajectory(0.01, MotionModelDiffDrive::ControlParams(vel, curv), trajectory);
+    mm.generate_trajectory(0.01, MotionModelDiffDrive::ControlParams(vel, omega), trajectory);
 
     EXPECT_NEAR(5, trajectory.trajectory.back()(0), 0.05);
     EXPECT_NEAR(0, trajectory.trajectory.back()(1), 0.05);
@@ -58,7 +58,7 @@ TEST(TestSuite, test3)
     TrajectoryGeneratorDiffDrive tg;
     MotionModelDiffDrive::ControlParams output;
     MotionModelDiffDrive::VelocityParams init_v(0.0, 0.5, 1.0, 0.5, 0.5);
-    MotionModelDiffDrive::ControlParams init_params(init_v, MotionModelDiffDrive::CurvatureParams(0, 0, 0.5, 5));
+    MotionModelDiffDrive::ControlParams init_params(init_v, MotionModelDiffDrive::AngularVelocityParams(0, 0, 0.5, 5));
     Eigen::Vector3d goal(5, 1, 1);
     MotionModelDiffDrive::Trajectory trajectory;
     std::cout << "generate optimized trajectory" << std::endl;
@@ -100,7 +100,7 @@ TEST(TestSuite, test5)
     tg.set_motion_param(0.8, 1.0, 2.0, 1.0, 11.6, 0.125, 0.5);
     MotionModelDiffDrive::ControlParams output;
     MotionModelDiffDrive::VelocityParams init_v(0.0, 1.0, 0.8, 0.8, 1.0);
-    MotionModelDiffDrive::ControlParams init_params(init_v, MotionModelDiffDrive::CurvatureParams(-0.8, 0, 0, goal.segment(0, 2).norm()));
+    MotionModelDiffDrive::ControlParams init_params(init_v, MotionModelDiffDrive::AngularVelocityParams(-0.8, 0, 0, goal.segment(0, 2).norm()));
     MotionModelDiffDrive::Trajectory trajectory;
     std::cout << "generate optimized trajectory" << std::endl;
     double start = ros::Time::now().toSec();
@@ -118,16 +118,16 @@ TEST(TestSuite, test5)
 TEST(TestSuite, test6)
 {
     ros::NodeHandle nh;
-    MotionModelDiffDrive::CurvatureParams curv(0, 0.5, 1.0, -5);
-    curv.calculate_spline();
+    MotionModelDiffDrive::AngularVelocityParams omega(0, 0.5, 1.0, -5);
+    omega.calculate_spline();
     MotionModelDiffDrive mm;
-    double cf = mm.calculate_cubic_function(0, curv.coeff_0_m);
+    double cf = mm.calculate_cubic_function(0, omega.coeff_0_m);
     EXPECT_NEAR(0, cf, 0.01);
-    cf = mm.calculate_cubic_function(-2.5, curv.coeff_0_m);
+    cf = mm.calculate_cubic_function(-2.5, omega.coeff_0_m);
     EXPECT_NEAR(0.5, cf, 0.01);
-    cf = mm.calculate_cubic_function(-2.5, curv.coeff_m_f);
+    cf = mm.calculate_cubic_function(-2.5, omega.coeff_m_f);
     EXPECT_NEAR(0.5, cf, 0.01);
-    cf = mm.calculate_cubic_function(-5, curv.coeff_m_f);
+    cf = mm.calculate_cubic_function(-5, omega.coeff_m_f);
     EXPECT_NEAR(1.0, cf, 0.01);
 }
 
@@ -136,9 +136,9 @@ TEST(TestSuite, test7)
     ros::NodeHandle nh;
     MotionModelDiffDrive mm;
     MotionModelDiffDrive::VelocityParams vel(0.0, 0.5, -0.5, 0.0, 0.5);
-    MotionModelDiffDrive::CurvatureParams curv(0.0, 0.0, 0.0, -5);
+    MotionModelDiffDrive::AngularVelocityParams omega(0.0, 0.0, 0.0, -5);
     MotionModelDiffDrive::Trajectory trajectory;
-    mm.generate_trajectory(0.1, MotionModelDiffDrive::ControlParams(vel, curv), trajectory);
+    mm.generate_trajectory(0.1, MotionModelDiffDrive::ControlParams(vel, omega), trajectory);
 
     EXPECT_NEAR(-5, trajectory.trajectory.back()(0), 0.05);
     EXPECT_NEAR(0, trajectory.trajectory.back()(1), 0.05);
@@ -152,7 +152,7 @@ TEST(TestSuite, test8)
     MotionModelDiffDrive::ControlParams output;
     MotionModelDiffDrive::VelocityParams init_v(0.0, 0.5, -1.0, 0.0, 0.5);
     Eigen::Vector3d goal(-5, 1, -0.5);
-    MotionModelDiffDrive::ControlParams init_params(init_v, MotionModelDiffDrive::CurvatureParams(0, 0, 0, goal.segment(0, 2).norm()));
+    MotionModelDiffDrive::ControlParams init_params(init_v, MotionModelDiffDrive::AngularVelocityParams(0, 0, 0, goal.segment(0, 2).norm()));
     MotionModelDiffDrive::Trajectory trajectory;
     std::cout << "generate optimized trajectory" << std::endl;
     double start = ros::Time::now().toSec();
@@ -180,7 +180,7 @@ TEST(TestSuite, test9)
     MotionModelDiffDrive::ControlParams output;
     MotionModelDiffDrive::VelocityParams init_v(0.0, 1.0, 1.0, 0.0, 1.0);
     Eigen::Vector3d goal(0.5, 2, M_PI/2.0);
-    MotionModelDiffDrive::ControlParams init_params(init_v, MotionModelDiffDrive::CurvatureParams(0.0, 1.0, 0.0, goal.segment(0, 2).norm()));
+    MotionModelDiffDrive::ControlParams init_params(init_v, MotionModelDiffDrive::AngularVelocityParams(0.0, 1.0, 0.0, goal.segment(0, 2).norm()));
     MotionModelDiffDrive::Trajectory trajectory;
     std::cout << "generate optimized trajectory" << std::endl;
     double start = ros::Time::now().toSec();

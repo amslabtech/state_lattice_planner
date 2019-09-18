@@ -19,7 +19,7 @@ public:
         double y;// robot posiiton y
         double yaw;// robot orientation yaw
         double v;// robot linear velocity
-        double curvature;// trajectory curvature
+        double omega;// robot angular velocity
     private:
     };
 
@@ -38,11 +38,11 @@ public:
     private:
     };
 
-    class CurvatureParams
+    class AngularVelocityParams
     {
     public:
-        CurvatureParams(void);
-        CurvatureParams(double, double, double, double);
+        AngularVelocityParams(void);
+        AngularVelocityParams(double, double, double, double);
 
         void calculate_spline(void);
 
@@ -59,10 +59,10 @@ public:
     {
     public:
         ControlParams(void);
-        ControlParams(const VelocityParams&, const CurvatureParams&);
+        ControlParams(const VelocityParams&, const AngularVelocityParams&);
 
         VelocityParams vel;
-        CurvatureParams curv;
+        AngularVelocityParams omega;
     private:
     };
 

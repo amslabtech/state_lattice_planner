@@ -12,13 +12,13 @@ TEST(TestSuite, test0)
     MotionModelDiffDrive::CurvatureParams curv(0, 0.5, 1.0, 5);
     curv.calculate_spline();
     MotionModelDiffDrive mm;
-    double cf = mm.calculate_quadratic_function(0, curv.coeff_0_m);
+    double cf = mm.calculate_cubic_function(0, curv.coeff_0_m);
     EXPECT_NEAR(0, cf, 0.01);
-    cf = mm.calculate_quadratic_function(2.5, curv.coeff_0_m);
+    cf = mm.calculate_cubic_function(2.5, curv.coeff_0_m);
     EXPECT_NEAR(0.5, cf, 0.01);
-    cf = mm.calculate_quadratic_function(2.5-5.0/2.0, curv.coeff_m_f);
+    cf = mm.calculate_cubic_function(2.5, curv.coeff_m_f);
     EXPECT_NEAR(0.5, cf, 0.01);
-    cf = mm.calculate_quadratic_function(5-5.0/2.0, curv.coeff_m_f);
+    cf = mm.calculate_cubic_function(5, curv.coeff_m_f);
     EXPECT_NEAR(1.0, cf, 0.01);
 }
 
@@ -28,13 +28,13 @@ TEST(TestSuite, test1)
     MotionModelDiffDrive::CurvatureParams curv(0, -0.5, -1.0, 10);
     curv.calculate_spline();
     MotionModelDiffDrive mm;
-    double cf = mm.calculate_quadratic_function(0, curv.coeff_0_m);
+    double cf = mm.calculate_cubic_function(0, curv.coeff_0_m);
     EXPECT_NEAR(0, cf, 0.01);
-    cf = mm.calculate_quadratic_function(5, curv.coeff_0_m);
+    cf = mm.calculate_cubic_function(5, curv.coeff_0_m);
     EXPECT_NEAR(-0.5, cf, 0.01);
-    cf = mm.calculate_quadratic_function(5-10.0/2.0, curv.coeff_m_f);
+    cf = mm.calculate_cubic_function(5, curv.coeff_m_f);
     EXPECT_NEAR(-0.5, cf, 0.01);
-    cf = mm.calculate_quadratic_function(10-10.0/2.0, curv.coeff_m_f);
+    cf = mm.calculate_cubic_function(10, curv.coeff_m_f);
     EXPECT_NEAR(-1.0, cf, 0.01);
 }
 
@@ -121,13 +121,13 @@ TEST(TestSuite, test6)
     MotionModelDiffDrive::CurvatureParams curv(0, 0.5, 1.0, -5);
     curv.calculate_spline();
     MotionModelDiffDrive mm;
-    double cf = mm.calculate_quadratic_function(0, curv.coeff_0_m);
+    double cf = mm.calculate_cubic_function(0, curv.coeff_0_m);
     EXPECT_NEAR(0, cf, 0.01);
-    cf = mm.calculate_quadratic_function(-2.5, curv.coeff_0_m);
+    cf = mm.calculate_cubic_function(-2.5, curv.coeff_0_m);
     EXPECT_NEAR(0.5, cf, 0.01);
-    cf = mm.calculate_quadratic_function(-2.5-(-5.0/2.0), curv.coeff_m_f);
+    cf = mm.calculate_cubic_function(-2.5, curv.coeff_m_f);
     EXPECT_NEAR(0.5, cf, 0.01);
-    cf = mm.calculate_quadratic_function(-5-(-5.0/2.0), curv.coeff_m_f);
+    cf = mm.calculate_cubic_function(-5, curv.coeff_m_f);
     EXPECT_NEAR(1.0, cf, 0.01);
 }
 
@@ -178,9 +178,9 @@ TEST(TestSuite, test9)
     TrajectoryGeneratorDiffDrive tg;
     tg.set_motion_param(1.0, 1.0, 1.0, 1.0);
     MotionModelDiffDrive::ControlParams output;
-    MotionModelDiffDrive::VelocityParams init_v(0.5, 0.5, 1.0, 0.0, 0.5);
-    Eigen::Vector3d goal(0, 5, M_PI/2.0);
-    MotionModelDiffDrive::ControlParams init_params(init_v, MotionModelDiffDrive::CurvatureParams(0.1, 0.5, 0.0, goal.segment(0, 2).norm()));
+    MotionModelDiffDrive::VelocityParams init_v(0.0, 1.0, 1.0, 0.0, 1.0);
+    Eigen::Vector3d goal(1, 2, M_PI/2.0);
+    MotionModelDiffDrive::ControlParams init_params(init_v, MotionModelDiffDrive::CurvatureParams(0.0, 1.0, 0.0, goal.segment(0, 2).norm()));
     MotionModelDiffDrive::Trajectory trajectory;
     std::cout << "generate optimized trajectory" << std::endl;
     double start = ros::Time::now().toSec();

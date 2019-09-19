@@ -117,12 +117,12 @@ std::string LookupTableGenerator::process(void)
                 // std::cout << init.omega.k0 << ", " << init.omega.km << ", " << init.omega.kf << ", " << init.omega.sf << std::endl;
                 double cost = tg.generate_optimized_trajectory(state, init, 1e-1, 1e-1, 100, output, trajectory);
                 if(cost > 0){
-                    std::cout << "successfully optimized" << std::endl;
+                    std::cout << "\033[032msuccessfully optimized\033[0m" << std::endl;
                     std::stringstream data;
                     data << v0 << "," << k0 << "," << trajectory.trajectory.back()(0) << "," << trajectory.trajectory.back()(1) << "," << trajectory.trajectory.back()(2) << "," << output.omega.km << "," << output.omega.kf << "," << output.omega.sf << "\n";
                     output_data += data.str();
                 }else{
-                    std::cout << "failed to optimize trajectory" << std::endl;
+                    std::cout << "\033[031mfailed to optimize trajectory\033[0m" << std::endl;
                 }
             }
         }
@@ -135,8 +135,9 @@ void LookupTableGenerator::save(std::string& data)
     std::ofstream ofs(LOOKUP_TABLE_FILE_NAME);
     if(ofs){
         ofs << data;
-        //ofs.close();
+        ofs.close();
         std::cout << "lookup table saved as " << LOOKUP_TABLE_FILE_NAME << std::endl;
+        exit(0);
     }else{
         std::cout << "cannot open file" << std::endl;
         exit(-1);

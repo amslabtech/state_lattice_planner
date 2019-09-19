@@ -10,6 +10,7 @@
 
 #include "trajectory_generator/motion_model_diff_drive.h"
 #include "trajectory_generator/trajectory_generator_diff_drive.h"
+#include "state_lattice_planner/lookup_table_utils.h"
 
 class LookupTableGenerator
 {
@@ -45,6 +46,7 @@ private:
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;
 
+    LookupTableUtils::LookupTable lookup_table;
 };
 
 #endif// __LOOKUP_TABLE_GENERATOR_H

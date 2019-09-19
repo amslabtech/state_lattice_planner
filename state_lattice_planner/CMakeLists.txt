@@ -134,6 +134,7 @@ include_directories(
 # )
 add_library(lookup_table_generator_lib
   src/lookup_table_generator.cpp
+  src/lookup_table_utils.cpp
 )
 add_library(state_lattice_planner_lib
   src/state_lattice_planner.cpp

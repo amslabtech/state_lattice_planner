@@ -2,6 +2,7 @@
 
 #include <ros/ros.h>
 
+#include "state_lattice_planner/lookup_table_utils.h"
 #include "state_lattice_planner/lookup_table_generator.h"
 #include "state_lattice_planner/state_lattice_planner.h"
 
@@ -106,18 +107,6 @@ TEST(TestSuite, test4)
         std::cout << trajectory.velocities[i] << "[m/s]" << trajectory.angular_velocities[i] << "[rad/s]" << std::endl;
     }
     EXPECT_LT((goal.segment(0, 2) - trajectory.trajectory.back().segment(0, 2)).norm(), 0.2);
-}
-
-TEST(TestSuite, test5)
-{
-    StateLatticePlanner slp;
-    slp.load_lookup_table();
-    Eigen::Vector3d goal(3, 1, 0.5);
-    double v0 = 0.5;
-    double k0 = -0.1;
-    MotionModelDiffDrive::ControlParams control;
-    slp.get_optimized_param_from_lookup_table(goal, v0, k0, control);
-    std::cout << control.omega.k0 << ", " << control.omega.km << ", " << control.omega.kf << ", " << control.omega.sf << std::endl;
 }
 
 TEST(TestSuite, test6)

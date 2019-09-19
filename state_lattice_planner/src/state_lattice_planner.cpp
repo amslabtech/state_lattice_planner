@@ -59,7 +59,7 @@ StateLatticePlanner::StateLatticePlanner(void)
     local_map_updated = false;
     odom_updated = false;
 
-    load_lookup_table();
+    LookupTableUtils::load_lookup_table(LOOKUP_TABLE_FILE_NAME, lookup_table);
 }
 
 StateLatticePlanner::SamplingParams::SamplingParams(void)
@@ -99,11 +99,6 @@ StateLatticePlanner::SamplingParams::SamplingParams(const int _n_p, const int _n
     max_psi = _max_psi;
     min_psi = -_max_psi;
     span_psi = max_psi - min_psi;
-}
-
-StateLatticePlanner::StateWithControlParams::StateWithControlParams(void)
-{
-
 }
 
 void StateLatticePlanner::local_goal_callback(const geometry_msgs::PoseStampedConstPtr& msg)
@@ -259,7 +254,7 @@ bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
         double k0 = angular_velocity;
 
         MotionModelDiffDrive::ControlParams param;
-        get_optimized_param_from_lookup_table(boundary_state, velocity, k0, param);
+        LookupTableUtils::get_optimized_param_from_lookup_table(lookup_table, boundary_state, velocity, k0, param);
         // std::cout << "v0: " << velocity << ", " << "k0: " << k0 << ", " << "km: " << param.omega.km << ", " << "kf: " << param.omega.kf << ", " << "sf: " << param.omega.sf << std::endl;
         //std::cout << "lookup table time " << count << ": " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
@@ -357,84 +352,6 @@ bool StateLatticePlanner::pickup_trajectory(const std::vector<MotionModelDiffDri
         return false;
     }
     return true;
-}
-
-void StateLatticePlanner::load_lookup_table(void)
-{
-    lookup_table.clear();
-    std::cout << "loading lookup table from " << LOOKUP_TABLE_FILE_NAME << std::endl;
-    std::ifstream ifs(LOOKUP_TABLE_FILE_NAME);
-    if(ifs){
-        bool first_line_flag = true;
-        while(!ifs.eof()){
-            std::string data;
-            std::getline(ifs, data);
-            if(data == ""){
-                continue;
-            }
-            if(first_line_flag){
-                first_line_flag = false;
-                continue;
-            }
-            std::istringstream stream(data);
-            std::vector<double> splitted_data;
-            std::string buffer;
-            while(std::getline(stream, buffer, ',')){
-                splitted_data.push_back(std::stod(buffer));
-            }
-            StateWithControlParams param;
-            auto it = splitted_data.begin();
-            double v0 = *(it);
-            param.control.omega.k0 = *(++it);
-            double x = *(++it);
-            double y = *(++it);
-            double yaw = *(++it);
-            param.state << x, y, yaw;
-            param.control.omega.km = *(++it);
-            param.control.omega.kf = *(++it);
-            param.control.omega.sf = *(++it);
-            lookup_table[v0][param.control.omega.k0].push_back(param);
-        }
-        ifs.close();
-    }else{
-        std::cout << "\033[91mERROR: cannot open file\033[00m" << std::endl;
-        exit(-1);
-    }
-}
-
-void StateLatticePlanner::get_optimized_param_from_lookup_table(const Eigen::Vector3d goal, const double v0, const double k0, MotionModelDiffDrive::ControlParams& param)
-{
-    double min_v_diff = 1e3;
-    double v = 0;
-    for(const auto& v_data : lookup_table){
-        double _v = v_data.first;
-        double diff = fabs(_v - v0);
-        if(diff < min_v_diff){
-            min_v_diff = diff;
-            v = _v;
-        }
-    }
-    double min_k_diff = 1e3;
-    double k = 0;
-    for(const auto& k_data : lookup_table[v]){
-        double _k = k_data.first;
-        double diff = fabs(_k - k0);
-        if(diff < min_k_diff){
-            min_k_diff = diff;
-            k = _k;
-        }
-    }
-    double min_cost = 1e3;
-    StateWithControlParams _param;
-    for(const auto& data : lookup_table[v][k]){
-        // sqrt(x^2 + y^2 + yaw^2)
-        double cost = (goal - data.state).norm();
-        if(cost < min_cost){
-            min_cost = cost;
-            _param = data;
-        }
-    }
-    param = _param.control;
 }
 
 void StateLatticePlanner::process(void)

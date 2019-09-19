@@ -137,6 +137,7 @@ add_library(lookup_table_generator_lib
 )
 add_library(state_lattice_planner_lib
   src/state_lattice_planner.cpp
+  src/lookup_table_utils.cpp
 )
 
 ## Add cmake target dependencies of the library

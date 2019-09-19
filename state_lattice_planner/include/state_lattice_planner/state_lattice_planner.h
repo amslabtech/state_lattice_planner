@@ -19,6 +19,7 @@
 
 #include <trajectory_generator/motion_model_diff_drive.h>
 #include <trajectory_generator/trajectory_generator_diff_drive.h>
+#include "state_lattice_planner/lookup_table_utils.h"
 
 class StateLatticePlanner
 {
@@ -39,17 +40,6 @@ public:
         double max_psi;// max heading angle
         double min_psi;// min trajectories angle
         double span_psi;// max - min psi
-    private:
-    };
-
-    /// for lookup table
-    class StateWithControlParams
-    {
-    public:
-        StateWithControlParams(void);
-
-        Eigen::Vector3d state;// x, y, yaw
-        MotionModelDiffDrive::ControlParams control;
     private:
     };
 
@@ -113,7 +103,7 @@ protected:
     bool local_map_updated;
     bool odom_updated;
     SamplingParams sampling_params;
-    std::map<double, std::map<double, std::vector<StateWithControlParams> > > lookup_table;
+    LookupTableUtils::LookupTable lookup_table;
 };
 
 #endif //__STATE_LATTICE_PLANNER_H

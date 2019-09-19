@@ -18,9 +18,11 @@ LookupTableGenerator::LookupTableGenerator(void)
     local_nh.param("MAX_KAPPA", MAX_KAPPA, {1.0});
     local_nh.param("DELTA_KAPPA", DELTA_KAPPA, {0.2});
     local_nh.param("MAX_ACCELERATION", MAX_ACCELERATION, {1.0});
-    local_nh.param("MAX_CURVATURE", MAX_CURVATURE, {1.0});
-    local_nh.param("MAX_D_CURVATURE", MAX_D_CURVATURE, {2.0});
     local_nh.param("MAX_YAWRATE", MAX_YAWRATE, {0.8});
+    local_nh.param("MAX_D_YAWRATE", MAX_D_YAWRATE, {2.0});
+    local_nh.param("MAX_WHEEL_ANGULAR_VELOCITY", MAX_WHEEL_ANGULAR_VELOCITY, {11.6});
+    local_nh.param("WHEEL_RADIUS", WHEEL_RADIUS, {0.125});
+    local_nh.param("TREAD", TREAD, {0.5});
 
     std::cout << "MIN_X: " << MIN_X << std::endl;
     std::cout << "MAX_X: " << MAX_X << std::endl;
@@ -37,9 +39,11 @@ LookupTableGenerator::LookupTableGenerator(void)
     std::cout << "MAX_KAPPA: " << MAX_KAPPA << std::endl;
     std::cout << "DELTA_KAPPA: " << DELTA_KAPPA << std::endl;
     std::cout << "MAX_ACCELERATION: " << MAX_ACCELERATION << std::endl;
-    std::cout << "MAX_CURVATURE: " << MAX_CURVATURE << std::endl;
-    std::cout << "MAX_D_CURVATURE: " << MAX_D_CURVATURE << std::endl;
     std::cout << "MAX_YAWRATE: " << MAX_YAWRATE << std::endl;
+    std::cout << "MAX_D_YAWRATE: " << MAX_D_YAWRATE << std::endl;
+    std::cout << "MAX_WHEEL_ANGULAR_VELOCITY: " << MAX_WHEEL_ANGULAR_VELOCITY << std::endl;
+    std::cout << "WHEEL_RADIUS: " << WHEEL_RADIUS << std::endl;
+    std::cout << "TREAD: " << TREAD << std::endl;
 }
 
 std::string LookupTableGenerator::process(void)
@@ -100,16 +104,16 @@ std::string LookupTableGenerator::process(void)
                 std::cout << "distance: " << distance << std::endl;
                 double target_velocity = get_target_velocity(state);
                 MotionModelDiffDrive::VelocityParams init_v(v0, MAX_ACCELERATION, target_velocity, target_velocity, MAX_ACCELERATION);
-                MotionModelDiffDrive::ControlParams init(init_v, MotionModelDiffDrive::CurvatureParams(k0, 0, 0, distance));
+                MotionModelDiffDrive::ControlParams init(init_v, MotionModelDiffDrive::AngularVelocityParams(k0, 0, 0, distance));
                 MotionModelDiffDrive::ControlParams output;
                 MotionModelDiffDrive::Trajectory trajectory;
                 TrajectoryGeneratorDiffDrive tg;
-                tg.set_motion_param(MAX_YAWRATE, MAX_CURVATURE, MAX_D_CURVATURE, MAX_ACCELERATION);
+                tg.set_motion_param(MAX_YAWRATE, MAX_D_YAWRATE, MAX_ACCELERATION, MAX_WHEEL_ANGULAR_VELOCITY, WHEEL_RADIUS, TREAD);
                 double cost = tg.generate_optimized_trajectory(state, init, 1e-1, 1e-1, 100, output, trajectory);
                 if(cost > 0){
                     std::cout << "successfully optimized" << std::endl;
                     std::stringstream data;
-                    data << v0 << "," << k0 << "," << trajectory.trajectory.back()(0) << "," << trajectory.trajectory.back()(1) << "," << trajectory.trajectory.back()(2) << "," << output.curv.km << "," << output.curv.kf << "," << output.curv.sf << "\n";
+                    data << v0 << "," << k0 << "," << trajectory.trajectory.back()(0) << "," << trajectory.trajectory.back()(1) << "," << trajectory.trajectory.back()(2) << "," << output.omega.km << "," << output.omega.kf << "," << output.omega.sf << "\n";
                     output_data += data.str();
                 }else{
                     std::cout << "failed to optimize trajectory" << std::endl;

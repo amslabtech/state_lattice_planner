@@ -4,18 +4,20 @@ MotionModelDiffDrive::MotionModelDiffDrive()
 {
     // default setting
     MAX_YAWRATE = 0.8;
-    MAX_D_CURVATURE = 2.0;
-    MAX_CURVATURE = 1.0;
+    MAX_D_YAWRATE = 2.0;
     MAX_ACCELERATION = 1.0;
+    WHEEL_RADIUS = 0.125;
+    TREAD = 0.5;
+    MAX_WHEEL_ANGULAR_VELOCITY = 11.6;
 }
 
-MotionModelDiffDrive::State::State(double _x, double _y, double _yaw, double _v, double _curvature)
+MotionModelDiffDrive::State::State(double _x, double _y, double _yaw, double _v, double _omega)
 {
     x = _x;
     y = _y;
     yaw = _yaw;
     v = _v;
-    curvature = _curvature;
+    omega = _omega;
 }
 
 MotionModelDiffDrive::VelocityParams::VelocityParams(void)
@@ -37,20 +39,20 @@ MotionModelDiffDrive::VelocityParams::VelocityParams(double _v0, double _a0, dou
     time = 0;
 }
 
-MotionModelDiffDrive::CurvatureParams::CurvatureParams(void)
+MotionModelDiffDrive::AngularVelocityParams::AngularVelocityParams(void)
 {
-    coeff_0_m = Eigen::Vector3d::Zero();
-    coeff_m_f = Eigen::Vector3d::Zero();
+    coeff_0_m = Eigen::Matrix<double, 4, 1>::Zero();
+    coeff_m_f = Eigen::Matrix<double, 4, 1>::Zero();
 }
 
-MotionModelDiffDrive::CurvatureParams::CurvatureParams(double _k0, double _km, double _kf, double _sf)
+MotionModelDiffDrive::AngularVelocityParams::AngularVelocityParams(double _k0, double _km, double _kf, double _sf)
 {
     k0 = _k0;
     km = _km;
     kf = _kf;
     sf = _sf;
-    coeff_0_m = Eigen::Vector3d::Zero();
-    coeff_m_f = Eigen::Vector3d::Zero();
+    coeff_0_m = Eigen::Matrix<double, 4, 1>::Zero();
+    coeff_m_f = Eigen::Matrix<double, 4, 1>::Zero();
 }
 
 MotionModelDiffDrive::ControlParams::ControlParams(void)
@@ -58,10 +60,10 @@ MotionModelDiffDrive::ControlParams::ControlParams(void)
 
 }
 
-MotionModelDiffDrive::ControlParams::ControlParams(const VelocityParams& _vel, const CurvatureParams& _curv)
+MotionModelDiffDrive::ControlParams::ControlParams(const VelocityParams& _vel, const AngularVelocityParams& _omega)
 {
     vel = _vel;
-    curv = _curv;
+    omega = _omega;
 }
 
 MotionModelDiffDrive::Trajectory::Trajectory(void)
@@ -74,25 +76,27 @@ bool MotionModelDiffDrive::Trajectory::operator<(const Trajectory& another) cons
     return cost < another.cost;
 }
 
-void MotionModelDiffDrive::set_param(const double max_yawrate, const double max_curvature, const double max_d_curvature, const double max_acceleration)
+void MotionModelDiffDrive::set_param(const double max_yawrate, const double max_d_yawrate, const double max_acceleration, const double max_wheel_angular_velocity, const double wheel_radius, const double tread)
 {
     MAX_YAWRATE = max_yawrate;
-    MAX_CURVATURE = max_curvature;
-    MAX_D_CURVATURE = max_d_curvature;
+    MAX_D_YAWRATE = max_d_yawrate;
     MAX_ACCELERATION = max_acceleration;
+    MAX_WHEEL_ANGULAR_VELOCITY = max_wheel_angular_velocity;
+    WHEEL_RADIUS = wheel_radius;
+    TREAD = TREAD;
 }
 
-void MotionModelDiffDrive::update(const State& s, const double v, const double curv, const double dt, State& output_s)
+void MotionModelDiffDrive::update(const State& s, const double v, const double omega, const double dt, State& output_s)
 {
     double vdt = v * dt;
     output_s.x = s.x + vdt * cos(s.yaw);
     output_s.y = s.y + vdt * sin(s.yaw);
-    output_s.yaw = s.yaw + curv * vdt;
+    output_s.yaw = s.yaw + omega * dt;
     if(output_s.yaw < -M_PI || output_s.yaw > M_PI){
         output_s.yaw = atan2(sin(output_s.yaw), cos(output_s.yaw));
     }
     output_s.v = v;
-    output_s.curvature = curv;
+    output_s.omega = omega;
     response_to_control_inputs(s, dt, output_s);
 }
 
@@ -101,16 +105,21 @@ double MotionModelDiffDrive::calculate_quadratic_function(const double x, const 
     return coeff(0) * x * x + coeff(1) * x + coeff(2);
 }
 
+double MotionModelDiffDrive::calculate_cubic_function(const double x, const Eigen::Matrix<double, 4, 1>& coeff)
+{
+    return coeff(0) * x * x * x + coeff(1) * x * x + coeff(2) * x + coeff(3);
+}
+
 void MotionModelDiffDrive::response_to_control_inputs(const State& state, const double dt, State& output)
 {
     double _dt = 1.0 / dt;
-    double k = state.curvature;
-    double _k = output.curvature;
+    double k = state.omega;
+    double _k = output.omega;
     double dk = (_k - k) * _dt;
-    dk = std::max(std::min(dk, MAX_D_CURVATURE), -MAX_D_CURVATURE);
+    dk = std::max(std::min(dk, MAX_D_YAWRATE), -MAX_D_YAWRATE);
 
     _k += dk * dt;
-    output.curvature = std::max(std::min(_k, MAX_CURVATURE), -MAX_CURVATURE);
+    output.omega = std::max(std::min(_k, MAX_YAWRATE), -MAX_YAWRATE);
 
     // adjust output.v
     control_speed(output, output);
@@ -121,45 +130,48 @@ void MotionModelDiffDrive::response_to_control_inputs(const State& state, const 
     a = std::max(std::min(a, MAX_ACCELERATION), -MAX_ACCELERATION);
     output.v = v + a * dt;
 
-    // additional curvature limitation
-    double yawrate = output.v * output.curvature;
-    if(fabs(yawrate) > MAX_YAWRATE){
-        output.curvature = MAX_YAWRATE / fabs(output.v) * (output.curvature > 0 ? 1 : -1);
-    }
+    // additional omega limitation
+    // double yawrate = output.v * output.omega;
+    // if(fabs(yawrate) > MAX_YAWRATE){
+    //     output.omega = MAX_YAWRATE / fabs(output.v) * (output.omega > 0 ? 1 : -1);
+    // }
 }
 
 void MotionModelDiffDrive::control_speed(const State& state, State& _state)
 {
     // speed control logic
     _state = state;
-    double yawrate = _state.curvature * _state.v;
-    if(fabs(yawrate) > MAX_YAWRATE){
-        _state.v = MAX_YAWRATE / fabs(_state.curvature) * (state.v > 0 ? 1 : -1);
-    }
+    _state.v = WHEEL_RADIUS * std::min(fabs(_state.v) / WHEEL_RADIUS, MAX_WHEEL_ANGULAR_VELOCITY - 0.5 * fabs(_state.omega) * TREAD / WHEEL_RADIUS) * (_state.v >= 0.0 ? 1 : -1);
+
+    // double yawrate = _state.omega * _state.v;
+    // if(fabs(yawrate) > MAX_YAWRATE){
+    //     _state.v = MAX_YAWRATE / fabs(_state.omega) * (state.v > 0 ? 1 : -1);
+    // }
 }
 
 void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlParams& control_param, Trajectory& trajectory)
 {
     // std::cout << "gen start" << std::endl;
-    double start = ros::Time::now().toSec();
-    CurvatureParams curv = control_param.curv;
+    // double start = ros::Time::now().toSec();
+    AngularVelocityParams omega = control_param.omega;
     VelocityParams vel = control_param.vel;
 
     vel.time = estimate_driving_time(control_param);
+    // std::cout << "driving time: " << vel.time << "[s]" << std::endl;
     // std::cout << "estimate time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
     make_velocity_profile(dt, vel);
     // std::cout << "v prof: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
-    // std::cout << vel.v0 << ", " << vel.vt << ", " << vel.vf << ", " << vel.time << ", " << curv.sf << ", " << std::endl;
-    // std::cout << "n: " << N << std::endl;
+    // std::cout << vel.v0 << ", " << vel.vt << ", " << vel.vf << ", " << vel.time << ", " << omega.sf << ", " << std::endl;
 
-    curv.calculate_spline();
+    omega.calculate_spline();
     //std::cout << "spline: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     const int N = s_profile.size();
-    double sf_2 = curv.sf * 0.5;
+    // std::cout << "n: " << N << std::endl;
+    double sf_2 = omega.sf * 0.5;
 
-    State state(0, 0, 0, vel.v0, curv.k0);
-    State state_(0, 0, 0, vel.v0, curv.k0);
+    State state(0, 0, 0, vel.v0, omega.k0);
+    State state_(0, 0, 0, vel.v0, omega.k0);
     Eigen::Vector3d pose;
     pose << state.x, state.y, state.yaw;
     trajectory.trajectory.resize(N);
@@ -167,7 +179,8 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlPar
     trajectory.angular_velocities.resize(N);
     trajectory.trajectory[0] = pose;
     trajectory.velocities[0] = state.v;
-    trajectory.angular_velocities[0] = state.v * state.curvature;
+    // trajectory.angular_velocities[0] = state.v * state.omega;
+    trajectory.angular_velocities[0] = state.omega;
 
     //start = ros::Time::now().toSec();
     for(int i=1;i<N;i++){
@@ -175,16 +188,19 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlPar
         double s = s_profile[i];
         double k = 0;
         if(s < sf_2){
-            k = calculate_quadratic_function(s, curv.coeff_0_m);
+            // k = calculate_quadratic_function(s, omega.coeff_0_m);
+            k = calculate_cubic_function(s, omega.coeff_0_m);
         }else{
-            k = calculate_quadratic_function(s-sf_2, curv.coeff_m_f);
+            // k = calculate_quadratic_function(s-sf_2, omega.coeff_m_f);
+            k = calculate_cubic_function(s, omega.coeff_m_f);
         }
         update(state, v_profile[i], k, dt, state_);
         state = state_;
         pose << state.x, state.y, state.yaw;
         trajectory.trajectory[i] = pose;
         trajectory.velocities[i] = state.v;
-        trajectory.angular_velocities[i] = state.v * state.curvature;
+        // trajectory.angular_velocities[i] = state.v * state.omega;
+        trajectory.angular_velocities[i] = state.omega;
         //std::cout << "t" << i << ": " << ros::Time::now().toSec() - u_start << "[s]" << std::endl;
     }
     //std::cout << "gen t: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
@@ -195,28 +211,30 @@ void MotionModelDiffDrive::generate_last_state(const double dt, const double tra
     // std::cout << "--- generate last state ---" << std::endl;
     // std::cout << k0 << ", " << km << ", " << kf << ", " << trajectory_length << std::endl;
     //double start = ros::Time::now().toSec();
-    CurvatureParams curv(k0, km, kf, trajectory_length);
+    AngularVelocityParams omega(k0, km, kf, trajectory_length);
     VelocityParams vel = _vel;
 
-    vel.time = estimate_driving_time(ControlParams(vel, curv));
+    vel.time = estimate_driving_time(ControlParams(vel, omega));
     //std::cout << "estimate time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
     make_velocity_profile(dt, vel);
     //std::cout << "v_profile time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
-    curv.calculate_spline();
+    omega.calculate_spline();
     //std::cout << "spline time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     const int N = s_profile.size();
-    double sf_2 = curv.sf * 0.5;
-    State state(0, 0, 0, vel.v0, curv.k0);
+    double sf_2 = omega.sf * 0.5;
+    State state(0, 0, 0, vel.v0, omega.k0);
     output << state.x, state.y, state.yaw;
     for(int i=1;i<N;i++){
         double s = s_profile[i];
         double k = 0;
         if(s < sf_2){
-            k = calculate_quadratic_function(s, curv.coeff_0_m);
+            // k = calculate_quadratic_function(s, omega.coeff_0_m);
+            k = calculate_cubic_function(s, omega.coeff_0_m);
         }else{
-            k = calculate_quadratic_function(s-sf_2, curv.coeff_m_f);
+            // k = calculate_quadratic_function(s-sf_2, omega.coeff_m_f);
+            k = calculate_cubic_function(s, omega.coeff_m_f);
         }
         update(state, v_profile[i], k, dt, state);
     }
@@ -224,25 +242,44 @@ void MotionModelDiffDrive::generate_last_state(const double dt, const double tra
     //std::cout << "finish time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 }
 
-void MotionModelDiffDrive::CurvatureParams::calculate_spline(void)
+void MotionModelDiffDrive::AngularVelocityParams::calculate_spline(void)
 {
     //std::cout << "spline" << std::endl;
     //double start = ros::Time::now().toSec();
-    // 2d spline interpolation
+    // 3d spline interpolation
     Eigen::Vector3d x(0, sf * 0.5, sf);
     Eigen::Vector3d y(k0, km, kf);
-    Eigen::Matrix3d s;
-    //std::cout << "spline bfr s: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
-    s << 2 * (x(1) - x(0)),             x(1), -x(1),
-         x(1) * x(1),                   x(1), 0,
-         (x(2) - x(1)) * (x(2) - x(1)), 0,    x(2) - x(1);
-    Eigen::Vector3d c(0, y(1) - y(0), y(2) - y(1));
-    //std::cout << "spline bfr inv: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
-    Eigen::Vector3d a = s.inverse() * c;
-    //std::cout << "spline aft inv: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
-    coeff_0_m << a(0), a(1), y(0);
-    coeff_m_f << a(0), a(2), y(1);
-    //std::cout << "spline end: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+    Eigen::Matrix<double, 8, 8> s;
+    s << x(0) * x(0) * x(0), x(0) * x(0), x(0), 1, 0, 0, 0, 0,
+         x(1) * x(1) * x(1), x(1) * x(1), x(1), 1, 0, 0, 0, 0,
+         0, 0, 0, 0, x(1) * x(1) * x(1), x(1) * x(1) , x(1), 1,
+         0, 0, 0, 0, x(2) * x(2) * x(2), x(2) * x(2) , x(2), 1,
+         3 * x(1) * x(1), 2 * x(1), 1, 0, -3 * x(1) * x(1), -2 * x(1), -1, 0,
+         6 * x(1), 2, 0, 0, -6 * x(1), -2, 0, 0,
+         6 * x(0), 2, 0, 0, 0, 0, 0, 0,
+         0, 0, 0, 0, 6 * x(2), 2, 0, 0;
+    Eigen::VectorXd c = Eigen::VectorXd::Zero(8);
+    c << y(0), y(1), y(1), y(2), 0, 0, 0, 0;
+    Eigen::VectorXd a = s.inverse() * c;
+    coeff_0_m = a.segment(0, 4);
+    coeff_m_f = a.segment(4, 4);
+
+
+    // 2d spline interpolation
+    // Eigen::Vector3d x(0, sf * 0.5, sf);
+    // Eigen::Vector3d y(k0, km, kf);
+    // Eigen::Matrix3d s;
+    // std::cout << "spline bfr s: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+    // s << 2 * (x(1) - x(0)),             x(1), -x(1),
+    //      x(1) * x(1),                   x(1), 0,
+    //      (x(2) - x(1)) * (x(2) - x(1)), 0,    x(2) - x(1);
+    // Eigen::Vector3d c(0, y(1) - y(0), y(2) - y(1));
+    // std::cout << "spline bfr inv: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+    // Eigen::Vector3d a = s.inverse() * c;
+    // std::cout << "spline aft inv: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+    // coeff_0_m << a(0), a(1), y(0);
+    // coeff_m_f << a(0), a(2), y(1);
+    // std::cout << "spline end: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 }
 
 void MotionModelDiffDrive::make_velocity_profile(const double dt, const VelocityParams& v_param)
@@ -315,7 +352,7 @@ double MotionModelDiffDrive::estimate_driving_time(const ControlParams& control)
     double sd = 0.5 * fabs(control.vel.vt + control.vel.vf) * td;
     // std::cout << s0 << ", " << sd << std::endl;
 
-    double st = fabs(control.curv.sf) - s0 - sd;
+    double st = fabs(control.omega.sf) - s0 - sd;
     double tt = st / fabs(control.vel.vt);
     // std::cout << st << ", " << tt << std::endl;
     double driving_time = t0 + tt + td;

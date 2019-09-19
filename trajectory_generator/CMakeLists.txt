@@ -110,7 +110,7 @@ find_package(Eigen3 REQUIRED COMPONENTS system)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
    INCLUDE_DIRS include
-#  LIBRARIES trajectory_generator
+   LIBRARIES trajectory_generator_diff_drive motion_model_diff_drive
 #  CATKIN_DEPENDS geometry_msgs roscpp rospy std_msgs
 #  DEPENDS system_lib
 )

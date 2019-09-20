@@ -88,16 +88,16 @@ void MotionModelDiffDrive::set_param(const double max_yawrate, const double max_
 
 void MotionModelDiffDrive::update(const State& s, const double v, const double omega, const double dt, State& output_s)
 {
-    double vdt = v * dt;
-    output_s.x = s.x + vdt * cos(s.yaw);
-    output_s.y = s.y + vdt * sin(s.yaw);
-    output_s.yaw = s.yaw + omega * dt;
-    if(output_s.yaw < -M_PI || output_s.yaw > M_PI){
-        output_s.yaw = atan2(sin(output_s.yaw), cos(output_s.yaw));
-    }
     output_s.v = v;
     output_s.omega = omega;
     response_to_control_inputs(s, dt, output_s);
+
+    output_s.x = s.x + output_s.v * dt * cos(s.yaw);
+    output_s.y = s.y + output_s.v * dt * sin(s.yaw);
+    output_s.yaw = s.yaw + output_s.omega * dt;
+    if(output_s.yaw < -M_PI || output_s.yaw > M_PI){
+        output_s.yaw = atan2(sin(output_s.yaw), cos(output_s.yaw));
+    }
 }
 
 double MotionModelDiffDrive::calculate_quadratic_function(const double x, const Eigen::Vector3d& coeff)

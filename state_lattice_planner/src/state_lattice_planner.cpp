@@ -54,6 +54,7 @@ StateLatticePlanner::StateLatticePlanner(void)
     local_goal_sub = nh.subscribe("/local_goal", 1, &StateLatticePlanner::local_goal_callback, this);
     local_map_sub = nh.subscribe("/local_map", 1, &StateLatticePlanner::local_map_callback, this);
     odom_sub = nh.subscribe("/odom", 1, &StateLatticePlanner::odom_callback, this);
+    target_velocity_sub = nh.subscribe("/target_velocity", 1, &StateLatticePlanner::target_velocity_callback, this);
 
     local_goal_subscribed = false;
     local_map_updated = false;
@@ -122,6 +123,14 @@ void StateLatticePlanner::odom_callback(const nav_msgs::OdometryConstPtr& msg)
 {
     current_velocity = msg->twist.twist;
     odom_updated = true;
+}
+
+void StateLatticePlanner::target_velocity_callback(const geometry_msgs::TwistConstPtr& msg)
+{
+    if(msg->linear.x > 0.0){
+        TARGET_VELOCITY = msg->linear.x;
+        std::cout << "\033[31mtarget velocity was updated to " << TARGET_VELOCITY << "[m/s]\033[0m" << std::endl;
+    }
 }
 
 void StateLatticePlanner::sample_states(const std::vector<double>& sample_angles, const SamplingParams& params, std::vector<Eigen::Vector3d>& states)

@@ -49,6 +49,7 @@ public:
     void local_goal_callback(const geometry_msgs::PoseStampedConstPtr&);
     void local_map_callback(const nav_msgs::OccupancyGridConstPtr&);
     void odom_callback(const nav_msgs::OdometryConstPtr&);
+    void target_velocity_callback(const geometry_msgs::TwistConstPtr&);
     void generate_biased_polar_states(const int, const Eigen::Vector3d&, const SamplingParams&, double, std::vector<Eigen::Vector3d>&);
     void sample_states(const std::vector<double>&, const SamplingParams&, std::vector<Eigen::Vector3d>&);
     bool generate_trajectories(const std::vector<Eigen::Vector3d>&, const double, const double, const double, std::vector<MotionModelDiffDrive::Trajectory>&);
@@ -95,6 +96,7 @@ protected:
     ros::Subscriber local_map_sub;
     ros::Subscriber local_goal_sub;
     ros::Subscriber odom_sub;
+    ros::Subscriber target_velocity_sub;
     tf::TransformListener listener;
     geometry_msgs::PoseStamped local_goal;
     nav_msgs::OccupancyGrid local_map;

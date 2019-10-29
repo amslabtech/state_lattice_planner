@@ -47,6 +47,7 @@ private:
     ros::NodeHandle local_nh;
 
     LookupTableUtils::LookupTable lookup_table;
+    bool use_existing_lookup_table;
 };
 
 #endif// __LOOKUP_TABLE_GENERATOR_H

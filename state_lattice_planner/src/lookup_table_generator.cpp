@@ -45,7 +45,7 @@ LookupTableGenerator::LookupTableGenerator(void)
     std::cout << "WHEEL_RADIUS: " << WHEEL_RADIUS << std::endl;
     std::cout << "TREAD: " << TREAD << std::endl;
 
-    LookupTableUtils::load_lookup_table(LOOKUP_TABLE_FILE_NAME, lookup_table);
+    use_existing_lookup_table = LookupTableUtils::load_lookup_table(LOOKUP_TABLE_FILE_NAME, lookup_table);
 }
 
 std::string LookupTableGenerator::process(void)
@@ -93,8 +93,8 @@ std::string LookupTableGenerator::process(void)
         lookup_table_data.resize(6);
     }
 
+    int success_count = 0;
     std::string output_data = "v0, k0, x, y, yaw, km, kf, sf\n";
-    double span_v = MAX_V - MIN_V;
     for(double v0=MIN_V;v0<=MAX_V;v0+=DELTA_V){
         for(double k0=-MAX_KAPPA;k0<=MAX_KAPPA;k0+=DELTA_KAPPA){
             for(auto state : states){
@@ -106,7 +106,11 @@ std::string LookupTableGenerator::process(void)
                 std::cout << "distance: " << distance << std::endl;
                 double target_velocity = get_target_velocity(state);
                 MotionModelDiffDrive::ControlParams optimized_param;
-                LookupTableUtils::get_optimized_param_from_lookup_table(lookup_table, state, v0, k0, optimized_param);
+                if(use_existing_lookup_table){
+                    LookupTableUtils::get_optimized_param_from_lookup_table(lookup_table, state, v0, k0, optimized_param);
+                }else{
+                    optimized_param.omega.sf = distance;
+                }
                 MotionModelDiffDrive::VelocityParams init_v(v0, MAX_ACCELERATION, target_velocity, target_velocity, MAX_ACCELERATION);
                 MotionModelDiffDrive::ControlParams init(init_v, MotionModelDiffDrive::AngularVelocityParams(k0, optimized_param.omega.km, optimized_param.omega.kf, optimized_param.omega.sf));
                 MotionModelDiffDrive::ControlParams output;
@@ -121,12 +125,15 @@ std::string LookupTableGenerator::process(void)
                     std::stringstream data;
                     data << v0 << "," << k0 << "," << trajectory.trajectory.back()(0) << "," << trajectory.trajectory.back()(1) << "," << trajectory.trajectory.back()(2) << "," << output.omega.km << "," << output.omega.kf << "," << output.omega.sf << "\n";
                     output_data += data.str();
+                    success_count++;
                 }else{
                     std::cout << "\033[031mfailed to optimize trajectory\033[0m" << std::endl;
                 }
             }
         }
     }
+    int state_num = ((MAX_V - MIN_V) / DELTA_V) * 2 * (MAX_KAPPA / DELTA_KAPPA) * states.size();
+    std::cout << "success rate: " << success_count << " / " << state_num << " = " << (double)success_count / state_num << std::endl;
     return output_data;
 }
 

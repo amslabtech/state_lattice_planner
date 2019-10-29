@@ -10,13 +10,14 @@
     <arg name="n_s" default="1000"/>
     <arg name="target_velocity" default="0.8"/>
     <arg name="lookup_table_file_name" default="$(find state_lattice_planner)/lookup_table/lookup_table.csv"/>
+    <arg name="param_file_name" default="$(find state_lattice_planner)/config/robot_param.yaml"/>
     <arg name="max_iteration" default="5"/>
     <arg name="optimization_tolerance" default="0.1"/>
     <arg name="ignorable_obstacle_range" default="1.0"/>
     <arg name="verbose" default="false"/>
 
     <node pkg="state_lattice_planner" type="state_lattice_planner" name="state_lattice_planner" ns="local_planner">
-        <rosparam command="load" file="$(find state_lattice_planner)/config/robot_param.yaml" />
+        <rosparam command="load" file="$(arg param_file_name)"/>
         <param name="HZ" value="$(arg hz)"/>
         <param name="N_P" value="$(arg n_p)"/>
         <param name="N_H" value="$(arg n_h)"/>

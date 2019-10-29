@@ -7,7 +7,7 @@ namespace LookupTableUtils
 
     }
 
-    void load_lookup_table(const std::string& lookup_table_file_name, LookupTable& lookup_table)
+    bool load_lookup_table(const std::string& lookup_table_file_name, LookupTable& lookup_table)
     {
         lookup_table.clear();
         std::cout << "loading lookup table from " << lookup_table_file_name << std::endl;
@@ -46,8 +46,10 @@ namespace LookupTableUtils
             ifs.close();
         }else{
             std::cout << "\033[91mERROR: cannot open file\033[00m" << std::endl;
-            exit(-1);
+            // exit(-1);
+            return false;
         }
+        return true;
     }
 
     void get_optimized_param_from_lookup_table(const LookupTable& lookup_table, const Eigen::Vector3d goal, const double v0, const double k0, MotionModelDiffDrive::ControlParams& param)

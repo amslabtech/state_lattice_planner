@@ -23,7 +23,7 @@ namespace LookupTableUtils
 
     typedef std::map<double, std::map<double, std::vector<StateWithControlParams> > > LookupTable;
 
-    void load_lookup_table(const std::string&, LookupTable&);
+    bool load_lookup_table(const std::string&, LookupTable&);
 
     void get_optimized_param_from_lookup_table(const LookupTable&, const Eigen::Vector3d, const double, const double, MotionModelDiffDrive::ControlParams&);
 }

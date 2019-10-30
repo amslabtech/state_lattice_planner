@@ -31,7 +31,7 @@
         <param name="IGNORABLE_OBSTACLE_RANGE" value="$(arg ignorable_obstacle_range)"/>
         <param name="VERBOSE" value="$(arg verbose)"/>
         <remap from="/local_map" to="/local_map/expand"/>
-        <remap from="/local_goal" to="/local_goal"/>
+        <remap from="/local_goal" to="/move_base_simple/goal"/>
         <remap from="/cmd_vel" to="/local_path/cmd_vel"/>
         <remap from="/odom" to="/odom"/>
     </node>

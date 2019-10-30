@@ -247,13 +247,13 @@ bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
     std::cout << "generate trajectories to boundary states" << std::endl;
     int count = 0;
     for(auto boundary_state : boundary_states){
-        double start = ros::Time::now().toSec();
+        // double start = ros::Time::now().toSec();
         TrajectoryGeneratorDiffDrive tg;
         tg.set_verbose(VERBOSE);
         tg.set_motion_param(MAX_YAWRATE, MAX_D_YAWRATE, MAX_ACCELERATION, MAX_WHEEL_ANGULAR_VELOCITY, WHEEL_RADIUS, TREAD);
         MotionModelDiffDrive::ControlParams output;
         //std::cout << "v: " << velocity << ", " << "w: " << angular_velocity << std::endl;
-        double _velocity = velocity;
+        // double _velocity = velocity;
         // double k0 = angular_velocity / _velocity;
         // if(fabs(_velocity) < 1e-3){
         //     _velocity = 1e-3 * ((_velocity > 0) ? 1 : -1);
@@ -389,6 +389,9 @@ void StateLatticePlanner::process(void)
             generate_biased_polar_states(N_S, goal, sampling_params, target_velocity, states);
             std::vector<MotionModelDiffDrive::Trajectory> trajectories;
             bool generated = generate_trajectories(states, current_velocity.linear.x, current_velocity.angular.z, target_velocity, trajectories);
+            if(goal.segment(0, 2).norm() < 0.1){
+                generated = false;
+            }
             if(generated){
                 visualize_trajectories(trajectories, 0, 1, 0, N_P * N_H, candidate_trajectories_pub);
 
@@ -456,7 +459,8 @@ void StateLatticePlanner::process(void)
                 double relative_direction = atan2(local_goal_base_link.pose.position.y, local_goal_base_link.pose.position.x);
                 geometry_msgs::Twist cmd_vel;
                 cmd_vel.linear.x = 0;
-                cmd_vel.angular.z =  0.2 * ((relative_direction > 0) ? 1 : -1);
+                // cmd_vel.angular.z =  0.2 * ((relative_direction > 0) ? 1 : -1);
+                cmd_vel.angular.z = std::min(std::max(goal(2), -MAX_YAWRATE), MAX_YAWRATE);
                 velocity_pub.publish(cmd_vel);
                 // for clear
                 std::vector<MotionModelDiffDrive::Trajectory> clear_trajectories;

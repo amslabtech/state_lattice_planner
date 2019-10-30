@@ -22,6 +22,7 @@ StateLatticePlanner::StateLatticePlanner(void)
     local_nh.param("TREAD", TREAD, {0.5});
     local_nh.param("IGNORABLE_OBSTACLE_RANGE", IGNORABLE_OBSTACLE_RANGE, {1.0});
     local_nh.param("VERBOSE", VERBOSE, {false});
+    local_nh.param("CONTROL_DELAY", CONTROL_DELAY, {1});
 
     std::cout << "HZ: " << HZ << std::endl;
     std::cout << "ROBOT_FRAME: " << ROBOT_FRAME << std::endl;
@@ -42,6 +43,7 @@ StateLatticePlanner::StateLatticePlanner(void)
     std::cout << "TREAD: " << TREAD << std::endl;
     std::cout << "IGNORABLE_OBSTACLE_RANGE: " << IGNORABLE_OBSTACLE_RANGE << std::endl;
     std::cout << "VERBOSE: " << VERBOSE << std::endl;
+    std::cout << "CONTROL_DELAY: " << CONTROL_DELAY << std::endl;
 
     SamplingParams sp(N_P, N_H, MAX_ALPHA, MAX_PSI);
     sampling_params = sp;
@@ -432,7 +434,7 @@ void StateLatticePlanner::process(void)
                     std::cout << "publish velocity" << std::endl;
                     geometry_msgs::Twist cmd_vel;
                     double calculation_time = ros::Time::now().toSec() - start;
-                    int delayed_control_index = std::ceil(calculation_time * HZ) + 1;
+                    int delayed_control_index = std::ceil(calculation_time * HZ) + CONTROL_DELAY;
                     std::cout << calculation_time << ", " << delayed_control_index << std::endl;
                     cmd_vel.linear.x = trajectory.velocities[delayed_control_index];
                     cmd_vel.angular.z = trajectory.angular_velocities[delayed_control_index];

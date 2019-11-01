@@ -23,6 +23,7 @@ StateLatticePlanner::StateLatticePlanner(void)
     local_nh.param("IGNORABLE_OBSTACLE_RANGE", IGNORABLE_OBSTACLE_RANGE, {1.0});
     local_nh.param("VERBOSE", VERBOSE, {false});
     local_nh.param("CONTROL_DELAY", CONTROL_DELAY, {1});
+    local_nh.param("TURN_DIRECTION_THRESHOLD", TURN_DIRECTION_THRESHOLD, {M_PI/4.0});
 
     std::cout << "HZ: " << HZ << std::endl;
     std::cout << "ROBOT_FRAME: " << ROBOT_FRAME << std::endl;
@@ -44,6 +45,7 @@ StateLatticePlanner::StateLatticePlanner(void)
     std::cout << "IGNORABLE_OBSTACLE_RANGE: " << IGNORABLE_OBSTACLE_RANGE << std::endl;
     std::cout << "VERBOSE: " << VERBOSE << std::endl;
     std::cout << "CONTROL_DELAY: " << CONTROL_DELAY << std::endl;
+    std::cout << "TURN_DIRECTION_THRESHOLD: " << TURN_DIRECTION_THRESHOLD << std::endl;
 
     SamplingParams sp(N_P, N_H, MAX_ALPHA, MAX_PSI);
     sampling_params = sp;
@@ -391,8 +393,15 @@ void StateLatticePlanner::process(void)
             generate_biased_polar_states(N_S, goal, sampling_params, target_velocity, states);
             std::vector<MotionModelDiffDrive::Trajectory> trajectories;
             bool generated = generate_trajectories(states, current_velocity.linear.x, current_velocity.angular.z, target_velocity, trajectories);
+            bool turn_flag = false;
+            double relative_direction = atan2(local_goal_base_link.pose.position.y, local_goal_base_link.pose.position.x);
             if(goal.segment(0, 2).norm() < 0.1){
                 generated = false;
+            }else if(fabs(relative_direction) > TURN_DIRECTION_THRESHOLD){
+                if(fabs(goal(2)) > TURN_DIRECTION_THRESHOLD){
+                    generated = false;
+                    turn_flag = true;
+                }
             }
             if(generated){
                 visualize_trajectories(trajectories, 0, 1, 0, N_P * N_H, candidate_trajectories_pub);
@@ -458,11 +467,13 @@ void StateLatticePlanner::process(void)
             }else{
                 std::cout << "\033[91mERROR: no optimized trajectory was generated\033[00m" << std::endl;
                 std::cout << "\033[91mturn for local goal\033[00m" << std::endl;
-                double relative_direction = atan2(local_goal_base_link.pose.position.y, local_goal_base_link.pose.position.x);
                 geometry_msgs::Twist cmd_vel;
                 cmd_vel.linear.x = 0;
-                // cmd_vel.angular.z =  0.2 * ((relative_direction > 0) ? 1 : -1);
-                cmd_vel.angular.z = std::min(std::max(goal(2), -MAX_YAWRATE), MAX_YAWRATE);
+                if(!turn_flag){
+                    cmd_vel.angular.z = std::min(std::max(goal(2), -MAX_YAWRATE), MAX_YAWRATE);
+                }else{
+                    cmd_vel.angular.z = std::min(std::max(relative_direction, -MAX_YAWRATE), MAX_YAWRATE);
+                }
                 velocity_pub.publish(cmd_vel);
                 // for clear
                 std::vector<MotionModelDiffDrive::Trajectory> clear_trajectories;

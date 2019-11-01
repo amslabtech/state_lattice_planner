@@ -86,6 +86,7 @@ protected:
     double IGNORABLE_OBSTACLE_RANGE;
     bool VERBOSE;
     int CONTROL_DELAY;
+    double TURN_DIRECTION_THRESHOLD;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;

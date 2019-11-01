@@ -15,7 +15,8 @@
     <arg name="optimization_tolerance" default="0.1"/>
     <arg name="ignorable_obstacle_range" default="1.0"/>
     <arg name="verbose" default="false"/>
-    <arg name="control_delay" default="1"/>
+    <arg name="control_delay" default="5"/>
+    <arg name="turn_direction_threshold" default="1.0"/>
 
     <node pkg="state_lattice_planner" type="state_lattice_planner" name="state_lattice_planner" ns="local_planner">
         <rosparam command="load" file="$(arg param_file_name)"/>
@@ -32,6 +33,7 @@
         <param name="IGNORABLE_OBSTACLE_RANGE" value="$(arg ignorable_obstacle_range)"/>
         <param name="VERBOSE" value="$(arg verbose)"/>
         <param name="CONTROL_DELAY" value="$(arg control_delay)"/>
+        <param name="TURN_DIRECTION_THRESHOLD" value="$(arg turn_direction_threshold)"/>
         <remap from="/local_map" to="/local_map/expand"/>
         <remap from="/local_goal" to="/local_goal"/>
         <remap from="/cmd_vel" to="/local_path/cmd_vel"/>

@@ -352,7 +352,7 @@ bool StateLatticePlanner::pickup_trajectory(const std::vector<MotionModelDiffDri
     std::sort(trajectories.begin(), trajectories.end());
 
     double min_diff_yaw = 100;
-    const int N = ((trajectories.size() < sampling_params.n_h) ? trajectories.size() : sampling_params.n_h);
+    const int N = ((int)trajectories.size() < sampling_params.n_h) ? trajectories.size() : sampling_params.n_h;
     for(int i=0;i<N;i++){
         double diff_yaw = trajectories[i].trajectory.back()(2) - goal(2);
         diff_yaw = fabs(atan2(sin(diff_yaw), cos(diff_yaw)));

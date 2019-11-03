@@ -443,7 +443,7 @@ void StateLatticePlanner::process(void)
                     std::cout << "publish velocity" << std::endl;
                     geometry_msgs::Twist cmd_vel;
                     double calculation_time = ros::Time::now().toSec() - start;
-                    int delayed_control_index = std::ceil(calculation_time * HZ) + CONTROL_DELAY;
+                    int delayed_control_index = std::min(std::ceil(calculation_time * HZ) + CONTROL_DELAY, (double)trajectory.trajectory.size());
                     std::cout << calculation_time << ", " << delayed_control_index << std::endl;
                     cmd_vel.linear.x = trajectory.velocities[delayed_control_index];
                     cmd_vel.angular.z = trajectory.angular_velocities[delayed_control_index];

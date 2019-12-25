@@ -72,8 +72,8 @@ TEST(TestSuite, test3)
         std::cout << vel << "[m/s]" << std::endl;
     }
 
-    EXPECT_NEAR(5, trajectory.trajectory.back()(0), 0.05);
-    EXPECT_NEAR(1, trajectory.trajectory.back()(1), 0.05);
+    EXPECT_NEAR(5, trajectory.trajectory.back()(0), 0.1);
+    EXPECT_NEAR(1, trajectory.trajectory.back()(1), 0.1);
     EXPECT_NEAR(1, trajectory.trajectory.back()(2), 0.05);
     EXPECT_GT(cost, 0);// cost > 0
 }
@@ -165,8 +165,8 @@ TEST(TestSuite, test8)
         std::cout << vel << "[m/s]" << std::endl;
     }
 
-    EXPECT_NEAR(goal(0), trajectory.trajectory.back()(0), 0.05);
-    EXPECT_NEAR(goal(1), trajectory.trajectory.back()(1), 0.05);
+    EXPECT_NEAR(goal(0), trajectory.trajectory.back()(0), 0.1);
+    EXPECT_NEAR(goal(1), trajectory.trajectory.back()(1), 0.1);
     EXPECT_NEAR(goal(2), trajectory.trajectory.back()(2), 0.05);
     EXPECT_GT(cost, 0);// cost > 0
 }
@@ -179,19 +179,20 @@ TEST(TestSuite, test9)
     tg.set_motion_param(1.0, 2.0, 1.0, 11.6, 0.125, 0.5);
     MotionModelDiffDrive::ControlParams output;
     MotionModelDiffDrive::VelocityParams init_v(0.0, 1.0, 1.0, 0.0, 1.0);
-    Eigen::Vector3d goal(0.5, 2, M_PI/2.0);
-    MotionModelDiffDrive::ControlParams init_params(init_v, MotionModelDiffDrive::AngularVelocityParams(0.0, 1.0, 0.0, goal.segment(0, 2).norm()));
+    Eigen::Vector3d goal(0.5, 5, M_PI/2.0);
+    std::cout << "goal: " << goal.transpose() << std::endl;
+    MotionModelDiffDrive::ControlParams init_params(init_v, MotionModelDiffDrive::AngularVelocityParams(0.0, 0.0, 0.0, goal.segment(0, 2).norm()));
     MotionModelDiffDrive::Trajectory trajectory;
     std::cout << "generate optimized trajectory" << std::endl;
     double start = ros::Time::now().toSec();
-    double cost = tg.generate_optimized_trajectory(goal, init_params, 0.1, 1e-1, 5, output, trajectory);
+    double cost = tg.generate_optimized_trajectory(goal, init_params, 0.1, 1e-1, 10, output, trajectory);
     std::cout << "time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     std::cout << "trajecotry.back():" << std::endl;
     std::cout << trajectory.trajectory.back() << std::endl;
     std::cout << "cost: " << cost << std::endl;
     int size = trajectory.trajectory.size();
     for(int i=0;i<size;i++){
-        std::cout << trajectory.trajectory[i].transpose() << ", " << trajectory.velocities[i] << "[m/s], " << trajectory.angular_velocities[i] << "[rad/s]" << std::endl;
+        std::cout << i << ": " << trajectory.trajectory[i].transpose() << ", " << trajectory.velocities[i] << "[m/s], " << trajectory.angular_velocities[i] << "[rad/s]" << std::endl;
     }
     EXPECT_NEAR(goal(0), trajectory.trajectory.back()(0), 0.10);
     EXPECT_NEAR(goal(1), trajectory.trajectory.back()(1), 0.10);

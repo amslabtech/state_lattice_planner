@@ -17,8 +17,10 @@ public:
     void set_verbose(bool);
     double generate_optimized_trajectory(const Eigen::Vector3d&, const MotionModelDiffDrive::ControlParams&, const double, const double, const int, MotionModelDiffDrive::ControlParams&, MotionModelDiffDrive::Trajectory&);
     void get_jacobian(const double, const MotionModelDiffDrive::ControlParams&, const Eigen::Vector3d&, Eigen::Matrix3d&);
+    void calculate_scale_factor(double, double, const Eigen::Vector3d&, Eigen::Vector3d&, MotionModelDiffDrive::ControlParams&, MotionModelDiffDrive::Trajectory&, Eigen::Vector3d&);
 
 private:
+    double MAX_YAWRATE;
     MotionModelDiffDrive model;
 
     Eigen::Vector3d h;

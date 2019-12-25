@@ -168,6 +168,9 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlPar
     //std::cout << "spline: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     const int N = s_profile.size();
     // std::cout << "n: " << N << std::endl;
+    if(N == 0){
+        return;
+    }
     double sf_2 = omega.sf * 0.5;
 
     State state(0, 0, 0, vel.v0, omega.k0);

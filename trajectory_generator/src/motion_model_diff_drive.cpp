@@ -118,7 +118,7 @@ void MotionModelDiffDrive::response_to_control_inputs(const State& state, const 
     double dk = (_k - k) * _dt;
     dk = std::max(std::min(dk, MAX_D_YAWRATE), -MAX_D_YAWRATE);
 
-    _k += dk * dt;
+    _k = k + dk * dt;
     output.omega = std::max(std::min(_k, MAX_YAWRATE), -MAX_YAWRATE);
 
     // adjust output.v

@@ -3,7 +3,7 @@
 TrajectoryGeneratorDiffDrive::TrajectoryGeneratorDiffDrive(void)
 {
     // default
-    h << 0.1, 0.1, 0.1;
+    h << 0.05, 0.05, 0.1;
     MAX_YAWRATE = 1.0;
 }
 
@@ -39,6 +39,7 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
 
     while(1){
         //double start = ros::Time::now().toSec();
+        // std::cout << "---" << std::endl;
         if(cost.norm() < tolerance){
             std::cout << "successfully optimized in " << count << " iteration" << std::endl;
             break;
@@ -101,8 +102,8 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
         output.omega.km += dp(0);
         output.omega.kf += dp(1);
         output.omega.sf += dp(2);
-        output.omega.km = std::min(std::max(output.omega.km, -MAX_YAWRATE), MAX_YAWRATE);
-        output.omega.kf = std::min(std::max(output.omega.kf, -MAX_YAWRATE), MAX_YAWRATE);
+        // output.omega.km = std::min(std::max(output.omega.km, -MAX_YAWRATE), MAX_YAWRATE);
+        // output.omega.kf = std::min(std::max(output.omega.kf, -MAX_YAWRATE), MAX_YAWRATE);
         // std::cout << "output: " << output.omega.km << ", " << output.omega.kf << ", " << output.omega.sf << std::endl;
 
         // if(fabsf(output.omega.sf - distance_to_goal) > distance_to_goal * 0.5){
@@ -172,8 +173,8 @@ void TrajectoryGeneratorDiffDrive::calculate_scale_factor(double dt, double tole
         output_.omega.kf += dp_(1);
         output_.omega.sf += dp_(2);
         // std::cout << "dp_: " << dp_.transpose() << std::endl;
-        output_.omega.km = std::min(std::max(output_.omega.km, -MAX_YAWRATE), MAX_YAWRATE);
-        output_.omega.kf = std::min(std::max(output_.omega.kf, -MAX_YAWRATE), MAX_YAWRATE);
+        // output_.omega.km = std::min(std::max(output_.omega.km, -MAX_YAWRATE), MAX_YAWRATE);
+        // output_.omega.kf = std::min(std::max(output_.omega.kf, -MAX_YAWRATE), MAX_YAWRATE);
         // std::cout << "output: " << output_.omega.km << ", " << output_.omega.kf << ", " << output_.omega.sf << std::endl;
         model.generate_trajectory(dt, output_, trajectory_);
         // std::cout << "size: " << trajectory_.trajectory.size() << std::endl;

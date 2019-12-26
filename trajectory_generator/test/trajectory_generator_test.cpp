@@ -185,7 +185,7 @@ TEST(TestSuite, test9)
     MotionModelDiffDrive::Trajectory trajectory;
     std::cout << "generate optimized trajectory" << std::endl;
     double start = ros::Time::now().toSec();
-    double cost = tg.generate_optimized_trajectory(goal, init_params, 0.1, 1e-1, 10, output, trajectory);
+    double cost = tg.generate_optimized_trajectory(goal, init_params, 0.1, 1e-1, 100, output, trajectory);
     std::cout << "time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     std::cout << "trajecotry.back():" << std::endl;
     std::cout << trajectory.trajectory.back() << std::endl;

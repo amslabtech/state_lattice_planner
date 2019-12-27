@@ -319,6 +319,10 @@ void TrajectoryViewer::process(void)
                     std::cout << "pickup a optimal trajectory from candidate trajectories" << std::endl;
                     MotionModelDiffDrive::Trajectory trajectory;
                     pickup_trajectory(candidate_trajectories, goal, trajectory);
+                    int size = trajectory.trajectory.size();
+                    for(int i=0;i<size;i++){
+                        std::cout << i << ": " << trajectory.trajectory[i].transpose() << ", " << trajectory.velocities[i] << "[m/s], " << trajectory.angular_velocities[i] << "[rad/s]" << std::endl;
+                    }
                     visualize_trajectory(trajectory, 1, 0, 0, selected_trajectory_pub);
                     std::cout << "pickup time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
                 }else{

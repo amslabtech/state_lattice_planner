@@ -181,7 +181,7 @@ TEST(TestSuite, test9)
     MotionModelDiffDrive::VelocityParams init_v(0.0, 1.0, 1.0, 0.0, 1.0);
     Eigen::Vector3d goal(0.5, 5, M_PI/2.0);
     std::cout << "goal: " << goal.transpose() << std::endl;
-    MotionModelDiffDrive::ControlParams init_params(init_v, MotionModelDiffDrive::AngularVelocityParams(0.0, 0.0, 0.0, goal.segment(0, 2).norm()));
+    MotionModelDiffDrive::ControlParams init_params(init_v, MotionModelDiffDrive::AngularVelocityParams(0.0, 0.5, 0.0, goal.segment(0, 2).norm()));
     MotionModelDiffDrive::Trajectory trajectory;
     std::cout << "generate optimized trajectory" << std::endl;
     double start = ros::Time::now().toSec();

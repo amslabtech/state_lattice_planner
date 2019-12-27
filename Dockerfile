@@ -20,7 +20,5 @@ ENV ROS_PACKAGE_PATH=/root/catkin_ws:$ROS_PACKAGE_PATH
 
 ENV ROS_WORKSPACE=/root/catkin_ws
 
-RUN ln -sf /usr/include/eigen3/Eigen /usr/include/Eigen
-
 # clone repository
 WORKDIR /root

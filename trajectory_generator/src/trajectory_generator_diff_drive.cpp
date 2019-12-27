@@ -41,7 +41,9 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
         //double start = ros::Time::now().toSec();
         // std::cout << "---" << std::endl;
         if(cost.norm() < tolerance){
-            std::cout << "successfully optimized in " << count << " iteration" << std::endl;
+            if(verbose){
+                std::cout << "successfully optimized in " << count << " iteration" << std::endl;
+            }
             break;
         }else if(count >= max_iteration){
             if(verbose){

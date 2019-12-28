@@ -43,8 +43,10 @@ MotionModelDiffDrive::VelocityParams::VelocityParams(double _v0, double _a0, dou
 
 MotionModelDiffDrive::AngularVelocityParams::AngularVelocityParams(void)
 {
-    coeff_0_m = Eigen::Matrix<double, 4, 1>::Zero();
-    coeff_m_f = Eigen::Matrix<double, 4, 1>::Zero();
+    coefficients.resize(2);
+    for(auto c : coefficients){
+        c = Eigen::Vector4d::Zero();
+    }
 }
 
 MotionModelDiffDrive::AngularVelocityParams::AngularVelocityParams(double _k0, double _km, double _kf, double _sf)
@@ -53,8 +55,10 @@ MotionModelDiffDrive::AngularVelocityParams::AngularVelocityParams(double _k0, d
     km = _km;
     kf = _kf;
     sf = _sf;
-    coeff_0_m = Eigen::Matrix<double, 4, 1>::Zero();
-    coeff_m_f = Eigen::Matrix<double, 4, 1>::Zero();
+    coefficients.resize(2);
+    for(auto c : coefficients){
+        c = Eigen::Vector4d::Zero();
+    }
 }
 
 MotionModelDiffDrive::ControlParams::ControlParams(void)
@@ -107,7 +111,7 @@ double MotionModelDiffDrive::calculate_quadratic_function(const double x, const 
     return coeff(0) * x * x + coeff(1) * x + coeff(2);
 }
 
-double MotionModelDiffDrive::calculate_cubic_function(const double x, const Eigen::Matrix<double, 4, 1>& coeff)
+double MotionModelDiffDrive::calculate_cubic_function(const double x, const Eigen::Vector4d& coeff)
 {
     return coeff(0) * x * x * x + coeff(1) * x * x + coeff(2) * x + coeff(3);
 }
@@ -193,11 +197,9 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlPar
         double s = s_profile[i];
         double k = 0;
         if(s < sf_2){
-            // k = calculate_quadratic_function(s, omega.coeff_0_m);
-            k = calculate_cubic_function(s, omega.coeff_0_m);
+            k = calculate_cubic_function(s, omega.coefficients[0]);
         }else{
-            // k = calculate_quadratic_function(s-sf_2, omega.coeff_m_f);
-            k = calculate_cubic_function(s, omega.coeff_m_f);
+            k = calculate_cubic_function(s, omega.coefficients[1]);
         }
         update(state, v_profile[i], k, dt, state_);
         state = state_;
@@ -235,11 +237,9 @@ void MotionModelDiffDrive::generate_last_state(const double dt, const double tra
         double s = s_profile[i];
         double k = 0;
         if(s < sf_2){
-            // k = calculate_quadratic_function(s, omega.coeff_0_m);
-            k = calculate_cubic_function(s, omega.coeff_0_m);
+            k = calculate_cubic_function(s, omega.coefficients[0]);
         }else{
-            // k = calculate_quadratic_function(s-sf_2, omega.coeff_m_f);
-            k = calculate_cubic_function(s, omega.coeff_m_f);
+            k = calculate_cubic_function(s, omega.coefficients[1]);
         }
         update(state, v_profile[i], k, dt, state);
     }
@@ -249,8 +249,8 @@ void MotionModelDiffDrive::generate_last_state(const double dt, const double tra
 
 void MotionModelDiffDrive::AngularVelocityParams::calculate_spline(double ratio)
 {
-    //std::cout << "spline" << std::endl;
-    //double start = ros::Time::now().toSec();
+    // std::cout << "spline" << std::endl;
+    // double start = ros::Time::now().toSec();
     // 3d spline interpolation
     Eigen::Vector3d x(0, sf * ratio, sf);
     Eigen::Vector3d y(k0, km, kf);
@@ -266,25 +266,8 @@ void MotionModelDiffDrive::AngularVelocityParams::calculate_spline(double ratio)
     Eigen::VectorXd c = Eigen::VectorXd::Zero(8);
     c << y(0), y(1), y(1), y(2), 0, 0, 0, 0;
     Eigen::VectorXd a = s.inverse() * c;
-    coeff_0_m = a.segment(0, 4);
-    coeff_m_f = a.segment(4, 4);
-
-
-    // 2d spline interpolation
-    // Eigen::Vector3d x(0, sf * 0.5, sf);
-    // Eigen::Vector3d y(k0, km, kf);
-    // Eigen::Matrix3d s;
-    // std::cout << "spline bfr s: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
-    // s << 2 * (x(1) - x(0)),             x(1), -x(1),
-    //      x(1) * x(1),                   x(1), 0,
-    //      (x(2) - x(1)) * (x(2) - x(1)), 0,    x(2) - x(1);
-    // Eigen::Vector3d c(0, y(1) - y(0), y(2) - y(1));
-    // std::cout << "spline bfr inv: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
-    // Eigen::Vector3d a = s.inverse() * c;
-    // std::cout << "spline aft inv: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
-    // coeff_0_m << a(0), a(1), y(0);
-    // coeff_m_f << a(0), a(2), y(1);
-    // std::cout << "spline end: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+    coefficients[0] = a.segment(0, 4);
+    coefficients[1] = a.segment(4, 4);
 }
 
 void MotionModelDiffDrive::make_velocity_profile(const double dt, const VelocityParams& v_param)

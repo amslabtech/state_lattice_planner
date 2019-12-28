@@ -50,8 +50,7 @@ public:
         double km;
         double kf;
         double sf;
-        Eigen::Matrix<double, 4, 1> coeff_0_m;
-        Eigen::Matrix<double, 4, 1> coeff_m_f;
+        std::vector<Eigen::Vector4d> coefficients;
     private:
     };
 
@@ -88,7 +87,7 @@ public:
     double estimate_driving_time(const ControlParams&);
     void update(const State&, const double, const double, const double, State&);
     double calculate_quadratic_function(const double, const Eigen::Vector3d&);
-    double calculate_cubic_function(const double, const Eigen::Matrix<double, 4, 1>&);
+    double calculate_cubic_function(const double, const Eigen::Vector4d&);
     void response_to_control_inputs(const State&, const double, State&);
     void control_speed(const State& state, State& _state);
 

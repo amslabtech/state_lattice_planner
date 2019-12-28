@@ -44,7 +44,7 @@ public:
         AngularVelocityParams(void);
         AngularVelocityParams(double, double, double, double);
 
-        void calculate_spline(void);
+        void calculate_spline(double ratio=0.5);
 
         double k0;
         double km;
@@ -102,6 +102,8 @@ private:
 
     std::vector<double> v_profile;
     std::vector<double> s_profile;
+
+    double ratio;
 };
 
 #endif //__MOTION_MODEL_DIFF_DRIVE_H

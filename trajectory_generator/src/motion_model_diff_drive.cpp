@@ -9,6 +9,8 @@ MotionModelDiffDrive::MotionModelDiffDrive()
     WHEEL_RADIUS = 0.125;
     TREAD = 0.5;
     MAX_WHEEL_ANGULAR_VELOCITY = 11.6;
+
+    ratio = 0.50;
 }
 
 MotionModelDiffDrive::State::State(double _x, double _y, double _yaw, double _v, double _omega)
@@ -164,14 +166,14 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlPar
     // std::cout << "v prof: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     // std::cout << vel.v0 << ", " << vel.vt << ", " << vel.vf << ", " << vel.time << ", " << omega.sf << ", " << std::endl;
 
-    omega.calculate_spline();
+    omega.calculate_spline(ratio);
     //std::cout << "spline: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     const int N = s_profile.size();
     // std::cout << "n: " << N << std::endl;
     if(N == 0){
         return;
     }
-    double sf_2 = omega.sf * 0.5;
+    double sf_2 = omega.sf * ratio;
 
     State state(0, 0, 0, vel.v0, omega.k0);
     State state_(0, 0, 0, vel.v0, omega.k0);
@@ -223,10 +225,10 @@ void MotionModelDiffDrive::generate_last_state(const double dt, const double tra
     make_velocity_profile(dt, vel);
     //std::cout << "v_profile time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
-    omega.calculate_spline();
+    omega.calculate_spline(ratio);
     //std::cout << "spline time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     const int N = s_profile.size();
-    double sf_2 = omega.sf * 0.5;
+    double sf_2 = omega.sf * ratio;
     State state(0, 0, 0, vel.v0, omega.k0);
     output << state.x, state.y, state.yaw;
     for(int i=1;i<N;i++){
@@ -245,12 +247,12 @@ void MotionModelDiffDrive::generate_last_state(const double dt, const double tra
     //std::cout << "finish time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 }
 
-void MotionModelDiffDrive::AngularVelocityParams::calculate_spline(void)
+void MotionModelDiffDrive::AngularVelocityParams::calculate_spline(double ratio)
 {
     //std::cout << "spline" << std::endl;
     //double start = ros::Time::now().toSec();
     // 3d spline interpolation
-    Eigen::Vector3d x(0, sf * 0.5, sf);
+    Eigen::Vector3d x(0, sf * ratio, sf);
     Eigen::Vector3d y(k0, km, kf);
     Eigen::Matrix<double, 8, 8> s;
     s << x(0) * x(0) * x(0), x(0) * x(0), x(0), 1, 0, 0, 0, 0,

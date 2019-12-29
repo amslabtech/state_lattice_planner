@@ -79,6 +79,8 @@ protected:
     double WHEEL_RADIUS;
     double TREAD;
     bool VERBOSE;
+    double V0;
+    double K0;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;

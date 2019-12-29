@@ -21,6 +21,8 @@ TrajectoryViewer::TrajectoryViewer(void)
     local_nh.param("WHEEL_RADIUS", WHEEL_RADIUS, {0.125});
     local_nh.param("TREAD", TREAD, {0.5});
     local_nh.param("VERBOSE", VERBOSE, {false});
+    local_nh.param("V0", V0, {0.0});
+    local_nh.param("K0", K0, {0.0});
 
     std::cout << "HZ: " << HZ << std::endl;
     std::cout << "ROBOT_FRAME: " << ROBOT_FRAME << std::endl;
@@ -40,6 +42,8 @@ TrajectoryViewer::TrajectoryViewer(void)
     std::cout << "WHEEL_RADIUS: " << WHEEL_RADIUS << std::endl;
     std::cout << "TREAD: " << TREAD << std::endl;
     std::cout << "VERBOSE: " << VERBOSE << std::endl;
+    std::cout << "V0: " << V0 << std::endl;
+    std::cout << "K0: " << K0 << std::endl;
 
     SamplingParams sp(N_P, N_H, MAX_ALPHA, MAX_PSI);
     sampling_params = sp;
@@ -295,6 +299,8 @@ void TrajectoryViewer::process(void)
             std::cout << "=== trajectory viewer ===" << std::endl;
             double start = ros::Time::now().toSec();
             std::cout << "local goal: \n" << local_goal << std::endl;
+            current_velocity.linear.x = V0;
+            current_velocity.angular.z = K0;
             std::cout << "current_velocity: \n" << current_velocity << std::endl;
             Eigen::Vector3d goal(local_goal.pose.position.x, local_goal.pose.position.y, tf::getYaw(local_goal.pose.orientation));
             std::vector<Eigen::Vector3d> states;

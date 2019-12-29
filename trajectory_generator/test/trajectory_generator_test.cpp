@@ -12,13 +12,13 @@ TEST(TestSuite, test0)
     MotionModelDiffDrive::AngularVelocityParams omega(0, 0.5, 1.0, 5);
     omega.calculate_spline();
     MotionModelDiffDrive mm;
-    double cf = mm.calculate_cubic_function(0, omega.coeff_0_m);
+    double cf = mm.calculate_cubic_function(0, omega.coefficients[0]);
     EXPECT_NEAR(0, cf, 0.01);
-    cf = mm.calculate_cubic_function(2.5, omega.coeff_0_m);
+    cf = mm.calculate_cubic_function(2.5, omega.coefficients[0]);
     EXPECT_NEAR(0.5, cf, 0.01);
-    cf = mm.calculate_cubic_function(2.5, omega.coeff_m_f);
+    cf = mm.calculate_cubic_function(2.5, omega.coefficients[1]);
     EXPECT_NEAR(0.5, cf, 0.01);
-    cf = mm.calculate_cubic_function(5, omega.coeff_m_f);
+    cf = mm.calculate_cubic_function(5, omega.coefficients[1]);
     EXPECT_NEAR(1.0, cf, 0.01);
 }
 
@@ -28,13 +28,13 @@ TEST(TestSuite, test1)
     MotionModelDiffDrive::AngularVelocityParams omega(0, -0.5, -1.0, 10);
     omega.calculate_spline();
     MotionModelDiffDrive mm;
-    double cf = mm.calculate_cubic_function(0, omega.coeff_0_m);
+    double cf = mm.calculate_cubic_function(0, omega.coefficients[0]);
     EXPECT_NEAR(0, cf, 0.01);
-    cf = mm.calculate_cubic_function(5, omega.coeff_0_m);
+    cf = mm.calculate_cubic_function(5, omega.coefficients[0]);
     EXPECT_NEAR(-0.5, cf, 0.01);
-    cf = mm.calculate_cubic_function(5, omega.coeff_m_f);
+    cf = mm.calculate_cubic_function(5, omega.coefficients[1]);
     EXPECT_NEAR(-0.5, cf, 0.01);
-    cf = mm.calculate_cubic_function(10, omega.coeff_m_f);
+    cf = mm.calculate_cubic_function(10, omega.coefficients[1]);
     EXPECT_NEAR(-1.0, cf, 0.01);
 }
 
@@ -121,13 +121,13 @@ TEST(TestSuite, test6)
     MotionModelDiffDrive::AngularVelocityParams omega(0, 0.5, 1.0, -5);
     omega.calculate_spline();
     MotionModelDiffDrive mm;
-    double cf = mm.calculate_cubic_function(0, omega.coeff_0_m);
+    double cf = mm.calculate_cubic_function(0, omega.coefficients[0]);
     EXPECT_NEAR(0, cf, 0.01);
-    cf = mm.calculate_cubic_function(-2.5, omega.coeff_0_m);
+    cf = mm.calculate_cubic_function(-2.5, omega.coefficients[0]);
     EXPECT_NEAR(0.5, cf, 0.01);
-    cf = mm.calculate_cubic_function(-2.5, omega.coeff_m_f);
+    cf = mm.calculate_cubic_function(-2.5, omega.coefficients[1]);
     EXPECT_NEAR(0.5, cf, 0.01);
-    cf = mm.calculate_cubic_function(-5, omega.coeff_m_f);
+    cf = mm.calculate_cubic_function(-5, omega.coefficients[1]);
     EXPECT_NEAR(1.0, cf, 0.01);
 }
 

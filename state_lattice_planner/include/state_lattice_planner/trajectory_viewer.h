@@ -16,6 +16,8 @@
 
 #include <Eigen/Dense>
 
+#include <omp.h>
+
 #include <trajectory_generator/motion_model_diff_drive.h>
 #include <trajectory_generator/trajectory_generator_diff_drive.h>
 #include "state_lattice_planner/lookup_table_utils.h"

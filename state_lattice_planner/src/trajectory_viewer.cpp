@@ -225,7 +225,11 @@ bool TrajectoryViewer::generate_trajectories(const std::vector<Eigen::Vector3d>&
 {
     std::cout << "generate trajectories to boundary states" << std::endl;
     int count = 0;
-    for(auto boundary_state : boundary_states){
+    int trajectory_num = boundary_states.size();
+    std::vector<MotionModelDiffDrive::Trajectory> trajectories_(trajectory_num);
+    #pragma omp parallel for
+    for(int i=0;i<trajectory_num;i++){
+        Eigen::Vector3d boundary_state = boundary_states[i];
         // double start = ros::Time::now().toSec();
         TrajectoryGeneratorDiffDrive tg;
         tg.set_verbose(VERBOSE);
@@ -246,13 +250,20 @@ bool TrajectoryViewer::generate_trajectories(const std::vector<Eigen::Vector3d>&
         double cost = tg.generate_optimized_trajectory(boundary_state, init, 1.0 / HZ, OPTIMIZATION_TOLERANCE, MAX_ITERATION, output, trajectory);
         // std::cout << trajectory.trajectory.back().transpose() << std::endl;
         if(cost > 0){
-            trajectories.push_back(trajectory);
+            trajectories_[i] = trajectory;
             //std::cout << "generate time " << count << ": " << ros::Time::now().toSec() - start << "[s]" << std::endl;
             count++;
         }
     }
-    if(trajectories.size() == 0)
-    {
+    for(auto it=trajectories_.begin();it!=trajectories_.end();){
+        if(it->trajectory.size() == 0){
+            it = trajectories_.erase(it);
+        }else{
+            ++it;
+        }
+    }
+    std::copy(trajectories_.begin(), trajectories_.end(), std::back_inserter(trajectories));
+    if(trajectories.size() == 0){
         std::cout << "\033[91mERROR: no trajectory was generated\033[00m" << std::endl;
         return false;
     }

@@ -309,6 +309,7 @@ void TrajectoryViewer::process(void)
         if(local_goal_updated){
             std::cout << "=== trajectory viewer ===" << std::endl;
             double start = ros::Time::now().toSec();
+            int max_trajecotry_num = N_P * N_H;
             std::cout << "local goal: \n" << local_goal << std::endl;
             current_velocity.linear.x = V0;
             current_velocity.angular.z = K0;
@@ -323,7 +324,7 @@ void TrajectoryViewer::process(void)
                 generated = false;
             }
             if(generated){
-                visualize_trajectories(trajectories, 0, 1, 0, N_P * N_H, candidate_trajectories_pub);
+                visualize_trajectories(trajectories, 0, 1, 0, max_trajecotry_num, candidate_trajectories_pub);
 
                 std::cout << "check candidate trajectories" << std::endl;
                 std::vector<MotionModelDiffDrive::Trajectory> candidate_trajectories;
@@ -345,7 +346,7 @@ void TrajectoryViewer::process(void)
                 }else{
                     std::cout << "\033[91mERROR: stacking\033[00m" << std::endl;
                     std::vector<MotionModelDiffDrive::Trajectory> clear_trajectories;
-                    visualize_trajectories(clear_trajectories, 0, 1, 0, N_P * N_H, candidate_trajectories_pub);
+                    visualize_trajectories(clear_trajectories, 0, 1, 0, max_trajecotry_num, candidate_trajectories_pub);
                     visualize_trajectory(MotionModelDiffDrive::Trajectory(), 1, 0, 0, selected_trajectory_pub);
                 }
             }else{
@@ -353,7 +354,7 @@ void TrajectoryViewer::process(void)
                 std::cout << "\033[91mturn for local goal\033[00m" << std::endl;
                 // for clear
                 std::vector<MotionModelDiffDrive::Trajectory> clear_trajectories;
-                visualize_trajectories(clear_trajectories, 0, 1, 0, N_P * N_H, candidate_trajectories_pub);
+                visualize_trajectories(clear_trajectories, 0, 1, 0, max_trajecotry_num, candidate_trajectories_pub);
                 visualize_trajectory(MotionModelDiffDrive::Trajectory(), 1, 0, 0, selected_trajectory_pub);
             }
             std::cout << "final time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;

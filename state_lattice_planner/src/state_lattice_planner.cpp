@@ -388,6 +388,7 @@ void StateLatticePlanner::process(void)
         if(local_goal_subscribed && local_map_updated && odom_updated && goal_transformed){
             std::cout << "=== state lattice planner ===" << std::endl;
             double start = ros::Time::now().toSec();
+            int max_trajectory_num = N_P * N_H;
             std::cout << "local goal: \n" << local_goal_base_link << std::endl;
             std::cout << "current_velocity: \n" << current_velocity << std::endl;
             Eigen::Vector3d goal(local_goal_base_link.pose.position.x, local_goal_base_link.pose.position.y, tf::getYaw(local_goal_base_link.pose.orientation));
@@ -407,7 +408,7 @@ void StateLatticePlanner::process(void)
                 }
             }
             if(generated){
-                visualize_trajectories(trajectories, 0, 1, 0, N_P * N_H, candidate_trajectories_pub);
+                visualize_trajectories(trajectories, 0, 1, 0, max_trajectory_num, candidate_trajectories_pub);
 
                 std::cout << "check candidate trajectories" << std::endl;
                 std::vector<MotionModelDiffDrive::Trajectory> candidate_trajectories;
@@ -430,7 +431,7 @@ void StateLatticePlanner::process(void)
                 }
                 // std::cout << "candidate time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
                 if(candidate_trajectories.size() > 0){
-                    visualize_trajectories(candidate_trajectories, 0, 0.5, 1, N_P * N_H, candidate_trajectories_no_collision_pub);
+                    visualize_trajectories(candidate_trajectories, 0, 0.5, 1, max_trajectory_num, candidate_trajectories_no_collision_pub);
 
                     std::cout << "pickup a optimal trajectory from candidate trajectories" << std::endl;
                     MotionModelDiffDrive::Trajectory trajectory;
@@ -466,8 +467,8 @@ void StateLatticePlanner::process(void)
                     velocity_pub.publish(cmd_vel);
                     // for clear
                     std::vector<MotionModelDiffDrive::Trajectory> clear_trajectories;
-                    visualize_trajectories(clear_trajectories, 0, 1, 0, N_P * N_H, candidate_trajectories_pub);
-                    visualize_trajectories(clear_trajectories, 0, 0.5, 1, N_P * N_H, candidate_trajectories_no_collision_pub);
+                    visualize_trajectories(clear_trajectories, 0, 1, 0, max_trajectory_num, candidate_trajectories_pub);
+                    visualize_trajectories(clear_trajectories, 0, 0.5, 1, max_trajectory_num, candidate_trajectories_no_collision_pub);
                     visualize_trajectory(MotionModelDiffDrive::Trajectory(), 1, 0, 0, selected_trajectory_pub);
                 }
             }else{
@@ -483,8 +484,8 @@ void StateLatticePlanner::process(void)
                 velocity_pub.publish(cmd_vel);
                 // for clear
                 std::vector<MotionModelDiffDrive::Trajectory> clear_trajectories;
-                visualize_trajectories(clear_trajectories, 0, 1, 0, N_P * N_H, candidate_trajectories_pub);
-                visualize_trajectories(clear_trajectories, 0, 0.5, 1, N_P * N_H, candidate_trajectories_no_collision_pub);
+                visualize_trajectories(clear_trajectories, 0, 1, 0, max_trajectory_num, candidate_trajectories_pub);
+                visualize_trajectories(clear_trajectories, 0, 0.5, 1, max_trajectory_num, candidate_trajectories_no_collision_pub);
                 visualize_trajectory(MotionModelDiffDrive::Trajectory(), 1, 0, 0, selected_trajectory_pub);
             }
             std::cout << "final time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;

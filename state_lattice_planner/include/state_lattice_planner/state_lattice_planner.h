@@ -88,6 +88,7 @@ protected:
     bool VERBOSE;
     int CONTROL_DELAY;
     double TURN_DIRECTION_THRESHOLD;
+    bool ENABLE_SHARP_TRAJECTORY;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;

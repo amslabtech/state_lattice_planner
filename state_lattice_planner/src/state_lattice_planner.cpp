@@ -24,6 +24,7 @@ StateLatticePlanner::StateLatticePlanner(void)
     local_nh.param("VERBOSE", VERBOSE, {false});
     local_nh.param("CONTROL_DELAY", CONTROL_DELAY, {1});
     local_nh.param("TURN_DIRECTION_THRESHOLD", TURN_DIRECTION_THRESHOLD, {M_PI/4.0});
+    local_nh.param("ENABLE_SHARP_TRAJECTORY", ENABLE_SHARP_TRAJECTORY, {false});
 
     std::cout << "HZ: " << HZ << std::endl;
     std::cout << "ROBOT_FRAME: " << ROBOT_FRAME << std::endl;
@@ -46,6 +47,7 @@ StateLatticePlanner::StateLatticePlanner(void)
     std::cout << "VERBOSE: " << VERBOSE << std::endl;
     std::cout << "CONTROL_DELAY: " << CONTROL_DELAY << std::endl;
     std::cout << "TURN_DIRECTION_THRESHOLD: " << TURN_DIRECTION_THRESHOLD << std::endl;
+    std::cout << "ENABLE_SHARP_TRAJECTORY: " << ENABLE_SHARP_TRAJECTORY << std::endl;
 
     SamplingParams sp(N_P, N_H, MAX_ALPHA, MAX_PSI);
     sampling_params = sp;
@@ -397,6 +399,10 @@ void StateLatticePlanner::process(void)
             generate_biased_polar_states(N_S, goal, sampling_params, target_velocity, states);
             std::vector<MotionModelDiffDrive::Trajectory> trajectories;
             bool generated = generate_trajectories(states, current_velocity.linear.x, current_velocity.angular.z, target_velocity, trajectories);
+            if(ENABLE_SHARP_TRAJECTORY){
+                generated |= generate_trajectories(states, current_velocity.linear.x, current_velocity.angular.z + MAX_D_YAWRATE / HZ, target_velocity, trajectories);
+                generated |= generate_trajectories(states, current_velocity.linear.x, current_velocity.angular.z - MAX_D_YAWRATE / HZ, target_velocity, trajectories);
+            }
             bool turn_flag = false;
             double relative_direction = atan2(local_goal_base_link.pose.position.y, local_goal_base_link.pose.position.x);
             if(goal.segment(0, 2).norm() < 0.1){

@@ -23,7 +23,7 @@ endif()
 
 catkin_package(
    INCLUDE_DIRS include
-#  LIBRARIES state_lattice_planner
+   LIBRARIES state_lattice_planner_lib lookup_table_generator_lib
 #  CATKIN_DEPENDS geometry_msgs roscpp rospy std_msgs
 #  DEPENDS system_lib
 )

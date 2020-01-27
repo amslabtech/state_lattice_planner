@@ -612,6 +612,7 @@ void StateLatticePlanner::visualize_trajectories(const std::vector<MotionModelDi
         v_trajectory.action = visualization_msgs::Marker::ADD;
         v_trajectory.lifetime = ros::Duration();
         v_trajectory.id = count;
+        v_trajectory.pose.orientation.w = 1.0;
         v_trajectory.scale.x = 0.02;
         geometry_msgs::Point p;
         for(const auto& pose : trajectories[count].trajectory){
@@ -649,6 +650,7 @@ void StateLatticePlanner::visualize_trajectory(const MotionModelDiffDrive::Traje
     v_trajectory.type = visualization_msgs::Marker::LINE_STRIP;
     v_trajectory.action = visualization_msgs::Marker::ADD;
     v_trajectory.lifetime = ros::Duration();
+    v_trajectory.pose.orientation.w = 1.0;
     v_trajectory.scale.x = 0.05;
     geometry_msgs::Point p;
     for(const auto& pose : trajectory.trajectory){

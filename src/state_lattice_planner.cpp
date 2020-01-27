@@ -25,6 +25,7 @@ StateLatticePlanner::StateLatticePlanner(void)
     local_nh.param("CONTROL_DELAY", CONTROL_DELAY, {1});
     local_nh.param("TURN_DIRECTION_THRESHOLD", TURN_DIRECTION_THRESHOLD, {M_PI/4.0});
     local_nh.param("ENABLE_SHARP_TRAJECTORY", ENABLE_SHARP_TRAJECTORY, {false});
+    local_nh.param("ENABLE_CONTROL_SPACE_SAMPLING", ENABLE_CONTROL_SPACE_SAMPLING, {false});
 
     std::cout << "HZ: " << HZ << std::endl;
     std::cout << "ROBOT_FRAME: " << ROBOT_FRAME << std::endl;
@@ -48,6 +49,7 @@ StateLatticePlanner::StateLatticePlanner(void)
     std::cout << "CONTROL_DELAY: " << CONTROL_DELAY << std::endl;
     std::cout << "TURN_DIRECTION_THRESHOLD: " << TURN_DIRECTION_THRESHOLD << std::endl;
     std::cout << "ENABLE_SHARP_TRAJECTORY: " << ENABLE_SHARP_TRAJECTORY << std::endl;
+    std::cout << "ENABLE_CONTROL_SPACE_SAMPLING: " << ENABLE_CONTROL_SPACE_SAMPLING << std::endl;
 
     SamplingParams sp(N_P, N_H, MAX_ALPHA, MAX_PSI);
     sampling_params = sp;
@@ -282,6 +284,26 @@ bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
             count++;
         }
     }
+    if(ENABLE_CONTROL_SPACE_SAMPLING){
+        for(int i=0;i<2;i++){
+            MotionModelDiffDrive::Trajectory traj;
+            MotionModelDiffDrive mmdd;
+            mmdd.set_param(MAX_YAWRATE, MAX_D_YAWRATE, MAX_ACCELERATION, MAX_WHEEL_ANGULAR_VELOCITY, WHEEL_RADIUS, TREAD);
+            MotionModelDiffDrive::State state(0, 0, 0, velocity, angular_velocity);
+            traj.trajectory.emplace_back(Eigen::Vector3d(state.x, state.y, state.yaw));
+            traj.velocities.emplace_back(state.v);
+            traj.angular_velocities.emplace_back(state.omega);
+            double omega = angular_velocity + (2 * i - 1) * MAX_D_YAWRATE / HZ;
+            omega = std::min(omega, std::max(omega, -MAX_YAWRATE));
+            for(int j=0;j<35;j++){
+                mmdd.update(state, velocity, omega, 1.0 / HZ, state);
+                traj.trajectory.emplace_back(Eigen::Vector3d(state.x, state.y, state.yaw));
+                traj.velocities.emplace_back(state.v);
+                traj.angular_velocities.emplace_back(state.omega);
+            }
+            trajectories_.emplace_back(traj);
+        }
+    }
     for(auto it=trajectories_.begin();it!=trajectories_.end();){
         if(it->trajectory.size() == 0){
             it = trajectories_.erase(it);
@@ -390,7 +412,7 @@ void StateLatticePlanner::process(void)
         if(local_goal_subscribed && local_map_updated && odom_updated && goal_transformed){
             std::cout << "=== state lattice planner ===" << std::endl;
             double start = ros::Time::now().toSec();
-            int max_trajectory_num = N_P * N_H;
+            static int last_trajectory_num = 0;
             std::cout << "local goal: \n" << local_goal_base_link << std::endl;
             std::cout << "current_velocity: \n" << current_velocity << std::endl;
             Eigen::Vector3d goal(local_goal_base_link.pose.position.x, local_goal_base_link.pose.position.y, tf::getYaw(local_goal_base_link.pose.orientation));
@@ -414,7 +436,7 @@ void StateLatticePlanner::process(void)
                 }
             }
             if(generated){
-                visualize_trajectories(trajectories, 0, 1, 0, max_trajectory_num, candidate_trajectories_pub);
+                visualize_trajectories(trajectories, 0, 1, 0, last_trajectory_num, candidate_trajectories_pub);
 
                 std::cout << "check candidate trajectories" << std::endl;
                 std::vector<MotionModelDiffDrive::Trajectory> candidate_trajectories;
@@ -437,7 +459,7 @@ void StateLatticePlanner::process(void)
                 }
                 // std::cout << "candidate time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
                 if(candidate_trajectories.size() > 0){
-                    visualize_trajectories(candidate_trajectories, 0, 0.5, 1, max_trajectory_num, candidate_trajectories_no_collision_pub);
+                    visualize_trajectories(candidate_trajectories, 0, 0.5, 1, last_trajectory_num, candidate_trajectories_no_collision_pub);
 
                     std::cout << "pickup a optimal trajectory from candidate trajectories" << std::endl;
                     MotionModelDiffDrive::Trajectory trajectory;
@@ -473,8 +495,8 @@ void StateLatticePlanner::process(void)
                     velocity_pub.publish(cmd_vel);
                     // for clear
                     std::vector<MotionModelDiffDrive::Trajectory> clear_trajectories;
-                    visualize_trajectories(clear_trajectories, 0, 1, 0, max_trajectory_num, candidate_trajectories_pub);
-                    visualize_trajectories(clear_trajectories, 0, 0.5, 1, max_trajectory_num, candidate_trajectories_no_collision_pub);
+                    visualize_trajectories(clear_trajectories, 0, 1, 0, last_trajectory_num, candidate_trajectories_pub);
+                    visualize_trajectories(clear_trajectories, 0, 0.5, 1, last_trajectory_num, candidate_trajectories_no_collision_pub);
                     visualize_trajectory(MotionModelDiffDrive::Trajectory(), 1, 0, 0, selected_trajectory_pub);
                 }
             }else{
@@ -490,10 +512,11 @@ void StateLatticePlanner::process(void)
                 velocity_pub.publish(cmd_vel);
                 // for clear
                 std::vector<MotionModelDiffDrive::Trajectory> clear_trajectories;
-                visualize_trajectories(clear_trajectories, 0, 1, 0, max_trajectory_num, candidate_trajectories_pub);
-                visualize_trajectories(clear_trajectories, 0, 0.5, 1, max_trajectory_num, candidate_trajectories_no_collision_pub);
+                visualize_trajectories(clear_trajectories, 0, 1, 0, last_trajectory_num, candidate_trajectories_pub);
+                visualize_trajectories(clear_trajectories, 0, 0.5, 1, last_trajectory_num, candidate_trajectories_no_collision_pub);
                 visualize_trajectory(MotionModelDiffDrive::Trajectory(), 1, 0, 0, selected_trajectory_pub);
             }
+            last_trajectory_num = trajectories.size();
             std::cout << "final time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
         }else{
             if(!local_goal_subscribed){

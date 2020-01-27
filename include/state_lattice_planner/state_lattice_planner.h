@@ -89,6 +89,7 @@ protected:
     int CONTROL_DELAY;
     double TURN_DIRECTION_THRESHOLD;
     bool ENABLE_SHARP_TRAJECTORY;
+    bool ENABLE_CONTROL_SPACE_SAMPLING;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;

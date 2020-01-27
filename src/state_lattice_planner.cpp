@@ -284,7 +284,18 @@ bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
             count++;
         }
     }
+    for(auto it=trajectories_.begin();it!=trajectories_.end();){
+        if(it->trajectory.size() == 0){
+            it = trajectories_.erase(it);
+        }else{
+            ++it;
+        }
+    }
     if(ENABLE_CONTROL_SPACE_SAMPLING){
+        int min_trajectory_size = trajectories_[0].trajectory.size();
+        for(auto& traj : trajectories_){
+            min_trajectory_size = std::min(min_trajectory_size, (int)traj.trajectory.size());
+        }
         for(int i=0;i<2;i++){
             MotionModelDiffDrive::Trajectory traj;
             MotionModelDiffDrive mmdd;
@@ -295,20 +306,13 @@ bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
             traj.angular_velocities.emplace_back(state.omega);
             double omega = angular_velocity + (2 * i - 1) * MAX_D_YAWRATE / HZ;
             omega = std::min(omega, std::max(omega, -MAX_YAWRATE));
-            for(int j=0;j<35;j++){
+            for(int j=0;j<min_trajectory_size;j++){
                 mmdd.update(state, velocity, omega, 1.0 / HZ, state);
                 traj.trajectory.emplace_back(Eigen::Vector3d(state.x, state.y, state.yaw));
                 traj.velocities.emplace_back(state.v);
                 traj.angular_velocities.emplace_back(state.omega);
             }
             trajectories_.emplace_back(traj);
-        }
-    }
-    for(auto it=trajectories_.begin();it!=trajectories_.end();){
-        if(it->trajectory.size() == 0){
-            it = trajectories_.erase(it);
-        }else{
-            ++it;
         }
     }
     std::copy(trajectories_.begin(), trajectories_.end(), std::back_inserter(trajectories));

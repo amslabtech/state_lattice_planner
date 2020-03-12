@@ -77,11 +77,6 @@ MotionModelDiffDrive::Trajectory::Trajectory(void)
 
 }
 
-bool MotionModelDiffDrive::Trajectory::operator<(const Trajectory& another) const
-{
-    return cost < another.cost;
-}
-
 void MotionModelDiffDrive::set_param(const double max_yawrate, const double max_d_yawrate, const double max_acceleration, const double max_wheel_angular_velocity, const double wheel_radius, const double tread)
 {
     MAX_YAWRATE = max_yawrate;

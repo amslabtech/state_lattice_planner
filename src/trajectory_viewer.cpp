@@ -283,7 +283,13 @@ bool TrajectoryViewer::pickup_trajectory(const std::vector<MotionModelDiffDrive:
         trajectories.push_back(traj);
     }
     // ascending sort by cost
-    std::sort(trajectories.begin(), trajectories.end());
+    auto compare_trajectories = [=](const MotionModelDiffDrive::Trajectory& lhs, const MotionModelDiffDrive::Trajectory& rhs)
+    {
+        double l_distance = (lhs.trajectory.back().segment(0, 2) - goal.segment(0, 2)).norm();
+        double r_distance = (rhs.trajectory.back().segment(0, 2) - goal.segment(0, 2)).norm();
+        return l_distance < r_distance;
+    };
+    std::sort(trajectories.begin(), trajectories.end(), compare_trajectories);
 
     double min_diff_yaw = 100;
     const int N = ((int)trajectories.size() < sampling_params.n_h) ? trajectories.size() : sampling_params.n_h;

@@ -1,19 +1,7 @@
 #ifndef __STATE_LATTICE_PLANNER_H
 #define __STATE_LATTICE_PLANNER_H
 
-#include <fstream>
 #include <sstream>
-
-#include <ros/ros.h>
-#include <tf/tf.h>
-#include <geometry_msgs/Twist.h>
-#include <nav_msgs/OccupancyGrid.h>
-#include <nav_msgs/Odometry.h>
-#include <geometry_msgs/PoseStamped.h>
-#include <visualization_msgs/Marker.h>
-#include <visualization_msgs/MarkerArray.h>
-#include <tf/tf.h>
-#include <tf/transform_listener.h>
 
 #include <Eigen/Dense>
 #include <omp.h>
@@ -46,69 +34,35 @@ public:
 
     StateLatticePlanner(void);
 
-    void process(void);
-    void local_goal_callback(const geometry_msgs::PoseStampedConstPtr&);
-    void local_map_callback(const nav_msgs::OccupancyGridConstPtr&);
-    void odom_callback(const nav_msgs::OdometryConstPtr&);
-    void target_velocity_callback(const geometry_msgs::TwistConstPtr&);
-    void generate_biased_polar_states(const int, const Eigen::Vector3d&, const SamplingParams&, double, std::vector<Eigen::Vector3d>&);
-    void sample_states(const std::vector<double>&, const SamplingParams&, std::vector<Eigen::Vector3d>&);
+    void set_optimization_params(int, double);
+    void set_sampling_params(const SamplingParams&);
+    void set_target_velocity(double);
+    void set_motion_params(double, double, double);
+    void set_vehicle_params(double, double);
+    void load_lookup_table(const std::string&);
+    void generate_biased_polar_states(const int, const Eigen::Vector3d&, double, std::vector<Eigen::Vector3d>&);
+    void sample_states(const std::vector<double>&, std::vector<Eigen::Vector3d>&);
     bool generate_trajectories(const std::vector<Eigen::Vector3d>&, const double, const double, const double, std::vector<MotionModelDiffDrive::Trajectory>&);
-    bool check_collision(const nav_msgs::OccupancyGrid&, const std::vector<Eigen::Vector3d>&);
-    bool check_collision(const nav_msgs::OccupancyGrid&, const std::vector<Eigen::Vector3d>&, double);
     bool pickup_trajectory(const std::vector<MotionModelDiffDrive::Trajectory>&, const Eigen::Vector3d&, MotionModelDiffDrive::Trajectory&);
     void load_lookup_table(void);
     void get_optimized_param_from_lookup_table(const Eigen::Vector3d, const double, const double, MotionModelDiffDrive::ControlParams&);
     double get_target_velocity(const Eigen::Vector3d&);
+    void generate_bresemhams_line(const std::vector<Eigen::Vector3d>&, const double&, std::vector<Eigen::Vector3d>&);
 
 protected:
-    void swap(double&, double&);
-    void generate_bresemhams_line(const std::vector<Eigen::Vector3d>&, const double&, std::vector<Eigen::Vector3d>&);
-    void visualize_trajectories(const std::vector<MotionModelDiffDrive::Trajectory>&, const double, const double, const double, const int, const ros::Publisher&);
-    void visualize_trajectory(const MotionModelDiffDrive::Trajectory&, const double, const double, const double, const ros::Publisher&);
-
     double HZ;
-    std::string ROBOT_FRAME;
-    int N_P;
-    int N_H;
-    int N_S;
-    double MAX_ALPHA;
-    double MAX_PSI;
-    double MAX_ACCELERATION;
-    double TARGET_VELOCITY;
-    std::string LOOKUP_TABLE_FILE_NAME;
     int MAX_ITERATION;
     double OPTIMIZATION_TOLERANCE;
+    double TARGET_VELOCITY;
+    double MAX_ACCELERATION;
     double MAX_YAWRATE;
     double MAX_D_YAWRATE;
     double MAX_WHEEL_ANGULAR_VELOCITY;
     double WHEEL_RADIUS;
     double TREAD;
-    double IGNORABLE_OBSTACLE_RANGE;
     bool VERBOSE;
-    int CONTROL_DELAY;
-    double TURN_DIRECTION_THRESHOLD;
-    bool ENABLE_SHARP_TRAJECTORY;
     bool ENABLE_CONTROL_SPACE_SAMPLING;
 
-    ros::NodeHandle nh;
-    ros::NodeHandle local_nh;
-
-    ros::Publisher velocity_pub;
-    ros::Publisher candidate_trajectories_pub;
-    ros::Publisher candidate_trajectories_no_collision_pub;
-    ros::Publisher selected_trajectory_pub;
-    ros::Subscriber local_map_sub;
-    ros::Subscriber local_goal_sub;
-    ros::Subscriber odom_sub;
-    ros::Subscriber target_velocity_sub;
-    tf::TransformListener listener;
-    geometry_msgs::PoseStamped local_goal;
-    nav_msgs::OccupancyGrid local_map;
-    geometry_msgs::Twist current_velocity;
-    bool local_goal_subscribed;
-    bool local_map_updated;
-    bool odom_updated;
     SamplingParams sampling_params;
     LookupTableUtils::LookupTable lookup_table;
 };

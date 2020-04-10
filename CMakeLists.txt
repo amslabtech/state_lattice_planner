@@ -53,7 +53,7 @@ add_dependencies(state_lattice_planner_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} $
 add_dependencies(motion_model_diff_drive ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(trajectory_generator_diff_drive ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-add_executable(state_lattice_planner src/state_lattice_planner_node.cpp)
+add_executable(state_lattice_planner src/state_lattice_planner_node.cpp src/state_lattice_planner_ros.cpp)
 add_executable(lookup_table_generator src/lookup_table_generator_node.cpp)
 add_executable(trajectory_viewer src/trajectory_viewer.cpp src/lookup_table_utils.cpp)
 

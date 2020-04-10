@@ -153,20 +153,23 @@ void MotionModelDiffDrive::control_speed(const State& state, State& _state)
 void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlParams& control_param, Trajectory& trajectory)
 {
     // std::cout << "gen start" << std::endl;
-    // double start = ros::Time::now().toSec();
+    auto start = std::chrono::system_clock::now();
     AngularVelocityParams omega = control_param.omega;
     VelocityParams vel = control_param.vel;
 
     vel.time = estimate_driving_time(control_param);
     // std::cout << "driving time: " << vel.time << "[s]" << std::endl;
-    // std::cout << "estimate time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+    auto time = std::chrono::system_clock::now();
+    double elapsed_time = std::chrono::duration_cast<std::chrono::seconds>(time - start).count();
+    std::cout << "estimate time: " << elapsed_time << "[s]" << std::endl;
 
     make_velocity_profile(dt, vel);
-    // std::cout << "v prof: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+    time = std::chrono::system_clock::now();
+    elapsed_time = std::chrono::duration_cast<std::chrono::seconds>(time - start).count();
+    std::cout << "v prof: " << elapsed_time << "[s]" << std::endl;
     // std::cout << vel.v0 << ", " << vel.vt << ", " << vel.vf << ", " << vel.time << ", " << omega.sf << ", " << std::endl;
 
     omega.calculate_spline(ratio);
-    //std::cout << "spline: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     const int N = s_profile.size();
     // std::cout << "n: " << N << std::endl;
     if(N == 0){
@@ -186,9 +189,7 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlPar
     // trajectory.angular_velocities[0] = state.v * state.omega;
     trajectory.angular_velocities[0] = state.omega;
 
-    //start = ros::Time::now().toSec();
     for(int i=1;i<N;i++){
-        //double u_start = ros::Time::now().toSec();
         double s = s_profile[i];
         double k = 0;
         if(s < sf_2){
@@ -203,27 +204,24 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlPar
         trajectory.velocities[i] = state.v;
         // trajectory.angular_velocities[i] = state.v * state.omega;
         trajectory.angular_velocities[i] = state.omega;
-        //std::cout << "t" << i << ": " << ros::Time::now().toSec() - u_start << "[s]" << std::endl;
     }
-    //std::cout << "gen t: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
+    time = std::chrono::system_clock::now();
+    elapsed_time = std::chrono::duration_cast<std::chrono::seconds>(time - start).count();
+    std::cout << "gen t: " << elapsed_time << "[s]" << std::endl;
 }
 
 void MotionModelDiffDrive::generate_last_state(const double dt, const double trajectory_length, const VelocityParams& _vel, const double k0, const double km, const double kf, Eigen::Vector3d& output)
 {
     // std::cout << "--- generate last state ---" << std::endl;
     // std::cout << k0 << ", " << km << ", " << kf << ", " << trajectory_length << std::endl;
-    //double start = ros::Time::now().toSec();
     AngularVelocityParams omega(k0, km, kf, trajectory_length);
     VelocityParams vel = _vel;
 
     vel.time = estimate_driving_time(ControlParams(vel, omega));
-    //std::cout << "estimate time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
     make_velocity_profile(dt, vel);
-    //std::cout << "v_profile time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
     omega.calculate_spline(ratio);
-    //std::cout << "spline time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     const int N = s_profile.size();
     double sf_2 = omega.sf * ratio;
     State state(0, 0, 0, vel.v0, omega.k0);
@@ -239,13 +237,11 @@ void MotionModelDiffDrive::generate_last_state(const double dt, const double tra
         update(state, v_profile[i], k, dt, state);
     }
     output << state.x, state.y, state.yaw;
-    //std::cout << "finish time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 }
 
 void MotionModelDiffDrive::AngularVelocityParams::calculate_spline(double ratio)
 {
     // std::cout << "spline" << std::endl;
-    // double start = ros::Time::now().toSec();
     // 3d spline interpolation
     Eigen::Vector3d x(0, sf * ratio, sf);
     Eigen::Vector3d y(k0, km, kf);

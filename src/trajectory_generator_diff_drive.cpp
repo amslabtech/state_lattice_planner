@@ -38,7 +38,6 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
     Eigen::Matrix3d jacobian;
 
     while(1){
-        //double start = ros::Time::now().toSec();
         // std::cout << "---" << std::endl;
         if(cost.norm() < tolerance){
             if(verbose){
@@ -54,7 +53,6 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
         trajectory.trajectory.clear();
         trajectory.velocities.clear();
         trajectory.angular_velocities.clear();
-        //std::cout << "bfr traj gen time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
         model.generate_trajectory(dt, output, trajectory);
         /*
         std::cout << "size: " << trajectory.trajectory.size() << std::endl;
@@ -63,10 +61,8 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
             return -1;
         }
         */
-        //std::cout << "traj gen time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
         get_jacobian(dt, output, h, jacobian);
-        //std::cout << "get jacobian time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
         // std::cout << "j: \n" << jacobian << std::endl;
         // std::cout << "j^-1: \n" << jacobian.inverse() << std::endl;
         cost = goal - trajectory.trajectory.back();
@@ -78,7 +74,6 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
             }
             return -1;
         }
-        //std::cout << "jacobian inverse time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
         // std::cout << "cost vector: " << cost.transpose() << std::endl;
         // std::cout << "cost: " << cost.norm() << std::endl;
         // std::cout << "dp" << dp.transpose() << std::endl;
@@ -118,7 +113,6 @@ double TrajectoryGeneratorDiffDrive::generate_optimized_trajectory(const Eigen::
 
         // std::cout << "count: " << count << std::endl;
         count++;
-        // std::cout << "optimization loop: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     }
     //std::cout << "final cost: \n" << cost << std::endl;
     return cost.norm();
@@ -130,7 +124,6 @@ void TrajectoryGeneratorDiffDrive::get_jacobian(const double dt, const MotionMod
      * h: (dkm, dkf, dsf)
      */
     //std::cout << "j start" << std::endl;
-    // double start = ros::Time::now().toSec();
     MotionModelDiffDrive::AngularVelocityParams omega = control.omega;
     Eigen::Vector3d x0;
     model.generate_last_state(dt, omega.sf, control.vel, omega.k0, omega.km - h(0), omega.kf, x0);
@@ -139,26 +132,22 @@ void TrajectoryGeneratorDiffDrive::get_jacobian(const double dt, const MotionMod
 
     Eigen::Vector3d dx_dkm;
     dx_dkm << (x1 - x0) / (2.0 * h(0));
-    // std::cout << "dx_dkm time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
     model.generate_last_state(dt, omega.sf, control.vel, omega.k0, omega.km, omega.kf - h(1), x0);
     model.generate_last_state(dt, omega.sf, control.vel, omega.k0, omega.km, omega.kf + h(1), x1);
 
     Eigen::Vector3d dx_dkf;
     dx_dkf << (x1 - x0) / (2.0 * h(1));
-    // std::cout << "dx_dkf time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
     model.generate_last_state(dt, omega.sf - h(2), control.vel, omega.k0, omega.km, omega.kf, x0);
     model.generate_last_state(dt, omega.sf + h(2), control.vel, omega.k0, omega.km, omega.kf, x1);
 
     Eigen::Vector3d dx_dsf;
     dx_dsf << (x1 - x0) / (2.0 * h(2));
-    // std::cout << "dx_dsf time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 
     j << dx_dkm(0), dx_dkf(0), dx_dsf(0),
          dx_dkm(1), dx_dkf(1), dx_dsf(1),
          dx_dkm(2), dx_dkf(2), dx_dsf(2);
-    //std::cout << "j time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
 }
 
 void TrajectoryGeneratorDiffDrive::calculate_scale_factor(double dt, double tolerance, const Eigen::Vector3d& goal, Eigen::Vector3d& cost, MotionModelDiffDrive::ControlParams& output, MotionModelDiffDrive::Trajectory& trajectory, Eigen::Vector3d& dp)

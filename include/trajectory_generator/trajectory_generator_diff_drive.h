@@ -1,10 +1,6 @@
 #ifndef __TRAJECTORY_GENERATOR_DIFF_DRIVE_H
 #define __TRAJECTORY_GENERATOR_DIFF_DRIVE_H
 
-#include <ros/ros.h>
-
-#include <Eigen/Dense>
-
 #include <trajectory_generator/motion_model_diff_drive.h>
 
 class TrajectoryGeneratorDiffDrive

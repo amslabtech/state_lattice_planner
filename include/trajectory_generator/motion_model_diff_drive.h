@@ -1,7 +1,9 @@
 #ifndef __MOTION_MODEL_DIFF_DRIVE_H
 #define __MOTION_MODEL_DIFF_DRIVE_H
 
-#include <ros/ros.h>
+#include <iostream>
+#include <vector>
+#include <chrono>
 
 #include <Eigen/Dense>
 

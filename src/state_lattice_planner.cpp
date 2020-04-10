@@ -296,23 +296,27 @@ bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3
         for(auto& traj : trajectories_){
             min_trajectory_size = std::min(min_trajectory_size, (int)traj.trajectory.size());
         }
-        for(int i=0;i<2;i++){
-            MotionModelDiffDrive::Trajectory traj;
-            MotionModelDiffDrive mmdd;
-            mmdd.set_param(MAX_YAWRATE, MAX_D_YAWRATE, MAX_ACCELERATION, MAX_WHEEL_ANGULAR_VELOCITY, WHEEL_RADIUS, TREAD);
-            MotionModelDiffDrive::State state(0, 0, 0, velocity, angular_velocity);
-            traj.trajectory.emplace_back(Eigen::Vector3d(state.x, state.y, state.yaw));
-            traj.velocities.emplace_back(state.v);
-            traj.angular_velocities.emplace_back(state.omega);
-            double omega = angular_velocity + (2 * i - 1) * MAX_D_YAWRATE / HZ;
-            omega = std::min(omega, std::max(omega, -MAX_YAWRATE));
-            for(int j=0;j<min_trajectory_size;j++){
-                mmdd.update(state, velocity, omega, 1.0 / HZ, state);
+        for(int i=0;i<3;i++){
+            for(int j=0;j<3;j++){
+                MotionModelDiffDrive::Trajectory traj;
+                MotionModelDiffDrive mmdd;
+                mmdd.set_param(MAX_YAWRATE, MAX_D_YAWRATE, MAX_ACCELERATION, MAX_WHEEL_ANGULAR_VELOCITY, WHEEL_RADIUS, TREAD);
+                MotionModelDiffDrive::State state(0, 0, 0, velocity, angular_velocity);
                 traj.trajectory.emplace_back(Eigen::Vector3d(state.x, state.y, state.yaw));
                 traj.velocities.emplace_back(state.v);
                 traj.angular_velocities.emplace_back(state.omega);
+                double velocity_ = velocity + (j - 1) * MAX_ACCELERATION / HZ;
+                velocity_ = std::min(TARGET_VELOCITY, std::max(-TARGET_VELOCITY, velocity_));
+                double omega = angular_velocity + (i - 1) * MAX_D_YAWRATE / HZ;
+                omega = std::min(MAX_YAWRATE, std::max(omega, -MAX_YAWRATE));
+                for(int j=0;j<min_trajectory_size;j++){
+                    mmdd.update(state, velocity_, omega, 1.0 / HZ, state);
+                    traj.trajectory.emplace_back(Eigen::Vector3d(state.x, state.y, state.yaw));
+                    traj.velocities.emplace_back(state.v);
+                    traj.angular_velocities.emplace_back(state.omega);
+                }
+                trajectories_.emplace_back(traj);
             }
-            trajectories_.emplace_back(traj);
         }
     }
     std::copy(trajectories_.begin(), trajectories_.end(), std::back_inserter(trajectories));

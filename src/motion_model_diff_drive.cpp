@@ -161,12 +161,12 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlPar
     // std::cout << "driving time: " << vel.time << "[s]" << std::endl;
     auto time = std::chrono::system_clock::now();
     double elapsed_time = std::chrono::duration_cast<std::chrono::seconds>(time - start).count();
-    std::cout << "estimate time: " << elapsed_time << "[s]" << std::endl;
+    // std::cout << "estimate time: " << elapsed_time << "[s]" << std::endl;
 
     make_velocity_profile(dt, vel);
     time = std::chrono::system_clock::now();
     elapsed_time = std::chrono::duration_cast<std::chrono::seconds>(time - start).count();
-    std::cout << "v prof: " << elapsed_time << "[s]" << std::endl;
+    // std::cout << "v prof: " << elapsed_time << "[s]" << std::endl;
     // std::cout << vel.v0 << ", " << vel.vt << ", " << vel.vf << ", " << vel.time << ", " << omega.sf << ", " << std::endl;
 
     omega.calculate_spline(ratio);
@@ -207,7 +207,7 @@ void MotionModelDiffDrive::generate_trajectory(const double dt, const ControlPar
     }
     time = std::chrono::system_clock::now();
     elapsed_time = std::chrono::duration_cast<std::chrono::seconds>(time - start).count();
-    std::cout << "gen t: " << elapsed_time << "[s]" << std::endl;
+    // std::cout << "gen t: " << elapsed_time << "[s]" << std::endl;
 }
 
 void MotionModelDiffDrive::generate_last_state(const double dt, const double trajectory_length, const VelocityParams& _vel, const double k0, const double km, const double kf, Eigen::Vector3d& output)

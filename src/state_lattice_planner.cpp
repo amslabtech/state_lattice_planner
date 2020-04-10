@@ -656,7 +656,8 @@ void StateLatticePlanner::visualize_trajectory(const MotionModelDiffDrive::Traje
     v_trajectory.action = visualization_msgs::Marker::ADD;
     v_trajectory.lifetime = ros::Duration();
     v_trajectory.pose.orientation.w = 1.0;
-    v_trajectory.scale.x = 0.05;
+    v_trajectory.pose.position.z = 0.1;
+    v_trajectory.scale.x = 0.10;
     geometry_msgs::Point p;
     for(const auto& pose : trajectory.trajectory){
         p.x = pose(0);

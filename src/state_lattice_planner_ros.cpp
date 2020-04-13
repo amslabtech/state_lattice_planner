@@ -105,50 +105,6 @@ void StateLatticePlannerROS::target_velocity_callback(const geometry_msgs::Twist
     }
 }
 
-bool StateLatticePlannerROS::check_collision(const nav_msgs::OccupancyGrid& local_costmap, const std::vector<Eigen::Vector3d>& trajectory)
-{
-    /*
-     * if given trajectory is considered to collide with an obstacle, return true
-     */
-    double resolution = local_costmap.info.resolution;
-    std::vector<Eigen::Vector3d> bresenhams_line;
-    planner.generate_bresemhams_line(trajectory, resolution, bresenhams_line);
-    int size = bresenhams_line.size();
-    for(int i=0;i<size;i++){
-        int xi = round((bresenhams_line[i](0) - local_costmap.info.origin.position.x) / resolution);
-        int yi = round((bresenhams_line[i](1) - local_costmap.info.origin.position.y) / resolution);
-        //std::cout << xi << ", " << yi << std::endl;
-        if(local_costmap.data[xi + local_costmap.info.width * yi] != 0){
-            return true;
-        }
-    }
-    return false;
-}
-
-bool StateLatticePlannerROS::check_collision(const nav_msgs::OccupancyGrid& local_costmap, const std::vector<Eigen::Vector3d>& trajectory, double range)
-{
-    /*
-     * if given trajectory is considered to collide with an obstacle, return true
-     */
-    double resolution = local_costmap.info.resolution;
-    std::vector<Eigen::Vector3d> bresenhams_line;
-    planner.generate_bresemhams_line(trajectory, resolution, bresenhams_line);
-    int size = bresenhams_line.size();
-    for(int i=0;i<size;i++){
-        int xi = round((bresenhams_line[i](0) - local_costmap.info.origin.position.x) / resolution);
-        int yi = round((bresenhams_line[i](1) - local_costmap.info.origin.position.y) / resolution);
-        //std::cout << xi << ", " << yi << std::endl;
-        if(local_costmap.data[xi + local_costmap.info.width * yi] != 0){
-            if(bresenhams_line[i].norm() > range){
-                return false;
-            }else{
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
 void StateLatticePlannerROS::process(void)
 {
     ros::Rate loop_rate(HZ);
@@ -195,8 +151,10 @@ void StateLatticePlannerROS::process(void)
 
                 std::cout << "check candidate trajectories" << std::endl;
                 std::vector<MotionModelDiffDrive::Trajectory> candidate_trajectories;
+                state_lattice_planner::ObstacleMap<int> obstacle_map;
+                get_obstacle_map(local_map, obstacle_map);
                 for(const auto& trajectory : trajectories){
-                    if(!check_collision(local_map, trajectory.trajectory)){
+                    if(!planner.check_collision(obstacle_map, trajectory.trajectory)){
                         candidate_trajectories.push_back(trajectory);
                     }
                 }
@@ -206,7 +164,7 @@ void StateLatticePlannerROS::process(void)
                     // if no candidate trajectories
                     // collision checking with relaxed restrictions
                     for(const auto& trajectory : trajectories){
-                        if(!check_collision(local_map, trajectory.trajectory, IGNORABLE_OBSTACLE_RANGE)){
+                        if(!planner.check_collision(obstacle_map, trajectory.trajectory, IGNORABLE_OBSTACLE_RANGE)){
                             candidate_trajectories.push_back(trajectory);
                         }
                     }
@@ -355,4 +313,14 @@ void StateLatticePlannerROS::visualize_trajectory(const MotionModelDiffDrive::Tr
         v_trajectory.points.push_back(p);
     }
     pub.publish(v_trajectory);
+}
+
+template<typename TYPE>
+void StateLatticePlannerROS::get_obstacle_map(const nav_msgs::OccupancyGrid& input_map, state_lattice_planner::ObstacleMap<TYPE>& output_map)
+{
+    output_map.set_shape(input_map.info.width, input_map.info.height, input_map.info.resolution);
+    output_map.data.clear();
+    for(const auto& data : input_map.data){
+        output_map.data.emplace_back(data);
+    }
 }

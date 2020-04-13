@@ -367,3 +367,39 @@ double StateLatticePlanner::get_target_velocity(const Eigen::Vector3d& goal)
         return -TARGET_VELOCITY;
     }
 }
+
+bool StateLatticePlanner::check_collision(const state_lattice_planner::ObstacleMap<int>& map, const std::vector<Eigen::Vector3d>& trajectory)
+{
+    /*
+     * if given trajectory is considered to collide with an obstacle, return true
+     */
+    double resolution = map.get_resolution();
+    std::vector<Eigen::Vector3d> bresenhams_line;
+    generate_bresemhams_line(trajectory, resolution, bresenhams_line);
+    int size = bresenhams_line.size();
+    for(int i=0;i<size;i++){
+        int index = map.get_index_from_xy(bresenhams_line[i](0), bresenhams_line[i](1));
+        if(map.data[index] != 0){
+            return true;
+        }
+    }
+    return false;
+}
+
+bool StateLatticePlanner::check_collision(const state_lattice_planner::ObstacleMap<int>& map, const std::vector<Eigen::Vector3d>& trajectory, double range)
+{
+    /*
+     * if given trajectory is considered to collide with an obstacle, return true
+     */
+    double resolution = map.get_resolution();
+    std::vector<Eigen::Vector3d> bresenhams_line;
+    generate_bresemhams_line(trajectory, resolution, bresenhams_line);
+    int size = bresenhams_line.size();
+    for(int i=0;i<size;i++){
+        int index = map.get_index_from_xy(bresenhams_line[i](0), bresenhams_line[i](1));
+        if(map.data[index] != 0){
+            return true;
+        }
+    }
+    return false;
+}

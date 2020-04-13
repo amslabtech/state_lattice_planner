@@ -9,6 +9,7 @@
 #include <trajectory_generator/motion_model_diff_drive.h>
 #include <trajectory_generator/trajectory_generator_diff_drive.h>
 #include "state_lattice_planner/lookup_table_utils.h"
+#include "state_lattice_planner/obstacle_map.h"
 
 class StateLatticePlanner
 {
@@ -48,6 +49,8 @@ public:
     void get_optimized_param_from_lookup_table(const Eigen::Vector3d, const double, const double, MotionModelDiffDrive::ControlParams&);
     double get_target_velocity(const Eigen::Vector3d&);
     void generate_bresemhams_line(const std::vector<Eigen::Vector3d>&, const double&, std::vector<Eigen::Vector3d>&);
+    bool check_collision(const state_lattice_planner::ObstacleMap<int>&, const std::vector<Eigen::Vector3d>&);
+    bool check_collision(const state_lattice_planner::ObstacleMap<int>&, const std::vector<Eigen::Vector3d>&, double);
 
 protected:
     double HZ;

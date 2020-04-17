@@ -1,0 +1,16 @@
+catkin_add_gtest(trajectory_generator_test
+    src/trajectory_generator_test.cpp
+)
+target_link_libraries(trajectory_generator_test
+    motion_model_diff_drive
+    trajectory_generator_diff_drive
+)
+catkin_add_gtest(state_lattice_planner_function_test
+    src/state_lattice_planner_function_test.cpp
+)
+target_link_libraries(state_lattice_planner_function_test
+    lookup_table_generator_lib
+    state_lattice_planner_lib
+    motion_model_diff_drive
+    trajectory_generator_diff_drive
+)

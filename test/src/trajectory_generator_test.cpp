@@ -1,14 +1,10 @@
 #include <gtest/gtest.h>
 
-#include <ros/ros.h>
-
-
 #include "trajectory_generator/motion_model_diff_drive.h"
 #include "trajectory_generator/trajectory_generator_diff_drive.h"
 
-TEST(TestSuite, test0)
+TEST(MotionModelTest, Interpolation)
 {
-    ros::NodeHandle nh;
     MotionModelDiffDrive::AngularVelocityParams omega(0, 0.5, 1.0, 5);
     omega.calculate_spline();
     MotionModelDiffDrive mm;
@@ -22,9 +18,8 @@ TEST(TestSuite, test0)
     EXPECT_NEAR(1.0, cf, 0.01);
 }
 
-TEST(TestSuite, test1)
+TEST(MotionModelTest, Interpolation2)
 {
-    ros::NodeHandle nh;
     MotionModelDiffDrive::AngularVelocityParams omega(0, -0.5, -1.0, 10);
     omega.calculate_spline();
     MotionModelDiffDrive mm;
@@ -38,9 +33,8 @@ TEST(TestSuite, test1)
     EXPECT_NEAR(-1.0, cf, 0.01);
 }
 
-TEST(TestSuite, test2)
+TEST(MotionModelTest, GenerateTrajectory)
 {
-    ros::NodeHandle nh;
     MotionModelDiffDrive mm;
     MotionModelDiffDrive::VelocityParams vel(0.5, 0.5, 1.0, 0.5, 0.5);
     MotionModelDiffDrive::AngularVelocityParams omega(0.0, 0.0, 0.0, 5);
@@ -52,9 +46,8 @@ TEST(TestSuite, test2)
     EXPECT_NEAR(0, trajectory.trajectory.back()(2), 0.05);
 }
 
-TEST(TestSuite, test3)
+TEST(TrajectoryGeneratorFunctionTest, GenerateOptimizedTrajectory)
 {
-    ros::NodeHandle nh;
     TrajectoryGeneratorDiffDrive tg;
     MotionModelDiffDrive::ControlParams output;
     MotionModelDiffDrive::VelocityParams init_v(0.0, 0.5, 1.0, 0.5, 0.5);
@@ -62,9 +55,7 @@ TEST(TestSuite, test3)
     Eigen::Vector3d goal(5, 1, 1);
     MotionModelDiffDrive::Trajectory trajectory;
     std::cout << "generate optimized trajectory" << std::endl;
-    double start = ros::Time::now().toSec();
     double cost = tg.generate_optimized_trajectory(goal, init_params, 0.05, 1e-1, 5, output, trajectory);
-    std::cout << "time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     std::cout << "trajecotry.back():" << std::endl;
     std::cout << trajectory.trajectory.back() << std::endl;
     std::cout << "cost: " << cost << std::endl;
@@ -78,9 +69,8 @@ TEST(TestSuite, test3)
     EXPECT_GT(cost, 0);// cost > 0
 }
 
-TEST(TestSuite, test5)
+TEST(TrajectoryGeneratorFunctionTest, GenerateNotOptimizedTrajectory)
 {
-    ros::NodeHandle nh;
     Eigen::Vector3d goal(1, 2, -1.0472);
     TrajectoryGeneratorDiffDrive tg;
     tg.set_motion_param(1.0, 2.0, 1.0, 11.6, 0.125, 0.5);
@@ -89,9 +79,7 @@ TEST(TestSuite, test5)
     MotionModelDiffDrive::ControlParams init_params(init_v, MotionModelDiffDrive::AngularVelocityParams(-0.8, 0, 0, goal.segment(0, 2).norm()));
     MotionModelDiffDrive::Trajectory trajectory;
     std::cout << "generate optimized trajectory" << std::endl;
-    double start = ros::Time::now().toSec();
     double cost = tg.generate_optimized_trajectory(goal, init_params, 1e-1, 1e-1, 100, output, trajectory);
-    std::cout << "time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     std::cout << "trajecotry.back():" << std::endl;
     std::cout << trajectory.trajectory.back() << std::endl;
     std::cout << "cost: " << cost << std::endl;
@@ -101,9 +89,8 @@ TEST(TestSuite, test5)
 }
 
 // negative value test
-TEST(TestSuite, test6)
+TEST(MotionModelTest, InterpolationBack)
 {
-    ros::NodeHandle nh;
     MotionModelDiffDrive::AngularVelocityParams omega(0, 0.5, 1.0, -5);
     omega.calculate_spline();
     MotionModelDiffDrive mm;
@@ -117,9 +104,8 @@ TEST(TestSuite, test6)
     EXPECT_NEAR(1.0, cf, 0.01);
 }
 
-TEST(TestSuite, test7)
+TEST(MotionModelTest, GeenrateTrajectoryToBack)
 {
-    ros::NodeHandle nh;
     MotionModelDiffDrive mm;
     MotionModelDiffDrive::VelocityParams vel(0.0, 0.5, -0.5, 0.0, 0.5);
     MotionModelDiffDrive::AngularVelocityParams omega(0.0, 0.0, 0.0, -5);
@@ -131,9 +117,8 @@ TEST(TestSuite, test7)
     EXPECT_NEAR(0, trajectory.trajectory.back()(2), 0.05);
 }
 
-TEST(TestSuite, test8)
+TEST(TrajectoryGeneratorFunctionTest, GenerateOptimizedTrajectoryToBack)
 {
-    ros::NodeHandle nh;
     TrajectoryGeneratorDiffDrive tg;
     MotionModelDiffDrive::ControlParams output;
     MotionModelDiffDrive::VelocityParams init_v(0.0, 0.5, -1.0, 0.0, 0.5);
@@ -141,9 +126,7 @@ TEST(TestSuite, test8)
     MotionModelDiffDrive::ControlParams init_params(init_v, MotionModelDiffDrive::AngularVelocityParams(0, 0, 0, goal.segment(0, 2).norm()));
     MotionModelDiffDrive::Trajectory trajectory;
     std::cout << "generate optimized trajectory" << std::endl;
-    double start = ros::Time::now().toSec();
     double cost = tg.generate_optimized_trajectory(goal, init_params, 0.05, 1e-1, 5, output, trajectory);
-    std::cout << "time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     std::cout << "trajecotry.back():" << std::endl;
     std::cout << trajectory.trajectory.back() << std::endl;
     std::cout << "cost: " << cost << std::endl;
@@ -158,9 +141,8 @@ TEST(TestSuite, test8)
 }
 
 // sharp curve test
-TEST(TestSuite, test9)
+TEST(TrajectoryGeneratorFunctionTest, GenerateOptimizedTrajectoryWithSharpCurve)
 {
-    ros::NodeHandle nh;
     TrajectoryGeneratorDiffDrive tg;
     tg.set_motion_param(1.0, 2.0, 1.0, 11.6, 0.125, 0.5);
     MotionModelDiffDrive::ControlParams output;
@@ -170,9 +152,7 @@ TEST(TestSuite, test9)
     MotionModelDiffDrive::ControlParams init_params(init_v, MotionModelDiffDrive::AngularVelocityParams(0.0, 0.5, 0.0, goal.segment(0, 2).norm()));
     MotionModelDiffDrive::Trajectory trajectory;
     std::cout << "generate optimized trajectory" << std::endl;
-    double start = ros::Time::now().toSec();
     double cost = tg.generate_optimized_trajectory(goal, init_params, 0.1, 1e-1, 100, output, trajectory);
-    std::cout << "time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     std::cout << "trajecotry.back():" << std::endl;
     std::cout << trajectory.trajectory.back() << std::endl;
     std::cout << "cost: " << cost << std::endl;
@@ -189,19 +169,6 @@ TEST(TestSuite, test9)
 int main(int argc, char** argv)
 {
     testing::InitGoogleTest(&argc, argv);
-
-    ros::init(argc, argv, "trajectory_generator_test");
-
-    ros::AsyncSpinner spinner(1);
-    spinner.start();
-
-    ros::Duration(3.0).sleep();
-
     int r_e_t = RUN_ALL_TESTS();
-
-    spinner.stop();
-
-    ros::shutdown();
-
     return r_e_t;
 }

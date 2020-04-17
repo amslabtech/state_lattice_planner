@@ -1,19 +1,9 @@
 #include <gtest/gtest.h>
 
-#include <ros/ros.h>
-
 #include "state_lattice_planner/lookup_table_utils.h"
-#include "state_lattice_planner/lookup_table_generator.h"
 #include "state_lattice_planner/state_lattice_planner.h"
 
-TEST(TestSuite, test0)
-{
-    LookupTableGenerator ltg;
-    //ltg.process();
-    EXPECT_NEAR(1.0, 1.0, 0.01);
-}
-
-TEST(TestSuite, test1)
+TEST(StateLatticePlannerFunctionTest, SamplingState)
 {
     StateLatticePlanner slp;
     StateLatticePlanner::SamplingParams params(6, 3, 5.0, M_PI / 4.0, M_PI / 6.0);
@@ -30,7 +20,7 @@ TEST(TestSuite, test1)
     EXPECT_GT(n, 0);
 }
 
-TEST(TestSuite, test2)
+TEST(StateLatticePlannerFunctionTest, GenerateTerminalStates)
 {
     StateLatticePlanner slp;
     int np = 5;
@@ -52,7 +42,7 @@ TEST(TestSuite, test2)
     //EXPECT_NEAR(states[0](2) - goal_direction, -states[n-1](2) - goal_direction, 1e-1);
 }
 
-TEST(TestSuite, test3)
+TEST(StateLatticePlannerFunctionTest, CompareCenterWithGoal)
 {
     StateLatticePlanner slp;
     int np = 5;
@@ -83,7 +73,7 @@ TEST(TestSuite, test3)
     EXPECT_NEAR(center_state.segment(0, 2).norm(), goal.segment(0, 2).norm(), 0.1);
 }
 
-TEST(TestSuite, test4)
+TEST(StateLatticePlannerFunctionTest, GenerateTrajectories)
 {
     StateLatticePlanner slp;
     int np = 10;
@@ -92,7 +82,6 @@ TEST(TestSuite, test4)
     Eigen::Vector3d goal(5, -1, 1);
     StateLatticePlanner::SamplingParams params(np, nh, M_PI / 4.0, M_PI / 6.0);
     slp.set_sampling_params(params);
-    double start = ros::Time::now().toSec();
     std::vector<Eigen::Vector3d> states;
     double target_velocity = slp.get_target_velocity(goal);
     slp.generate_biased_polar_states(ns, goal, target_velocity, states);
@@ -100,7 +89,6 @@ TEST(TestSuite, test4)
     slp.generate_trajectories(states, 0.0, 0.0, target_velocity, trajectories);
     MotionModelDiffDrive::Trajectory trajectory;
     slp.pickup_trajectory(trajectories, goal, trajectory);
-    std::cout << "time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     std::cout << "goal" << std::endl;
     std::cout << goal << std::endl;
     std::cout << "terminal state" << std::endl;
@@ -114,7 +102,7 @@ TEST(TestSuite, test4)
     EXPECT_LT((goal.segment(0, 2) - trajectory.trajectory.back().segment(0, 2)).norm(), 0.2);
 }
 
-TEST(TestSuite, test6)
+TEST(StateLatticePlannerFunctionTest, GenerateBackTrajectories)
 {
     StateLatticePlanner slp;
     int np = 10;
@@ -123,7 +111,6 @@ TEST(TestSuite, test6)
     Eigen::Vector3d goal(-5, 1, -0.5);
     StateLatticePlanner::SamplingParams params(np, nh, M_PI / 4.0, M_PI / 6.0);
     slp.set_sampling_params(params);
-    double start = ros::Time::now().toSec();
     std::vector<Eigen::Vector3d> states;
     double target_velocity = slp.get_target_velocity(goal);
     slp.generate_biased_polar_states(ns, goal, target_velocity, states);
@@ -134,7 +121,6 @@ TEST(TestSuite, test6)
     slp.generate_trajectories(states, 0.0, 0.0, target_velocity, trajectories);
     MotionModelDiffDrive::Trajectory trajectory;
     slp.pickup_trajectory(trajectories, goal, trajectory);
-    std::cout << "time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
     std::cout << "goal" << std::endl;
     std::cout << goal << std::endl;
     std::cout << "terminal state" << std::endl;
@@ -150,19 +136,6 @@ TEST(TestSuite, test6)
 int main(int argc, char** argv)
 {
     testing::InitGoogleTest(&argc, argv);
-
-    ros::init(argc, argv, "state_lattice_planner_test");
-
-    ros::AsyncSpinner spinner(1);
-    spinner.start();
-
-    ros::Duration(3.0).sleep();
-
     int r_e_t = RUN_ALL_TESTS();
-
-    spinner.stop();
-
-    ros::shutdown();
-
     return r_e_t;
 }

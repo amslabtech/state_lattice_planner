@@ -275,7 +275,7 @@ void MotionModelDiffDrive::make_velocity_profile(const double dt, const Velocity
           a0      a=0         af
 
     ***************************************/
-    int size = v_param.time / dt;
+    int size = v_param.time / dt + 1;
     // std::cout << "size: " << size << std::endl;
     v_profile.resize(size);
     s_profile.resize(size);
@@ -312,9 +312,9 @@ void MotionModelDiffDrive::make_velocity_profile(const double dt, const Velocity
         }
         v_profile[i] = v;
         // std::cout << "v: " << v << std::endl;
-        s += v * dt;
         s_profile[i] = s;
         // std::cout << "s: " << s << std::endl;
+        s += v * dt;
         t += dt;
     }
 }

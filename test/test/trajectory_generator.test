@@ -1,5 +1,0 @@
-<launch>
-
-    <test pkg="state_lattice_planner" type="trajectory_generator_test" test-name="trajectory_generator_test"/>
-
-</launch>

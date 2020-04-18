@@ -14,3 +14,14 @@ target_link_libraries(state_lattice_planner_function_test
     motion_model_diff_drive
     trajectory_generator_diff_drive
 )
+add_rostest_gtest(state_lattice_planner_test
+    test/state_lattice_planner.test
+    src/state_lattice_planner_test.cpp
+)
+target_link_libraries(state_lattice_planner_test
+    ${catkin_LIBRARIES}
+    lookup_table_generator_lib
+    state_lattice_planner_lib
+    motion_model_diff_drive
+    trajectory_generator_diff_drive
+)

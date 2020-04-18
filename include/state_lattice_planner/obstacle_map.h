@@ -63,15 +63,15 @@ void ObstacleMap<ELEMENT_TYPE>::set_shape(unsigned int width_, unsigned int heig
         std::cout << "\033[31mvalue error: width and height must be > 0\033[0m" << std::endl;
         return;
     }
-    if(resolution > 0.0){
+    if(resolution_ > 0.0){
         resolution = resolution_;
     }else{
         std::cout << "\033[31mvalue error: resolution must be > 0.0 m\033[0m" << std::endl;
         return;
     }
     // origin is in the lower right-hand corner of the map.
-    origin_x = -height * 0.5 * resolution;
-    origin_y = -width * 0.5 * resolution;
+    origin_x = -static_cast<double>(height) * 0.5 * resolution;
+    origin_y = -static_cast<double>(width) * 0.5 * resolution;
 }
 
 template<typename ELEMENT_TYPE>

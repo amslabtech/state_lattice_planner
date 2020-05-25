@@ -1,3 +1,7 @@
+/**
+ * @file motion_model_diff_drive.h
+ * @author AMSL
+ */
 #ifndef __MOTION_MODEL_DIFF_DRIVE_H
 #define __MOTION_MODEL_DIFF_DRIVE_H
 
@@ -7,14 +11,31 @@
 
 #include <Eigen/Dense>
 
+/**
+ * @brief Trajectory generation with motion model of differential drive robots
+ */
 class MotionModelDiffDrive
 {
 public:
+    /**
+     * @brief Constructor
+     */
     MotionModelDiffDrive(void);
 
+    /**
+     * @brief Class representing robot state
+     */
     class State
     {
     public:
+        /**
+         * @brief Constructor
+         * @param[in] _x x coordinate in robot frame [m]
+         * @param[in] _y y coordinate in robot frame [m]
+         * @param[in] _yaw Orientation [rad]
+         * @param[in] _velocity Linear velocity [m/s]
+         * @param[in] _omega Angular velocity [rad/s]
+         */
         State(double, double, double, double, double);
 
         double x;// robot position x
@@ -25,10 +46,24 @@ public:
     private:
     };
 
+    /**
+     * @brief Class representing velocity profile for trajectories
+     */
     class VelocityParams
     {
     public:
+        /**
+         * @brief Constructor
+         */
         VelocityParams(void);
+        /**
+         * @brief Constructor
+         * @param[in] _v0 Initial velocity [m/s]
+         * @param[in] _a0 Initial linear acceleration [m/ss]
+         * @param[in] _vt Target velocity [m/s]
+         * @param[in] _vf Terminal velocity [m/s]
+         * @param[in] _af Terminal acceleration [m/ss]
+         */
         VelocityParams(double, double, double, double, double);// v0, a0, vt, vf, af
 
         double v0;
@@ -40,26 +75,57 @@ public:
     private:
     };
 
+    /**
+     * @brief Class representing yawrate profile for trajectories
+     */
     class AngularVelocityParams
     {
     public:
+        /**
+         * @brief Constructor
+         */
         AngularVelocityParams(void);
+        /**
+         * @brief Constructor
+         * @param[in] _k0 Initial angular velocity [rad/s]
+         * @param[in] _km Intermediate angular velocity [rad/s]
+         * @param[in] _kf Terminal angular velocity [rad/s]
+         * @param[in] _sf Length of trajectory [m]
+         */
         AngularVelocityParams(double, double, double, double);
 
+        /**
+         * @brief Calculate 3D spline parameters from k0, km, kf, sf. #coefficients will be to the parameters
+         * @param[in] ratio Ratio of sf (default: 0.5)
+         */
         void calculate_spline(double ratio=0.5);
 
         double k0;
         double km;
         double kf;
         double sf;
+        /**
+         * @brief (a, b, c, d) <- ax^3+bx^2+cx+d
+         */
         std::vector<Eigen::Vector4d> coefficients;
     private:
     };
 
+    /**
+     * @brief Class containing VelocityParams and AngularVelocityParams
+     */
     class ControlParams
     {
     public:
+        /**
+         * @brief Constructor
+         */
         ControlParams(void);
+        /**
+         * @brief Constructor
+         * @param[in] _vel Input VelocityParams
+         * @param[in] _omega Input AngularVelocityParams
+         */
         ControlParams(const VelocityParams&, const AngularVelocityParams&);
 
         VelocityParams vel;
@@ -67,6 +133,9 @@ public:
     private:
     };
 
+    /**
+     * @brief Class representing a trajectory
+     */
     class Trajectory
     {
     public:

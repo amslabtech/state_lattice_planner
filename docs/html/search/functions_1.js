@@ -1,8 +1,6 @@
 var searchData=
 [
-  ['generate_5fbiased_5fpolar_5fstates_50',['generate_biased_polar_states',['../class_state_lattice_planner.html#ad2affac9efcefe926738ab1168476dab',1,'StateLatticePlanner']]],
-  ['generate_5fbresemhams_5fline_51',['generate_bresemhams_line',['../class_state_lattice_planner.html#a9429deda6c5363ef69794f87e351dfa4',1,'StateLatticePlanner']]],
-  ['generate_5ftrajectories_52',['generate_trajectories',['../class_state_lattice_planner.html#a95cb3890365a4a78418adc4a8da274fb',1,'StateLatticePlanner']]],
-  ['get_5foptimized_5fparam_5ffrom_5flookup_5ftable_53',['get_optimized_param_from_lookup_table',['../class_state_lattice_planner.html#afb619b3b7640607e308ef5b580a5c84a',1,'StateLatticePlanner']]],
-  ['get_5ftarget_5fvelocity_54',['get_target_velocity',['../class_state_lattice_planner.html#ab2acba3b67661f3f3661039607b07b28',1,'StateLatticePlanner']]]
+  ['calculate_5fspline_56',['calculate_spline',['../class_motion_model_diff_drive_1_1_angular_velocity_params.html#a67712320a21e08bd3d731fb6422cdd66',1,'MotionModelDiffDrive::AngularVelocityParams']]],
+  ['check_5fcollision_57',['check_collision',['../class_state_lattice_planner.html#acdc10a5ab3171d411359e1995b335da1',1,'StateLatticePlanner::check_collision(const state_lattice_planner::ObstacleMap&lt; int &gt; &amp;, const std::vector&lt; Eigen::Vector3d &gt; &amp;)'],['../class_state_lattice_planner.html#a55052d50c33060be83bf041b37cf422b',1,'StateLatticePlanner::check_collision(const state_lattice_planner::ObstacleMap&lt; int &gt; &amp;, const std::vector&lt; Eigen::Vector3d &gt; &amp;, double)']]],
+  ['controlparams_58',['ControlParams',['../class_motion_model_diff_drive_1_1_control_params.html#aa1c7107918f6dcecc0c603a588dfed2b',1,'MotionModelDiffDrive::ControlParams::ControlParams(void)'],['../class_motion_model_diff_drive_1_1_control_params.html#a258471da6079541920f911eae9524168',1,'MotionModelDiffDrive::ControlParams::ControlParams(const VelocityParams &amp;, const AngularVelocityParams &amp;)']]]
 ];

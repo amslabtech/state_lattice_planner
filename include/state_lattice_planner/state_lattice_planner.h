@@ -28,8 +28,26 @@ public:
     class SamplingParams
     {
     public:
+        /**
+         * @brief Constructor
+         */
         SamplingParams(void);
+        /**
+         * @brief Constructor
+         * @param[in] _n_p Number of sampling positions
+         * @param[in] _n_h Number of sampling orientations per position
+         * @param[in] _max_alpha Maximum angle of sampling positions
+         * @param[in] _max_psi Maximum angle of sampling orientations
+         */
         SamplingParams(const int, const int, const double, const double);
+        /**
+         * @brief Constructor
+         * @param[in] _n_p Number of sampling positions
+         * @param[in] _n_h Number of sampling orientations per position
+         * @param[in] _length Distance to sampling position
+         * @param[in] _max_alpha Maximum angle of sampling positions
+         * @param[in] _max_psi Maximum angle of sampling orientations
+         */
         SamplingParams(const int, const int, const double, const double, const double);
 
         int n_p;// num of sampling positions
@@ -112,6 +130,8 @@ public:
      * @param[in] goal Goal pose (x, y, yaw)
      * @param[in] output The adopted trajectory
      * @return Whether the output trajectory is valid or not
+     * @retval true the output trajectory is valid
+     * @retval false the output trajectory is invalid
      */
     bool pickup_trajectory(const std::vector<MotionModelDiffDrive::Trajectory>&, const Eigen::Vector3d&, MotionModelDiffDrive::Trajectory&);
     /**
@@ -138,7 +158,8 @@ public:
      * @brief Check collision in the obstacle map
      * @param[in] map Obstacle map
      * @param[in] trajectory Trajectory
-     * @return True if the given trajectory collides with an obstacle
+     * @retval true The trajectory collides with an obstacle
+     * @retval false The trajectory doesn't collides with an obstacle
      */
     bool check_collision(const state_lattice_planner::ObstacleMap<int>&, const std::vector<Eigen::Vector3d>&);
     /**
@@ -146,7 +167,8 @@ public:
      * @param[in] map Obstacle map
      * @param[in] trajectory Trajectory
      * @param[in] range Range [m]
-     * @return True if the given trajectory collides with an obstacle
+     * @retval true The trajectory collides with an obstacle
+     * @retval false The trajectory doesn't collides with an obstacle
      */
     bool check_collision(const state_lattice_planner::ObstacleMap<int>&, const std::vector<Eigen::Vector3d>&, double);
 
@@ -161,7 +183,13 @@ protected:
     double MAX_WHEEL_ANGULAR_VELOCITY;
     double WHEEL_RADIUS;
     double TREAD;
+    /**
+     * @brief If true, verbosity output is enabled
+     */
     bool VERBOSE;
+    /**
+     * @brief If true, trajectories sampled in control space are added to the output
+     */
     bool ENABLE_CONTROL_SPACE_SAMPLING;
 
     SamplingParams sampling_params;

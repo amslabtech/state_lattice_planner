@@ -201,10 +201,12 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>WHEEL_RADIUS</b></t
 double&#160;</td><td class="memItemRight" valign="bottom"><b>TREAD</b></td></tr>
 <tr class="separator:accffb29f0531107343e7b2d6a7bed3ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a28a8f78a0b869318f47a7acfbfcc531e"><td class="memItemLeft" align="right" valign="top"><a id="a28a8f78a0b869318f47a7acfbfcc531e"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>VERBOSE</b></td></tr>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_state_lattice_planner.html#a28a8f78a0b869318f47a7acfbfcc531e">VERBOSE</a></td></tr>
+<tr class="memdesc:a28a8f78a0b869318f47a7acfbfcc531e"><td class="mdescLeft">&#160;</td><td class="mdescRight">If true, verbosity output is enabled. <br /></td></tr>
 <tr class="separator:a28a8f78a0b869318f47a7acfbfcc531e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a65159737bd94467ccaa9db536cb7833b"><td class="memItemLeft" align="right" valign="top"><a id="a65159737bd94467ccaa9db536cb7833b"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>ENABLE_CONTROL_SPACE_SAMPLING</b></td></tr>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_state_lattice_planner.html#a65159737bd94467ccaa9db536cb7833b">ENABLE_CONTROL_SPACE_SAMPLING</a></td></tr>
+<tr class="memdesc:a65159737bd94467ccaa9db536cb7833b"><td class="mdescLeft">&#160;</td><td class="mdescRight">If true, trajectories sampled in control space are added to the output. <br /></td></tr>
 <tr class="separator:a65159737bd94467ccaa9db536cb7833b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a26691281c5f5b5bf65e72e2fef416b33"><td class="memItemLeft" align="right" valign="top"><a id="a26691281c5f5b5bf65e72e2fef416b33"></a>
 <a class="el" href="class_state_lattice_planner_1_1_sampling_params.html">SamplingParams</a>&#160;</td><td class="memItemRight" valign="bottom"><b>sampling_params</b></td></tr>
@@ -250,7 +252,13 @@ LookupTableUtils::LookupTable&#160;</td><td class="memItemRight" valign="bottom"
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>True if the given trajectory collides with an obstacle </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">true</td><td>The trajectory collides with an obstacle </td></tr>
+    <tr><td class="paramname">false</td><td>The trajectory doesn't collides with an obstacle </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -295,7 +303,13 @@ LookupTableUtils::LookupTable&#160;</td><td class="memItemRight" valign="bottom"
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>True if the given trajectory collides with an obstacle </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">true</td><td>The trajectory collides with an obstacle </td></tr>
+    <tr><td class="paramname">false</td><td>The trajectory doesn't collides with an obstacle </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -546,6 +560,13 @@ LookupTableUtils::LookupTable&#160;</td><td class="memItemRight" valign="bottom"
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Whether the output trajectory is valid or not </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">true</td><td>the output trajectory is valid </td></tr>
+    <tr><td class="paramname">false</td><td>the output trajectory is invalid </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

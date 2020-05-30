@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['velocityparams_35',['VelocityParams',['../class_motion_model_diff_drive_1_1_velocity_params.html',1,'MotionModelDiffDrive::VelocityParams'],['../class_motion_model_diff_drive_1_1_velocity_params.html#a286b64a668b457a92215763d166881ba',1,'MotionModelDiffDrive::VelocityParams::VelocityParams(void)'],['../class_motion_model_diff_drive_1_1_velocity_params.html#adbb2cfa015e2b62c2f732f529ea69988',1,'MotionModelDiffDrive::VelocityParams::VelocityParams(double, double, double, double, double)']]],
-  ['verbose_36',['VERBOSE',['../class_state_lattice_planner.html#a28a8f78a0b869318f47a7acfbfcc531e',1,'StateLatticePlanner']]]
+  ['trajectory_41',['Trajectory',['../class_motion_model_diff_drive_1_1_trajectory.html',1,'MotionModelDiffDrive::Trajectory'],['../class_motion_model_diff_drive_1_1_trajectory.html#ae6b306b37c006ada95b5e7d4d280ff95',1,'MotionModelDiffDrive::Trajectory::Trajectory()']]],
+  ['trajectorygeneratordiffdrive_42',['TrajectoryGeneratorDiffDrive',['../class_trajectory_generator_diff_drive.html',1,'']]],
+  ['trajectoryviewer_43',['TrajectoryViewer',['../class_trajectory_viewer.html',1,'']]]
 ];

@@ -8,6 +8,8 @@
 ## Overview
 TBW
 
+The API documantation is [here](https://amslabtech.github.io/state_lattice_planner/docs/index.html).
+
 ## Enviornment
 - Ubuntu 16.04 or 18.04
 - ROS Kinetic or Melodic

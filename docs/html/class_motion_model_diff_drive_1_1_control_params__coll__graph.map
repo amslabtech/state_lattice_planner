@@ -1,0 +1,5 @@
+<map id="MotionModelDiffDrive::ControlParams" name="MotionModelDiffDrive::ControlParams">
+<area shape="rect" id="node1" title="Class containing VelocityParams and AngularVelocityParams." alt="" coords="104,109,271,151"/>
+<area shape="rect" id="node2" href="$class_motion_model_diff_drive_1_1_velocity_params.html" title="Class representing velocity profile for trajectories." alt="" coords="5,5,172,47"/>
+<area shape="rect" id="node3" href="$class_motion_model_diff_drive_1_1_angular_velocity_params.html" title="Class representing yawrate profile for trajectories." alt="" coords="196,5,379,47"/>
+</map>

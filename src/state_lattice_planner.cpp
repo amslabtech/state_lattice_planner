@@ -1,3 +1,7 @@
+/**
+* @file state_lattice_planner.cpp
+* @author AMSL
+*/
 #include "state_lattice_planner/state_lattice_planner.h"
 
 StateLatticePlanner::StateLatticePlanner(void)

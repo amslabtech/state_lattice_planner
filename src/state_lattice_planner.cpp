@@ -118,6 +118,43 @@ void StateLatticePlanner::sample_states(const std::vector<double>& sample_angles
                 }else{
                     yaw = (params.span_psi) * 0.5 + base_angle;
                 }
+                yaw = atan2(sin(yaw), cos(yaw));
+                Eigen::Vector3d state(x, y, yaw);
+                _states.push_back(state);
+            }else{
+                std::cout << "sampling param error" << std::endl;
+                exit(-1);
+            }
+        }
+    }
+    states = _states;
+}
+
+void StateLatticePlanner::sample_states(const std::vector<double>& sample_angles, const SamplingParams& params, std::vector<Eigen::Vector3d>& states)
+{
+    /*
+     * sample_angles: [0, 1]
+     */
+    std::vector<Eigen::Vector3d> _states;
+    for(auto angle_ratio : sample_angles){
+        double angle = params.min_alpha + params.span_alpha * angle_ratio;
+        double x = params.length * cos(angle);
+        double y = params.length * sin(angle);
+        double base_angle = angle;
+        if(params.min_alpha > params.max_alpha){
+            base_angle -= M_PI;
+            base_angle = atan2(sin(base_angle), cos(base_angle));
+        }
+        for(int i=0;i<params.n_h;i++){
+            if(params.n_h > 0){
+                double yaw = 0;
+                if(params.n_h != 1){
+                    double ratio = double(i) / (params.n_h - 1);
+                    yaw = params.min_psi + (params.span_psi) * ratio + base_angle;
+                }else{
+                    yaw = (params.span_psi) * 0.5 + base_angle;
+                }
+                yaw = atan2(sin(yaw), cos(yaw));
                 Eigen::Vector3d state(x, y, yaw);
                 _states.push_back(state);
             }else{
@@ -135,11 +172,11 @@ void StateLatticePlanner::generate_biased_polar_states(const int n_s, const Eige
      * n_s: param for biased polar sampling
      */
     // params.length is ignored in this function (distance for goal is used)
-    auto& _params = sampling_params;
+    SamplingParams _params = sampling_params;
     double alpha_coeff = _params.span_alpha / double(n_s - 1);
-    if(target_velocity < 0){
-        _params.min_alpha = M_PI - _params.max_alpha;
-        _params.max_alpha = -_params.min_alpha;
+    if(target_velocity < 0.0){
+        _params.min_alpha = M_PI - sampling_params.max_alpha;
+        _params.max_alpha = -sampling_params.min_alpha;
     }
     std::cout << "biased polar sampling" << std::endl;
     std::vector<double> cnav;
@@ -200,7 +237,7 @@ void StateLatticePlanner::generate_biased_polar_states(const int n_s, const Eige
         std::cout << angle << std::endl;
     }
     */
-    sample_states(biased_angles, states);
+    sample_states(biased_angles, _params, states);
 }
 
 bool StateLatticePlanner::generate_trajectories(const std::vector<Eigen::Vector3d>& boundary_states, const double velocity, const double angular_velocity, const double target_velocity, std::vector<MotionModelDiffDrive::Trajectory>& trajectories)

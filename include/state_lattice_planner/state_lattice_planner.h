@@ -115,6 +115,7 @@ public:
      * @param[out] states Terminal states
      */
     void sample_states(const std::vector<double>&, std::vector<Eigen::Vector3d>&);
+    void sample_states(const std::vector<double>&, const SamplingParams&, std::vector<Eigen::Vector3d>&);
     /**
      * @brief Generate trajectories to specified terminal states
      * @param[in] boudary_states Terminal states

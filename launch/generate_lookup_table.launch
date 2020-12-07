@@ -11,8 +11,8 @@
     <arg name="delta_yaw" default="1.0471975"/>
     <arg name="lookup_table_file_name" default="$(find state_lattice_planner)/lookup_table/lookup_table.csv"/>
     <arg name="param_file_name" default="$(find state_lattice_planner)/config/robot_param.yaml"/>
-    <arg name="min_v" default="-0.8"/>
-    <arg name="max_v" default="0.8"/>
+    <arg name="min_v" default="-1.0"/>
+    <arg name="max_v" default="1.0"/>
     <arg name="delta_v" default="0.1"/>
     <arg name="max_kappa" default="1.0"/>
     <arg name="delta_kappa" default="0.2"/>

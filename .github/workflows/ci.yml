@@ -21,5 +21,4 @@ jobs:
       - name: Build
         uses: ros-tooling/action-ros-ci@v0.3
         with:
-          package-name: state_lattice_planner
           target-ros1-distro: noetic

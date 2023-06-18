@@ -85,6 +85,10 @@ target_link_libraries(trajectory_viewer
 )
 
 if(CATKIN_ENABLE_TESTING)
-    find_package(rostest REQUIRED)
-    add_subdirectory(test)
+  find_package(roslint REQUIRED)
+  roslint_cpp()
+  roslint_add_test()
+
+  find_package(rostest REQUIRED)
+  add_subdirectory(test)
 endif()

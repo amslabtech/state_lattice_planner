@@ -256,7 +256,7 @@ void MotionModelDiffDrive::AngularVelocityParams::calculate_spline(double ratio)
          0, 0, 0, 0, 6 * x(2), 2, 0, 0;
     Eigen::VectorXd c = Eigen::VectorXd::Zero(8);
     c << y(0), y(1), y(1), y(2), 0, 0, 0, 0;
-    Eigen::VectorXd a = s.inverse() * c;
+    Eigen::VectorXd a = s.lu().solve(c);
     coefficients[0] = a.segment(0, 4);
     coefficients[1] = a.segment(4, 4);
 }

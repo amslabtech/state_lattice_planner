@@ -15,7 +15,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Setup ROS
-        uses: taka-kazu/setup-ros@master
+        uses: taka-kazu/setup-ros@use-colcon-core-0.15.1
         with:
           required-ros-distributions: noetic
       - name: Build

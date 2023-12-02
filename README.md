@@ -1,6 +1,6 @@
 # state_lattice_planner
 
-[![Build Status](https://travis-ci.org/amslabtech/state_lattice_planner.svg?branch=master)](https://travis-ci.org/amslabtech/state_lattice_planner)
+![Build Status](https://github.com/amslabtech/state_lattice_planner/actions/workflows/ci.yml/badge.svg)
 ![issue_opened](https://img.shields.io/github/issues/amslabtech/state_lattice_planner.svg)
 ![issue_closed](https://img.shields.io/github/issues-closed/amslabtech/state_lattice_planner.svg)
 
@@ -11,8 +11,7 @@ TBW
 The API documantation is [here](https://amslabtech.github.io/state_lattice_planner/).
 
 ## Enviornment
-- Ubuntu 16.04 or 18.04
-- ROS Kinetic or Melodic
+- Ubuntu 20.04, ROS noetic
 
 ## Install and Build
 
@@ -72,7 +71,7 @@ catkin_make
   - max time derivative of trajectory curvature (default: 2.0[rad/ms]
 - MAX_YAWRATE
   - max robot's yawrate (default: 0.8[rad/s])
-  
+
 #### Runtime requirement
 - TF (from /odom to /base_link) is required
 

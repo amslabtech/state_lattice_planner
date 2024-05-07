@@ -1,31 +1,38 @@
-#ifndef __LOOKUP_TABLE_UTILS_H
-#define __LOOKUP_TABLE_UTILS_H
+// Copyright 2019 amsl
 
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <map>
+#ifndef STATE_LATTICE_PLANNER_LOOKUP_TABLE_UTILS_H
+#define STATE_LATTICE_PLANNER_LOOKUP_TABLE_UTILS_H
+
 #include <Eigen/Dense>
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <string>
+#include <vector>
 
 #include "trajectory_generator/motion_model_diff_drive.h"
 
 namespace LookupTableUtils
 {
-    class StateWithControlParams
-    {
-    public:
-        StateWithControlParams(void);
+class StateWithControlParams
+{
+public:
+  StateWithControlParams(void);
 
-        Eigen::Vector3d state;// x, y, yaw
-        MotionModelDiffDrive::ControlParams control;
-    private:
-    };
+  Eigen::Vector3d state;  // x, y, yaw
+  MotionModelDiffDrive::ControlParams control;
 
-    typedef std::map<double, std::map<double, std::vector<StateWithControlParams> > > LookupTable;
+private:
+};
 
-    bool load_lookup_table(const std::string&, LookupTable&);
+typedef std::map<double, std::map<double, std::vector<StateWithControlParams>>>
+    LookupTable;
 
-    void get_optimized_param_from_lookup_table(const LookupTable&, const Eigen::Vector3d, const double, const double, MotionModelDiffDrive::ControlParams&);
-}
+bool load_lookup_table(const std::string&, LookupTable&);
 
-#endif// __LOOKUP_TABLE_UTILS_H
+void get_optimized_param_from_lookup_table(
+    const LookupTable&, const Eigen::Vector3d, const double, const double,
+    MotionModelDiffDrive::ControlParams&);
+}  // namespace LookupTableUtils
+
+#endif  // STATE_LATTICE_PLANNER_LOOKUP_TABLE_UTILS_H
